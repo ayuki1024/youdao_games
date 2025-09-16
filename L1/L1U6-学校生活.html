@@ -1,0 +1,799 @@
+<html lang="zh-CN"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>校园生活选择游戏</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- 配置Tailwind -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#4F46E5', // 主色调：智慧蓝
+            secondary: '#10B981', // 辅助色：活力绿
+            danger: '#EF4444', // 警示色：警示红
+            neutral: '#6B7280', // 中性色：深灰
+            light: '#F3F4F6', // 浅色背景
+            dark: '#1F2937', // 深色文本
+            success: '#22C55E', // 成功色：绿色
+            warning: '#F59E0B', // 警告色：橙色
+            info: '#F59E0B', // 信息色：橙色
+          },
+          fontFamily: {
+            code: ['Consolas', 'Monaco', 'monospace'],
+            game: ['"Segoe UI"', 'Roboto', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .glass-effect {
+        backdrop-filter: blur(8px);
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+      .text-shadow {
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .transition-all-300 {
+        transition: all 0.3s ease;
+      }
+      .hover-scale {
+        transition: transform 0.2s ease;
+      }
+      .hover-scale:hover {
+        transform: scale(1.03);
+      }
+      .choice-card {
+        @apply bg-white/10 rounded-xl p-5 shadow-lg hover-scale transition-all-300 cursor-pointer;
+      }
+      .choice-card-selected {
+        @apply bg-primary/20 border-2 border-primary;
+      }
+      .stat-change {
+        @apply inline-block px-2 py-1 rounded-full text-sm font-bold;
+      }
+      .stat-increase {
+        @apply bg-success/20 text-success;
+      }
+      .stat-decrease {
+        @apply bg-danger/20 text-danger;
+      }
+      .code-block {
+        @apply bg-dark/80 text-light font-code p-4 rounded-lg overflow-x-auto;
+      }
+      .stat-toggle-btn {
+        @apply bg-primary/20 hover:bg-primary/30 text-primary font-medium py-1 px-3 rounded-full transition-all duration-200 transform hover:scale-105 focus:outline-none ml-2;
+      }
+      .stat-toggle-btn.active {
+        @apply bg-primary text-white;
+      }
+      .fade-in {
+        animation: fadeIn 0.5s ease-in-out;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .pulse {
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-dark to-neutral min-h-screen font-game text-light">
+  <div class="container mx-auto px-4 py-8 max-w-7xl">
+    <!-- 顶部状态栏 -->
+    <header class="mb-8 glass-effect rounded-xl p-4 flex justify-between items-center">
+      <div class="flex flex-wrap items-center space-x-6">
+        <div class="flex items-center">
+          <i class="fa fa-users text-warning mr-2 text-xl"></i>
+          <span class="font-bold text-lg">人缘值: <span id="popularity" class="text-warning">60</span></span>
+          <button id="toggle-popularity" class="stat-toggle-btn active" title="隐藏/显示">
+            <i class="fa fa-eye"></i>
+          </button>
+        </div>
+        <div class="flex items-center">
+          <i class="fa fa-balance-scale text-warning mr-2 text-xl"></i>
+          <span class="font-bold text-lg">道德分: <span id="morality" class="text-warning">60</span></span>
+          <button id="toggle-morality" class="stat-toggle-btn active" title="隐藏/显示">
+            <i class="fa fa-eye"></i>
+          </button>
+        </div>
+        <div class="flex items-center">
+          <i class="fa fa-graduation-cap text-warning mr-2 text-xl"></i>
+          <span class="font-bold text-lg">成绩: <span id="score" class="text-warning">80</span></span>
+          <button id="toggle-score" class="stat-toggle-btn active" title="隐藏/显示">
+            <i class="fa fa-eye"></i>
+          </button>
+        </div>
+        <div class="flex items-center">
+          <i class="fa fa-smile-o text-warning mr-2 text-xl"></i>
+          <span class="font-bold text-lg">心情: <span id="mood" class="text-warning">60</span></span>
+          <button id="toggle-mood" class="stat-toggle-btn active" title="隐藏/显示">
+            <i class="fa fa-eye"></i>
+          </button>
+        </div>
+      </div>
+      <button id="restart-btn" class="bg-primary hover:bg-primary/80 text-white font-bold py-2 px-4 rounded-full transition-all duration-300 transform hover:scale-105 focus:outline-none">
+        <i class="fa fa-refresh mr-1"></i> 重新开始
+      </button>
+    </header>
+    
+    <!-- 主游戏区域 -->
+    <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- 左侧代码区域 -->
+      <div class="lg:col-span-1">
+        <div class="glass-effect rounded-xl p-5 h-full">
+          <h2 class="text-xl font-bold mb-4 text-warning flex items-center">
+            <i class="fa fa-code mr-2"></i> 选择与结果
+          </h2>
+          <div id="code-area" class="code-block min-h-[400px]">
+            <pre id="code-content"></pre>
+          </div>
+          <div class="mt-6">
+            <h3 class="text-lg font-semibold mb-2 text-light/80">游戏说明</h3>
+            <p class="text-light/70 text-sm">
+              在这个游戏中，你将面临各种校园生活中的选择。
+              每个选择都会影响你的人缘值、道德分、成绩和心情。
+              左侧区域会先显示题目相关的伪代码，选择后显示你的选择结果。
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 右侧游戏内容区域 -->
+      <div class="lg:col-span-2">
+        <div class="glass-effect rounded-xl p-6 h-full">
+          <div id="game-content">
+            <!-- 初始欢迎界面 -->
+            <div id="welcome-screen" class="text-center py-12 fade-in">
+              <h1 class="text-3xl md:text-4xl font-bold mb-6 text-warning">
+                校园生活选择游戏
+              </h1>
+              <p class="text-xl text-light/90 mb-8 max-w-2xl mx-auto">
+                在这个游戏中，你将面对各种校园生活中的选择。
+                你的每一个决定都会影响你的人缘值、道德分、成绩和心情。
+                做出明智的选择，塑造你理想中的校园形象！
+              </p>
+              <div class="mb-8 p-4 rounded-lg bg-primary/10 inline-block">
+                <p class="text-light/80 mb-2"><i class="fa fa-lightbulb-o text-warning mr-2"></i> 提示：</p>
+                <ul class="text-left text-light/70 space-y-2">
+                  <li><i class="fa fa-check-circle text-success mr-2"></i> 每个选择都会对四项属性产生不同影响</li>
+                  <li><i class="fa fa-check-circle text-success mr-2"></i> 可以点击属性后的按钮隐藏/显示对应数值</li>
+                  <li><i class="fa fa-check-circle text-success mr-2"></i> 左侧区域会先显示伪代码，选择后显示结果</li>
+                </ul>
+              </div>
+              <button id="start-game-btn" class="bg-primary hover:bg-primary/80 text-white font-bold py-4 px-10 rounded-full transition-all duration-300 transform hover:scale-105 focus:outline-none text-lg pulse">
+                开始游戏 <i class="fa fa-play ml-2"></i>
+              </button>
+            </div>
+            
+            <!-- 游戏关卡区域 -->
+            <div id="game-stages" class="hidden">
+              <!-- 关卡1：数学考试 -->
+              <div id="stage-1" class="game-stage fade-in">
+                <h2 class="text-2xl font-bold mb-6 text-warning">
+                  第一关：数学考试
+                </h2>
+                <p class="text-xl text-light/90 mb-8">
+                  现在是数学考试，你的好朋友林林想让你给她传答案，你选择：
+                </p>
+                <div class="space-y-4">
+                  <div id="choice-1-1" class="choice-card" data-choice="1-1">
+                    <p class="text-lg">给她答案</p>
+                  </div>
+                  <div id="choice-1-2" class="choice-card" data-choice="1-2">
+                    <p class="text-lg">拒绝给她答案</p>
+                  </div>
+                </div>
+                <!-- 下一题按钮（默认隐藏） -->
+                <div class="mt-6 hidden">
+                  <button class="next-stage-btn bg-primary hover:bg-primary/80 text-white font-bold py-2 px-6 rounded-full transition-all duration-300 transform hover:scale-105 focus:outline-none">
+                    下一题 <i class="fa fa-arrow-right ml-1"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <!-- 关卡2：班级大扫除 -->
+              <div id="stage-2" class="game-stage hidden fade-in">
+                <h2 class="text-2xl font-bold mb-6 text-warning">
+                  第二关：班级大扫除
+                </h2>
+                <p class="text-xl text-light/90 mb-8">
+                  班级在大扫除，你的朋友希望你帮他打水，但是你正在擦玻璃，你会：
+                </p>
+                <div class="space-y-4">
+                  <div id="choice-2-1" class="choice-card" data-choice="2-1">
+                    <p class="text-lg">帮他打水</p>
+                  </div>
+                  <div id="choice-2-2" class="choice-card" data-choice="2-2">
+                    <p class="text-lg">不帮他打水</p>
+                  </div>
+                </div>
+                <!-- 下一题按钮（默认隐藏） -->
+                <div class="mt-6 hidden">
+                  <button class="next-stage-btn bg-primary hover:bg-primary/80 text-white font-bold py-2 px-6 rounded-full transition-all duration-300 transform hover:scale-105 focus:outline-none">
+                    下一题 <i class="fa fa-arrow-right ml-1"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <!-- 关卡3：期末考试复习 -->
+              <div id="stage-3" class="game-stage hidden fade-in">
+                <h2 class="text-2xl font-bold mb-6 text-warning">
+                  第三关：期末考试复习
+                </h2>
+                <p class="text-xl text-light/90 mb-8">
+                  马上期末考试了，你正在家里复习，你的朋友喊你打游戏，你选择：
+                </p>
+                <div class="space-y-4">
+                  <div id="choice-3-1" class="choice-card" data-choice="3-1">
+                    <p class="text-lg">继续复习</p>
+                  </div>
+                  <div id="choice-3-2" class="choice-card" data-choice="3-2">
+                    <p class="text-lg">和朋友一起玩游戏</p>
+                  </div>
+                </div>
+                <!-- 下一题按钮（默认隐藏） -->
+                <div class="mt-6 hidden">
+                  <button class="next-stage-btn bg-primary hover:bg-primary/80 text-white font-bold py-2 px-6 rounded-full transition-all duration-300 transform hover:scale-105 focus:outline-none">
+                    下一题 <i class="fa fa-arrow-right ml-1"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <!-- 关卡4：课间休息 -->
+              <div id="stage-4" class="game-stage hidden fade-in">
+                <h2 class="text-2xl font-bold mb-6 text-warning">
+                  第四关：课间休息
+                </h2>
+                <p class="text-xl text-light/90 mb-8">
+                  现在正在课间休息，你有点困想睡觉，你同桌希望你给他讲题，你选择：
+                </p>
+                <div class="space-y-4">
+                  <div id="choice-4-1" class="choice-card" data-choice="4-1">
+                    <p class="text-lg">帮助同学讲题</p>
+                  </div>
+                  <div id="choice-4-2" class="choice-card" data-choice="4-2">
+                    <p class="text-lg">直接睡觉</p>
+                  </div>
+                  <div id="choice-4-3" class="choice-card" data-choice="4-3">
+                    <p class="text-lg">和他说我要睡觉，晚点给你讲</p>
+                  </div>
+                </div>
+                <!-- 下一题按钮（默认隐藏） -->
+                <div class="mt-6 hidden">
+                  <button class="next-stage-btn bg-primary hover:bg-primary/80 text-white font-bold py-2 px-6 rounded-full transition-all duration-300 transform hover:scale-105 focus:outline-none">
+                    查看结果 <i class="fa fa-check ml-1"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <!-- 结果界面 -->
+              <div id="result-screen" class="hidden text-center py-8 fade-in">
+                <h2 class="text-3xl font-bold mb-6 text-warning">
+                  游戏结束！
+                </h2>
+                <div class="space-y-6 mb-8">
+                  <div class="flex justify-center items-center">
+                    <i class="fa fa-users text-warning mr-3 text-2xl"></i>
+                    <span class="text-2xl">最终人缘值: <span id="final-popularity" class="text-warning font-bold">60</span></span>
+                  </div>
+                  <div class="flex justify-center items-center">
+                    <i class="fa fa-balance-scale text-warning mr-3 text-2xl"></i>
+                    <span class="text-2xl">最终道德分: <span id="final-morality" class="text-warning font-bold">60</span></span>
+                  </div>
+                  <div class="flex justify-center items-center">
+                    <i class="fa fa-graduation-cap text-warning mr-3 text-2xl"></i>
+                    <span class="text-2xl">最终成绩: <span id="final-score" class="text-warning font-bold">80</span></span>
+                  </div>
+                  <div class="flex justify-center items-center">
+                    <i class="fa fa-smile-o text-warning mr-3 text-2xl"></i>
+                    <span class="text-2xl">最终心情: <span id="final-mood" class="text-warning font-bold">60</span></span>
+                  </div>
+                </div>
+                <div id="result-message" class="text-xl text-light/90 mb-8 p-4 rounded-lg bg-primary/10"></div>
+                <button id="play-again-btn" class="bg-primary hover:bg-primary/80 text-white font-bold py-4 px-10 rounded-full transition-all duration-300 transform hover:scale-105 focus:outline-none text-lg pulse">
+                  再来一次 <i class="fa fa-refresh ml-2"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    
+    <!-- 页脚 -->
+    <footer class="mt-10 text-center text-light/60">
+      <p>校园生活选择游戏 © 2023 | 用选择塑造你的校园形象</p>
+    </footer>
+  </div>
+  
+  <!-- JavaScript -->
+  <script>
+    // 游戏状态
+    const gameState = {
+      currentStage: 0,
+      popularity: 60,
+      morality: 60,
+      score: 80,
+      mood: 60,
+      choices: [],
+      statsVisibility: {
+        popularity: true,
+        morality: true,
+        score: true,
+        mood: true
+      }
+    };
+    
+    // DOM元素
+    const startGameBtn = document.getElementById('start-game-btn');
+    const restartBtn = document.getElementById('restart-btn');
+    const playAgainBtn = document.getElementById('play-again-btn');
+    const popularityElement = document.getElementById('popularity');
+    const moralityElement = document.getElementById('morality');
+    const scoreElement = document.getElementById('score');
+    const moodElement = document.getElementById('mood');
+    const codeContent = document.getElementById('code-content');
+    const welcomeScreen = document.getElementById('welcome-screen');
+    const gameStages = document.getElementById('game-stages');
+    const resultScreen = document.getElementById('result-screen');
+    const finalPopularity = document.getElementById('final-popularity');
+    const finalMorality = document.getElementById('final-morality');
+    const finalScore = document.getElementById('final-score');
+    const finalMood = document.getElementById('final-mood');
+    const resultMessage = document.getElementById('result-message');
+    
+    // 切换按钮
+    const togglePopularityBtn = document.getElementById('toggle-popularity');
+    const toggleMoralityBtn = document.getElementById('toggle-morality');
+    const toggleScoreBtn = document.getElementById('toggle-score');
+    const toggleMoodBtn = document.getElementById('toggle-mood');
+    
+    // 关卡和选择配置
+    const stages = [
+      {
+        id: 1,
+        pseudocode: `if(给她答案) {
+    人缘值+8;
+    道德分-10;
+    心情+5;
+}
+else {
+    人缘值-8;
+    道德分+10;
+    心情-5;
+}`,
+        choices: [
+          {
+            id: '1-1',
+            text: '给她答案',
+            result: `人缘值+8;\n道德分-10;\n心情+5;`,
+            popularityChange: 8,
+            moralityChange: -10,
+            scoreChange: 0,
+            moodChange: 5,
+          },
+          {
+            id: '1-2',
+            text: '拒绝给她答案',
+            result: `人缘值-8;\n道德分+10;\n心情-5;`,
+            popularityChange: -8,
+            moralityChange: 10,
+            scoreChange: 0,
+            moodChange: -5,
+          }
+        ],
+        questionText: "现在是数学考试，你的好朋友林林想让你给她传答案，你选择："
+      },
+      {
+        id: 2,
+        pseudocode: `if(帮他打水) {
+    人缘值+10;
+    道德分+8;
+    心情-5;
+}
+else {
+    人缘值-10;
+    道德分-8;
+    心情+8;
+}`,
+        choices: [
+          {
+            id: '2-1',
+            text: '帮他打水',
+            result: `人缘值+10;\n道德分+8;\n心情-5;`,
+            popularityChange: 10,
+            moralityChange: 8,
+            scoreChange: 0,
+            moodChange: -5,
+          },
+          {
+            id: '2-2',
+            text: '不帮他打水',
+            result: `人缘值-10;\n道德分-8;\n心情+8;`,
+            popularityChange: -10,
+            moralityChange: -8,
+            scoreChange: 0,
+            moodChange: 8,
+          }
+        ],
+        questionText: "班级在大扫除，你的朋友希望你帮他打水，但是你正在擦玻璃，你会："
+      },
+      {
+        id: 3,
+        pseudocode: `if(继续复习) {
+    成绩+15;
+    人缘-5;
+    心情-10;
+}
+else {
+    成绩-15;
+    人缘+10;
+    心情+15;
+}`,
+        choices: [
+          {
+            id: '3-1',
+            text: '继续复习',
+            result: `成绩+15;\n人缘-5;\n心情-10;`,
+            popularityChange: -5,
+            moralityChange: 0,
+            scoreChange: 15,
+            moodChange: -10,
+          },
+          {
+            id: '3-2',
+            text: '和朋友一起玩游戏',
+            result: `成绩-15;\n人缘+10;\n心情+15;`,
+            popularityChange: 10,
+            moralityChange: 0,
+            scoreChange: -15,
+            moodChange: 15,
+          }
+        ],
+        questionText: "马上期末考试了，你正在家里复习，你的朋友喊你打游戏，你选择："
+      },
+      {
+        id: 4,
+        pseudocode: `if(帮助同学讲题) {
+    人缘值+10;
+    道德分+8;
+    心情-5;
+}
+else if(直接睡觉) {
+    人缘值-10;
+    道德分-5;
+    心情+10;
+}
+else {
+    人缘值-5;
+    道德分+5;
+    心情+8;
+}`,
+        choices: [
+          {
+            id: '4-1',
+            text: '帮助同学讲题',
+            result: `人缘值+10;\n道德分+8;\n心情-5;`,
+            popularityChange: 10,
+            moralityChange: 8,
+            scoreChange: 0,
+            moodChange: -5,
+          },
+          {
+            id: '4-2',
+            text: '直接睡觉',
+            result: `人缘值-10;\n道德分-5;\n心情+10;`,
+            popularityChange: -10,
+            moralityChange: -5,
+            scoreChange: 0,
+            moodChange: 10,
+          },
+          {
+            id: '4-3',
+            text: '和他说我要睡觉，晚点给你讲',
+            result: `人缘值-5;\n道德分+5;\n心情+8;`,
+            popularityChange: -5,
+            moralityChange: 5,
+            scoreChange: 0,
+            moodChange: 8,
+          }
+        ],
+        questionText: "现在正在课间休息，你有点困想睡觉，你同桌希望你给他讲题，你选择："
+      }
+    ];
+    
+    // 初始化游戏
+    function initGame() {
+      // 重置游戏状态
+      gameState.currentStage = 0;
+      gameState.popularity = 60;
+      gameState.morality = 60;
+      gameState.score = 80;
+      gameState.mood = 60;
+      gameState.choices = [];
+      
+      // 重置状态显示
+      gameState.statsVisibility = {
+        popularity: true,
+        morality: true,
+        score: true,
+        mood: true
+      };
+      
+      // 更新UI
+      updateStats();
+      updateCode(''); // 初始代码框为空
+      
+      // 重置切换按钮状态
+      togglePopularityBtn.classList.add('active');
+      togglePopularityBtn.innerHTML = '<i class="fa fa-eye"></i>';
+      
+      toggleMoralityBtn.classList.add('active');
+      toggleMoralityBtn.innerHTML = '<i class="fa fa-eye"></i>';
+      
+      toggleScoreBtn.classList.add('active');
+      toggleScoreBtn.innerHTML = '<i class="fa fa-eye"></i>';
+      
+      toggleMoodBtn.classList.add('active');
+      toggleMoodBtn.innerHTML = '<i class="fa fa-eye"></i>';
+      
+      // 显示欢迎界面，隐藏其他界面
+      welcomeScreen.classList.remove('hidden');
+      gameStages.classList.add('hidden');
+      resultScreen.classList.add('hidden');
+      
+      // 重置所有选择卡片样式和交互
+      document.querySelectorAll('.choice-card').forEach(card => {
+        card.classList.remove('choice-card-selected');
+        card.disabled = false;
+        card.style.pointerEvents = 'auto';
+      });
+      
+      // 隐藏所有下一题按钮
+      document.querySelectorAll('.mt-6').forEach(footer => {
+        footer.classList.add('hidden');
+      });
+      
+      // 隐藏所有关卡
+      document.querySelectorAll('.game-stage').forEach(stage => {
+        stage.classList.add('hidden');
+      });
+    }
+    
+    // 开始游戏
+    function startGame() {
+      welcomeScreen.classList.add('hidden');
+      gameStages.classList.remove('hidden');
+      gameState.currentStage = 1;
+      document.getElementById('stage-1').classList.remove('hidden');
+      // 显示当前关卡的伪代码
+      showCurrentStagePseudocode();
+    }
+    
+    // 显示当前关卡的伪代码
+    function showCurrentStagePseudocode() {
+      if (gameState.currentStage > 0 && gameState.currentStage <= stages.length) {
+        const currentStage = stages[gameState.currentStage - 1];
+        updateCode(currentStage.pseudocode);
+      }
+    }
+    
+    // 选择处理
+    function handleChoice(choiceId) {
+      const stageIndex = gameState.currentStage - 1;
+      const choice = stages[stageIndex].choices.find(c => c.id === choiceId);
+      
+      if (choice) {
+        // 添加到选择历史
+        gameState.choices.push(choice);
+        
+        // 更新状态值
+        gameState.popularity += choice.popularityChange;
+        gameState.morality += choice.moralityChange;
+        gameState.score += choice.scoreChange;
+        gameState.mood += choice.moodChange;
+        
+        // 更新UI
+        updateStats();
+        // 显示选择结果
+        updateCode(choice.result);
+        
+        // 高亮选择的卡片并禁用所有选择
+        document.querySelectorAll(`#stage-${gameState.currentStage} .choice-card`).forEach(card => {
+          if (card.getAttribute('data-choice') === choiceId) {
+            card.classList.add('choice-card-selected');
+          }
+          // 禁用所有选择，防止重复选择
+          card.style.pointerEvents = 'none';
+        });
+        
+        // 显示下一题按钮
+        document.querySelector(`#stage-${gameState.currentStage} .mt-6`).classList.remove('hidden');
+      }
+    }
+    
+    // 进入下一关（仅通过按钮点击触发）
+    function goToNextStage() {
+      if (gameState.currentStage < stages.length) {
+        // 隐藏当前关卡
+        document.getElementById(`stage-${gameState.currentStage}`).classList.add('hidden');
+        // 进入下一关
+        gameState.currentStage++;
+        document.getElementById(`stage-${gameState.currentStage}`).classList.remove('hidden');
+        // 显示下一关的伪代码
+        showCurrentStagePseudocode();
+      } else {
+        // 游戏结束，显示结果
+        gameStages.classList.add('hidden');
+        showResult();
+      }
+    }
+    
+    // 更新状态显示
+    function updateStats() {
+      popularityElement.textContent = gameState.popularity;
+      moralityElement.textContent = gameState.morality;
+      scoreElement.textContent = gameState.score;
+      moodElement.textContent = gameState.mood;
+      
+      // 应用可见性设置
+      if (!gameState.statsVisibility.popularity) {
+        popularityElement.parentElement.classList.add('opacity-0');
+      } else {
+        popularityElement.parentElement.classList.remove('opacity-0');
+      }
+      
+      if (!gameState.statsVisibility.morality) {
+        moralityElement.parentElement.classList.add('opacity-0');
+      } else {
+        moralityElement.parentElement.classList.remove('opacity-0');
+      }
+      
+      if (!gameState.statsVisibility.score) {
+        scoreElement.parentElement.classList.add('opacity-0');
+      } else {
+        scoreElement.parentElement.classList.remove('opacity-0');
+      }
+      
+      if (!gameState.statsVisibility.mood) {
+        moodElement.parentElement.classList.add('opacity-0');
+      } else {
+        moodElement.parentElement.classList.remove('opacity-0');
+      }
+    }
+    
+    // 更新代码显示
+    function updateCode(content) {
+      codeContent.textContent = content;
+    }
+    
+    // 显示结果
+    function showResult() {
+      finalPopularity.textContent = gameState.popularity;
+      finalMorality.textContent = gameState.morality;
+      finalScore.textContent = gameState.score;
+      finalMood.textContent = gameState.mood;
+      
+      // 根据最终得分生成结果信息
+      let message = '';
+      
+      if (gameState.score >= 90) {
+        message += "你的学习成绩非常优秀！";
+      } else if (gameState.score >= 70) {
+        message += "你的学习成绩良好，继续保持！";
+      } else {
+        message += "你的学习成绩有待提高，加油！";
+      }
+      
+      message += "<br><br>";
+      
+      if (gameState.popularity >= 70) {
+        message += "你在同学中非常受欢迎，人际关系处理得很好！";
+      } else if (gameState.popularity >= 50) {
+        message += "你的人缘不错，能够与大多数同学友好相处。";
+      } else {
+        message += "你可能需要更多地与同学交流，改善人际关系。";
+      }
+      
+      message += "<br><br>";
+      
+      if (gameState.morality >= 70) {
+        message += "你的道德品质高尚，是同学们学习的榜样！";
+      } else if (gameState.morality >= 50) {
+        message += "你的道德观念良好，能够做出正确的选择。";
+      } else {
+        message += "在今后的生活中，你需要更加注重自己的道德修养。";
+      }
+      
+      message += "<br><br>";
+      
+      if (gameState.mood >= 70) {
+        message += "你的心情总是很愉快，保持积极向上的心态！";
+      } else if (gameState.mood >= 50) {
+        message += "你的心情基本稳定，能够应对各种压力。";
+      } else {
+        message += "你最近可能有些压力，建议适当放松自己。";
+      }
+      
+      resultMessage.innerHTML = message;
+      resultScreen.classList.remove('hidden');
+    }
+    
+    // 切换状态显示
+    function toggleStatVisibility(statName, button) {
+      gameState.statsVisibility[statName] = !gameState.statsVisibility[statName];
+      
+      if (gameState.statsVisibility[statName]) {
+        button.classList.add('active');
+        button.innerHTML = '<i class="fa fa-eye"></i>';
+      } else {
+        button.classList.remove('active');
+        button.innerHTML = '<i class="fa fa-eye-slash"></i>';
+      }
+      
+      updateStats();
+    }
+    
+    // 事件监听
+    document.addEventListener('DOMContentLoaded', function() {
+      // 初始化游戏
+      initGame();
+      
+      // 开始游戏按钮
+      startGameBtn.addEventListener('click', startGame);
+      
+      // 重新开始按钮
+      restartBtn.addEventListener('click', initGame);
+      playAgainBtn.addEventListener('click', initGame);
+      
+      // 选择事件
+      document.querySelectorAll('.choice-card').forEach(card => {
+        card.addEventListener('click', function() {
+          const choiceId = this.getAttribute('data-choice');
+          handleChoice(choiceId);
+        });
+      });
+      
+      // 下一题按钮事件 - 只有点击这个按钮才会进入下一题
+      document.querySelectorAll('.next-stage-btn').forEach(button => {
+        button.addEventListener('click', goToNextStage);
+      });
+      
+      // 切换按钮事件
+      togglePopularityBtn.addEventListener('click', function() {
+        toggleStatVisibility('popularity', this);
+      });
+      
+      toggleMoralityBtn.addEventListener('click', function() {
+        toggleStatVisibility('morality', this);
+      });
+      
+      toggleScoreBtn.addEventListener('click', function() {
+        toggleStatVisibility('score', this);
+      });
+      
+      toggleMoodBtn.addEventListener('click', function() {
+        toggleStatVisibility('mood', this);
+      });
+    });
+  </script>
+
+
+    </body></html>
+    
