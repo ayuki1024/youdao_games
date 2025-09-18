@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>有道编程游戏索引</title>
+    <meta name="description" content="L1、L2、L3、L4 游戏入口索引">
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --accent: #0ea5e9;
+            --text: #0f172a;
+            --muted: #475569;
+            --border: #e2e8f0;
+            --disabled: #94a3b8;
+        }
+        html, body { height: 100%; }
+        body {
+            margin: 0;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+            color: var(--text);
+            background: radial-gradient(1200px 800px at 20% -10%, #eef2ff 0%, var(--bg) 50%),
+                        radial-gradient(1000px 600px at 120% 10%, #e0f2fe 0%, var(--bg) 40%),
+                        var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .container { width: 100%; max-width: 760px; }
+        header { text-align: center; margin-bottom: 16px; }
+        h1 { margin: 0 0 6px 0; font-size: 28px; letter-spacing: 0.2px; }
+        .subtitle { color: var(--muted); font-size: 14px; }
+
+        .grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            color: inherit;
+            position: relative;
+            overflow: hidden;
+            transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(15, 23, 42, 0.10); border-color: #bfdbfe; }
+        .card h3 { margin: 0 0 6px 0; font-size: 18px; }
+        .card p { margin: 0 0 12px 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+
+        .badge {
+            position: absolute; top: 10px; right: 10px; font-size: 11px; color: #075985;
+            background: linear-gradient(90deg, #7dd3fc, #93c5fd);
+            padding: 4px 8px; border-radius: 999px; font-weight: 700; letter-spacing: 0.3px;
+        }
+
+        .actions { display: flex; gap: 10px; }
+        .btn { appearance: none; border: 1px solid var(--border); background: #ffffff; color: var(--text); padding: 10px 14px; border-radius: 10px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; transition: background 150ms ease, border-color 150ms ease, transform 120ms ease;
+        }
+        .btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+        .btn:active { transform: translateY(1px); }
+        .btn-primary { background: linear-gradient(180deg, #38bdf8, #0ea5e9); color: #ffffff; border: 1px solid #0284c7; }
+        .btn-primary:hover { background: linear-gradient(180deg, #7dd3fc, #38bdf8); border-color: #0284c7; }
+        .btn-disabled { background: #f1f5f9; color: #94a3b8; border-color: #e2e8f0; cursor: not-allowed; }
+        .btn-disabled:hover { background: #f1f5f9; }
+
+        .disabled { opacity: 0.9; }
+        footer { text-align: center; margin-top: 18px; color: var(--muted); font-size: 12px; }
+    </style>
+    <link rel="icon" href="L1Games/assets/thumbs/u01.svg">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>有道编程游戏 - 目录</h1>
+            <div class="subtitle">选择一个级别进入对应的游戏集合</div>
+        </header>
+
+        <main class="grid">
+            <div class="card">
+                <span class="badge">可用</span>
+                <h3>L1 游戏集合</h3>
+                <p>数组、栈、二维数组等入门游戏与练习。</p>
+                <div class="actions">
+                    <a class="btn btn-primary" href="L1Games/index.html">进入 L1</a>
+                </div>
+            </div>
+
+            <div class="card disabled" title="即将上线">
+                <h3>L2 游戏集合</h3>
+                <p>进阶算法与数据结构练习。敬请期待。</p>
+                <div class="actions">
+                    <button class="btn btn-disabled" disabled>即将上线</button>
+                </div>
+            </div>
+
+            <div class="card disabled" title="即将上线">
+                <h3>L3 游戏集合</h3>
+                <p>综合项目挑战与算法竞赛模式。敬请期待。</p>
+                <div class="actions">
+                    <button class="btn btn-disabled" disabled>即将上线</button>
+                </div>
+            </div>
+
+            <div class="card disabled" title="即将上线">
+                <h3>L4 游戏集合</h3>
+                <p>高阶专题与实战项目。敬请期待。</p>
+                <div class="actions">
+                    <button class="btn btn-disabled" disabled>即将上线</button>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            © <span id="y"></span> Youdao Games
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('y').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>
+
+
