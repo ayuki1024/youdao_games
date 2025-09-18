@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>U2｜取余运算：厨房大作战</title>
+    <link rel="stylesheet" href="common.css">
+    <style>
+        .kitchen { display:grid; grid-template-columns: 1fr 300px; gap:16px; }
+        .orders { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+        .order { background:#fff; border:3px solid #fecaca; border-radius:16px; padding:12px; display:flex; align-items:center; gap:10px; }
+        .order.done { opacity:.6; border-color:#86efac; }
+        .ticket { background:#fff; border:3px dashed #f59e0b; padding:8px 10px; border-radius:10px; font-family:ui-monospace,Consolas,Menlo,Monaco,monospace; font-size:18px; color:#1f2937; }
+        .dish-board { background:#fff; border:3px solid #a7f3d0; border-radius:16px; padding:10px; }
+        .dishes { display:grid; grid-template-columns: repeat(5, 1fr); gap:8px; }
+        .dish { user-select:none; background:#f0fdf4; border:3px solid #86efac; border-radius:12px; padding:8px; text-align:center; cursor:grab; box-shadow:0 6px 14px rgba(0,0,0,.05); }
+        .dish.dragging { opacity:.7; }
+        .plate { width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:700; color:#065f46; background:#d1fae5; border:2px solid #34d399; }
+        .drop { flex:1; display:flex; align-items:center; justify-content:flex-end; gap:10px; }
+        .dropzone { min-width:70px; height:44px; border:3px dashed #93c5fd; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#2563eb; background:#eff6ff; }
+        .dropzone.over { background:#dbeafe; }
+        .small { font-size:13px; color:#334155; }
+    </style>
+    <meta name="description" content="根据顾客点单 a%b，拖拽对应 0~9 菜品到顾客，掌握取余运算。">
+    <meta name="keywords" content="取余, 余数, a%b, 拖拽, 小学奥数, C++ 运算符">
+    <meta name="author" content="L1Games 2.0">
+    <meta name="theme-color" content="#ff9f1c">
+    <meta property="og:title" content="U2｜取余运算：厨房大作战">
+    <meta property="og:description" content="有若干顾客点了 a%b 的加密菜，拖拽正确的菜品（0~9）进行上菜。"/>
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="../assets/thumbs/u02.svg">
+    <meta property="og:locale" content="zh_CN">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="../assets/thumbs/u02.svg">
+    <link rel="apple-touch-icon" href="../assets/thumbs/u02.svg">
+</head>
+
+<body>
+    <header>
+        <h1>
+            <span class="emoji">🍳🧮</span>U2：厨房大作战（取余运算）
+        </h1>
+        <div class="toolbar">
+            <span class="badge">⭐ 分数：<span id="score">0</span></span>
+            <span class="badge">🏆 最高分：<span id="high">0</span></span>
+            <button id="newRoundBtn" class="btn">新一轮</button>
+            <button id="resetBtn" class="btn">清空</button>
+        </div>
+    </header>
+    <main>
+        <p id="desc" class="big">参考 <b>分手厨房</b>：若干顾客各点一道<span class="tag">加密菜</span>，
+        以 <code>a % b</code> 的形式给出。请把 <b>对应余数</b> 的菜（0~9）拖拽到该顾客完成上菜。
+        <br/>知识点：<code>a = b × q + r</code>，且 <code>0 ≤ r &lt; b</code>，其中 <code>r = a % b</code>。</p>
+
+        <div class="kitchen">
+            <section class="panel">
+                <h2>顾客区（把菜拖过来上菜）</h2>
+                <div class="wrap">
+                    <div id="orders" class="orders"></div>
+                </div>
+            </section>
+
+            <aside class="panel">
+                <h2>菜品区（0 ~ 9）</h2>
+                <div class="wrap">
+                    <div class="dish-board">
+                        <div id="dishes" class="dishes"></div>
+                        <div class="small" style="margin-top:8px">拖拽菜品到右侧任意一位顾客的<b>上菜区</b>即可。</div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
+

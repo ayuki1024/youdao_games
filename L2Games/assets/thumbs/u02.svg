@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="240" y2="160" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FEF3C7"/>
+      <stop offset="1" stop-color="#FDE68A"/>
+    </linearGradient>
+  </defs>
+  <rect width="240" height="160" rx="12" fill="url(#bg)"/>
+  
+  <!-- Stack -->
+  <rect x="60" y="40" width="40" height="80" rx="4" fill="#F59E0B" stroke="#D97706" stroke-width="2"/>
+  
+  <!-- Stack elements -->
+  <rect x="65" y="70" width="30" height="15" rx="2" fill="#FFFFFF" stroke="#F59E0B" stroke-width="1"/>
+  <rect x="65" y="55" width="30" height="15" rx="2" fill="#FFFFFF" stroke="#F59E0B" stroke-width="1"/>
+  <rect x="65" y="40" width="30" height="15" rx="2" fill="#FFFFFF" stroke="#F59E0B" stroke-width="1"/>
+  
+  <!-- Queue -->
+  <rect x="140" y="60" width="80" height="40" rx="4" fill="#8B5CF6" stroke="#7C3AED" stroke-width="2"/>
+  
+  <!-- Queue elements -->
+  <rect x="150" y="70" width="15" height="20" rx="2" fill="#FFFFFF" stroke="#8B5CF6" stroke-width="1"/>
+  <rect x="170" y="70" width="15" height="20" rx="2" fill="#FFFFFF" stroke="#8B5CF6" stroke-width="1"/>
+  <rect x="190" y="70" width="15" height="20" rx="2" fill="#FFFFFF" stroke="#8B5CF6" stroke-width="1"/>
+  
+  <!-- Labels -->
+  <text x="80" y="30" font-size="12" font-family="Arial, sans-serif" fill="#92400E" text-anchor="middle">栈</text>
+  <text x="180" y="50" font-size="12" font-family="Arial, sans-serif" fill="#6B21A8" text-anchor="middle">队列</text>
+  
+  <text x="16" y="24" font-size="14" font-family="Arial, sans-serif" fill="#92400E">栈与队列</text>
+</svg>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="240" y2="160" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ECFDF5"/>
+      <stop offset="1" stop-color="#D1FAE5"/>
+    </linearGradient>
+  </defs>
+  <rect width="240" height="160" rx="12" fill="url(#bg)"/>
+  
+  <!-- Test paper -->
+  <rect x="40" y="30" width="160" height="100" rx="8" fill="#FFFFFF" stroke="#10B981" stroke-width="3"/>
+  <rect x="50" y="40" width="140" height="80" rx="4" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1"/>
+  
+  <!-- Question lines -->
+  <line x1="60" y1="50" x2="180" y2="50" stroke="#065F46" stroke-width="2"/>
+  <line x1="60" y1="60" x2="160" y2="60" stroke="#065F46" stroke-width="2"/>
+  <line x1="60" y1="70" x2="170" y2="70" stroke="#065F46" stroke-width="2"/>
+  
+  <!-- Multiple choice options -->
+  <circle cx="70" cy="90" r="6" fill="#10B981"/>
+  <text x="85" y="95" font-size="14" font-family="Arial, sans-serif" fill="#065F46">A. 选项A</text>
+  <circle cx="70" cy="105" r="6" fill="#86EFAC"/>
+  <text x="85" y="110" font-size="14" font-family="Arial, sans-serif" fill="#065F46">B. 选项B</text>
+  
+  <!-- Pencil -->
+  <rect x="180" y="20" width="8" height="40" rx="4" fill="#10B981"/>
+  <rect x="182" y="18" width="4" height="6" rx="2" fill="#EF4444"/>
+  
+  <!-- Check mark -->
+  <path d="M200 80 L210 90 L220 75" stroke="#10B981" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <text x="16" y="24" font-size="14" font-family="Arial, sans-serif" fill="#065F46">小测</text>
+</svg>

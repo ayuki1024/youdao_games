@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>U3｜double 与 int：装进哪个盒子？</title>
+    <link rel="stylesheet" href="common.css">
+</head>
+
+<body>
+    <header>
+        <h1>
+            <span class="emoji">🦎📦</span>U3：变量类型大作战（double vs int）
+        </h1>
+        <div class="toolbar">
+            <span class="badge">⏱️ 时间：<span id="timer">60</span>s</span>
+            <span class="badge">⭐ 分数：<span id="score">0</span></span>
+            <span class="badge">🏆 最高分：<span id="high">0</span></span>
+            <button id="resetBtn" class="btn">重新游戏</button>
+        </div>
+    </header>
+    <main>
+        <p id="desc" class="big">知识点：<b>double</b> 可以保存小数部分，<b>int</b> 只能保存整数部分。把壁虎（带小数长度）装进不同的变量盒子：
+        <br/>- 放进 <b>int a</b>：小数会被截去（尾巴断掉）
+        <br/>- 放进 <b>double b</b>：完整进入（尾巴保留）</p>
+
+        <div class="panel" style="margin-top:14px">
+            <h2>壁虎来了！长度 l = <span id="len"></span> cm</h2>
+            <div class="wrap" style="padding:12px 14px">
+                <div style="margin-bottom:8px"><button id="nextBtn" class="btn" style="padding:6px 10px;font-size:14px">下一只</button></div>
+                <div id="gecko" style="height:140px; position:relative; margin:6px 0 12px 0"></div>
+                <div id="feedback" class="tip" style="margin-top:8px"></div>
+                <div class="code" style="margin-top:10px" id="code"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        (function(){
+            "use strict";
+            const timerEl = document.getElementById('timer');
+            const scoreEl = document.getElementById('score');
+            const highEl = document.getElementById('high');
+            const resetBtn = document.getElementById('resetBtn');
+            const lenEl = document.getElementById('len');
+            const geckoEl = document.getElementById('gecko');
+            const nextBtn = document.getElementById('nextBtn');
+            const feedback = document.getElementById('feedback');
+            const codeEl = document.getElementById('code');
+
+            let timeLeft = 60, timerId = null;
+            let score = 0;
+            let want = 'double';
+            let len = 0;
+            let locked = false;
+            const PX_PER_CM = 100; // 可视长度：每 1cm 显示 100px（拉长10倍）
+            const IMG_URL = 'gecko.svg';
+
+            function updateHighWith(candidate){
+                const bestRaw = localStorage.getItem('u3_high');
+                const best = parseInt(bestRaw || '0', 10) || 0;
+                const newBest = candidate > best ? candidate : best;
+                if (newBest !== best) { localStorage.setItem('u3_high', String(newBest)); }
+                highEl.textContent = String(newBest);
+            }
+
+            function startTimer(){
+                clearTimer();
+                timeLeft = 60;
+                timerEl.textContent = String(timeLeft);
+                timerEl.style.color = '#d90429';
+                timerId = setInterval(()=>{
+                    timeLeft--; timerEl.textContent = String(timeLeft);
+                    if(timeLeft <= 10) { timerEl.style.color = '#ef476f'; }
+                    if(timeLeft <= 0){ clearTimer(); lockAll(true); /* showEnd could be implemented if needed */ }
+                }, 1000);
+            }
+            function clearTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } }
+
+            function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+            function rndLen(){ const i=rnd(0,4), f=rnd(0,9)/10; return Math.min(4, parseFloat((i+f).toFixed(1))); }
+
+            function ensureBoxes(){
+                let intBox = document.getElementById('intBox');
+                let dblBox = document.getElementById('doubleBox');
+                if(!intBox){
+                    intBox = document.createElement('div');
+                    intBox.id = 'intBox';
+                    intBox.style.position = 'absolute';
+                    intBox.style.left = '20%';
+                    intBox.style.bottom = '10px';
+                    intBox.style.width = '140px';
+                    intBox.style.height = '60px';
+                    intBox.style.zIndex = '1';
+                    buildCube(intBox, 'int a', 'rgba(43,45,66,0.8)');
+                    geckoEl.appendChild(intBox);
+                }
+                if(!dblBox){
+                    dblBox = document.createElement('div');
+                    dblBox.id = 'doubleBox';
+                    dblBox.style.position = 'absolute';
+                    dblBox.style.right = '20%';
+                    dblBox.style.bottom = '10px';
+                    dblBox.style.width = '160px';
+                    dblBox.style.height = '60px';
+                    dblBox.style.zIndex = '1';
+                    buildCube(dblBox, 'double b', '#2ec4b6');
+                    geckoEl.appendChild(dblBox);
+                }
+                [intBox, dblBox].forEach(b=>{
+                    b.addEventListener('dragover', e=>{ e.preventDefault(); });
+                    b.addEventListener('drop', e=>{ e.preventDefault(); onDrop(b.id); });
+                });
+                return { intBox, dblBox };
+            }
+
+            function buildCube(container, label, color){
+                container.style.transformStyle = 'preserve-3d';
+                container.style.perspective = '600px';
+                const front = document.createElement('div');
+                front.style.position = 'absolute';
+                front.style.inset = '0';
+                front.style.background = 'transparent';
+                front.style.border = `3px solid ${color}`;
+                front.style.borderRadius = '8px';
+                front.style.display = 'flex';
+                front.style.alignItems = 'center';
+                front.style.justifyContent = 'center';
+                front.style.fontWeight = '700';
+                front.style.color = color;
+                front.textContent = label;
+
+                const top = document.createElement('div');
+                top.style.position = 'absolute';
+                top.style.left = '6px';
+                top.style.right = '6px';
+                top.style.top = '-16px';
+                top.style.height = '20px';
+                top.style.background = 'transparent';
+                top.style.border = `3px solid ${color}`;
+                top.style.borderBottom = 'none';
+                top.style.borderRadius = '8px 8px 0 0';
+                top.style.transform = 'skewX(-20deg)';
+
+                const side = document.createElement('div');
+                side.style.position = 'absolute';
+                side.style.top = '6px';
+                side.style.bottom = '6px';
+                side.style.right = '-14px';
+                side.style.width = '18px';
+                side.style.background = 'transparent';
+                side.style.border = `3px solid ${color}`;
+                side.style.borderLeft = 'none';
+                side.style.borderRadius = '0 8px 8px 0';
+                side.style.transform = 'skewY(-20deg)';
+
+                container.appendChild(front);
+                container.appendChild(top);
+                container.appendChild(side);
+            }
+
+            function renderGecko(l){
+                geckoEl.innerHTML = '';
+                const runner = document.createElement('div');
+                runner.id = 'runner';
+                runner.style.position = 'absolute';
+                runner.style.left = '0px';
+                runner.style.top = '0px';
+                runner.style.transition = 'transform .7s ease';
+                runner.setAttribute('draggable','true');
+                runner.addEventListener('dragstart', (e)=>{
+                    e.dataTransfer.setData('text/plain','gecko');
+                });
+
+                const bubble = document.createElement('div');
+                bubble.id = 'lenBubble';
+                bubble.textContent = l.toFixed(1) + ' cm';
+                bubble.style.position = 'absolute';
+                bubble.style.left = '0';
+                bubble.style.top = '12px';
+                bubble.style.transform = 'translateX(0)';
+                bubble.style.padding = '2px 6px';
+                bubble.style.fontSize = '12px';
+                bubble.style.background = '#fff';
+                bubble.style.border = '2px solid #a0c4ff';
+                bubble.style.borderRadius = '999px';
+                bubble.style.color = '#1d3557';
+
+                const totalPx = Math.max(0, l * PX_PER_CM);
+                const intPx = Math.trunc(l) * PX_PER_CM;
+                const fracPx = Math.max(0, totalPx - intPx);
+
+                const bodyWrap = document.createElement('div');
+                bodyWrap.id = 'bodyWrap';
+                bodyWrap.style.position = 'absolute';
+                bodyWrap.style.left = '0px';
+                bodyWrap.style.top = '42px';
+                bodyWrap.style.height = '32px';
+                bodyWrap.style.width = intPx + 'px';
+                bodyWrap.style.overflow = 'hidden';
+                const bodyImg = document.createElement('img');
+                bodyImg.src = IMG_URL;
+                bodyImg.alt = 'gecko';
+                bodyImg.style.height = '32px';
+                bodyImg.style.width = totalPx + 'px';
+                bodyImg.style.objectFit = 'cover';
+                bodyImg.draggable = false;
+                bodyWrap.appendChild(bodyImg);
+
+                const tailWrap = document.createElement('div');
+                tailWrap.id = 'tailFrac';
+                tailWrap.style.position = 'absolute';
+                tailWrap.style.left = intPx + 'px';
+                tailWrap.style.top = '42px';
+                tailWrap.style.height = '32px';
+                tailWrap.style.width = fracPx + 'px';
+                tailWrap.style.overflow = 'hidden';
+                tailWrap.style.transition = 'opacity .6s ease, transform .6s ease';
+                const tailImg = document.createElement('img');
+                tailImg.src = IMG_URL;
+                tailImg.alt = 'gecko-tail';
+                tailImg.style.height = '32px';
+                tailImg.style.width = totalPx + 'px';
+                tailImg.style.objectFit = 'cover';
+                tailImg.style.transform = `translateX(-${intPx}px)`;
+                tailImg.draggable = false;
+                tailWrap.appendChild(tailImg);
+
+                runner.appendChild(bubble);
+                runner.appendChild(bodyWrap);
+                runner.appendChild(tailWrap);
+                geckoEl.appendChild(runner);
+                ensureBoxes();
+            }
+
+            function newRound(){
+                locked = false;
+                len = rndLen();
+                want = Math.random()<0.5 ? 'double' : 'int';
+                lenEl.textContent = len.toFixed(1);
+                renderGecko(len);
+                feedback.textContent = want==='double' ? '规则：让壁虎完整进入（选 double）' : '规则：只要整数部分（选 int）';
+                codeEl.textContent = '';
+            }
+
+            function onChoose(kind){
+                if(locked) return;
+                const intPart = Math.trunc(len);
+                if(kind === 'int'){
+                    const runner = document.getElementById('runner');
+                    const tailFrac = document.getElementById('tailFrac');
+                    const { intBox } = ensureBoxes();
+                    const boxRect = intBox.getBoundingClientRect();
+                    const geckoRect = geckoEl.getBoundingClientRect();
+                    const targetX = (boxRect.left - geckoRect.left) + 10;
+                    const targetY = (boxRect.top - geckoRect.top) - 20;
+                    runner.style.transform = `translate(${targetX}px,-80px)`;
+                    setTimeout(()=>{
+                        runner.style.transform = `translate(${targetX}px, ${targetY}px)`;
+                    }, 20);
+                    if(tailFrac){ tailFrac.style.opacity = '0'; tailFrac.style.transform = 'translateY(12px)'; }
+                    codeEl.textContent = `int a = (int)${len.toFixed(1)}; // a = ${intPart}`;
+                } else {
+                    const runner = document.getElementById('runner');
+                    const { dblBox } = ensureBoxes();
+                    const boxRect = dblBox.getBoundingClientRect();
+                    const geckoRect = geckoEl.getBoundingClientRect();
+                    const targetX = (boxRect.left - geckoRect.left) + 10;
+                    const targetY = (boxRect.top - geckoRect.top) - 20;
+                    runner.style.transform = `translate(${targetX}px,-80px)`;
+                    setTimeout(()=>{ runner.style.transform = `translate(${targetX}px, ${targetY}px)`; }, 20);
+                    codeEl.textContent = `double b = ${len.toFixed(1)}; // b = ${len.toFixed(1)}`;
+                }
+                const ok = (kind === want);
+                if(ok){ score += 2; } else { score = Math.max(0, score - 1); }
+                scoreEl.textContent = String(score);
+                updateHighWith(score);
+                feedback.innerHTML = ok ? '🎉 正确！+2 分' : '再想想：规则要求与选择不一致';
+                locked = true;
+            }
+
+            function onDrop(targetId){
+                if(locked) return;
+                if(targetId === 'intBox'){ onChoose('int'); }
+                if(targetId === 'doubleBox'){ onChoose('double'); }
+            }
+
+            document.getElementById('nextBtn').addEventListener('click', newRound);
+            document.getElementById('resetBtn').addEventListener('click', ()=>{ score=0; scoreEl.textContent='0'; updateHighWith(score); startTimer(); newRound(); });
+
+            // init
+            highEl.textContent = String(parseInt(localStorage.getItem('u3_high')||'0',10)||0);
+            scoreEl.textContent = '0';
+            startTimer();
+            newRound();
+        })();
+    </script>
+</body>
+
+</html>
+

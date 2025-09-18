@@ -1,0 +1,52 @@
+[
+  {
+    "q": "下列哪一条 cout 语句是正确的？",
+    "options": [
+      "cout << a << b;",
+      "cout >> a >> b;"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "int 类型中 7 / 2 的结果是？",
+    "options": [
+      "3",
+      "3.5"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "10 % 4 的值是？",
+    "options": [
+      "2",
+      "2.5"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "英文单词 bug 更接近的含义是？",
+    "options": [
+      "程序错误",
+      "期望值"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "double x=5; int y=2; 表达式 x / y 的结果类型是？",
+    "options": [
+      "double",
+      "int"
+    ],
+    "answer": 0
+  },
+  {
+    "q": "英文 expect 的含义是？",
+    "options": [
+      "期望",
+      "错误"
+    ],
+    "answer": 0
+  }
+]
+
+

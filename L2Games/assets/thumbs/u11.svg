@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="240" y2="160" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F0F9FF"/>
+      <stop offset="1" stop-color="#E0F2FE"/>
+    </linearGradient>
+  </defs>
+  <rect width="240" height="160" rx="12" fill="url(#bg)"/>
+  
+  <!-- Bubbles -->
+  <circle cx="60" cy="80" r="12" fill="#3B82F6" opacity="0.7"/>
+  <circle cx="100" cy="80" r="12" fill="#EF4444" opacity="0.7"/>
+  <circle cx="140" cy="80" r="12" fill="#10B981" opacity="0.7"/>
+  <circle cx="180" cy="80" r="12" fill="#F59E0B" opacity="0.7"/>
+  
+  <!-- Numbers in bubbles -->
+  <text x="60" y="85" font-size="12" font-family="Arial, sans-serif" fill="white" text-anchor="middle" font-weight="bold">3</text>
+  <text x="100" y="85" font-size="12" font-family="Arial, sans-serif" fill="white" text-anchor="middle" font-weight="bold">1</text>
+  <text x="140" y="85" font-size="12" font-family="Arial, sans-serif" fill="white" text-anchor="middle" font-weight="bold">4</text>
+  <text x="180" y="85" font-size="12" font-family="Arial, sans-serif" fill="white" text-anchor="middle" font-weight="bold">2</text>
+  
+  <!-- Bubble movement arrows -->
+  <path d="M72 80 L88 80" stroke="#EF4444" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M112 80 L128 80" stroke="#EF4444" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M152 80 L168 80" stroke="#EF4444" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <!-- Sorted result -->
+  <circle cx="60" cy="120" r="12" fill="#10B981"/>
+  <circle cx="100" cy="120" r="12" fill="#10B981"/>
+  <circle cx="140" cy="120" r="12" fill="#10B981"/>
+  <circle cx="180" cy="120" r="12" fill="#10B981"/>
+  
+  <text x="60" y="125" font-size="12" font-family="Arial, sans-serif" fill="white" text-anchor="middle" font-weight="bold">1</text>
+  <text x="100" y="125" font-size="12" font-family="Arial, sans-serif" fill="white" text-anchor="middle" font-weight="bold">2</text>
+  <text x="140" y="125" font-size="12" font-family="Arial, sans-serif" fill="white" text-anchor="middle" font-weight="bold">3</text>
+  <text x="180" y="125" font-size="12" font-family="Arial, sans-serif" fill="white" text-anchor="middle" font-weight="bold">4</text>
+  
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#EF4444"/>
+    </marker>
+  </defs>
+  
+  <text x="16" y="24" font-size="14" font-family="Arial, sans-serif" fill="#1E293B">冒泡排序</text>
+</svg>

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="240" y2="160" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FDF2F8"/>
+      <stop offset="1" stop-color="#FCE7F3"/>
+    </linearGradient>
+  </defs>
+  <rect width="240" height="160" rx="12" fill="url(#bg)"/>
+  
+  <!-- Counting buckets -->
+  <rect x="40" y="80" width="30" height="40" rx="4" fill="#EC4899" stroke="#DB2777" stroke-width="2"/>
+  <rect x="80" y="80" width="30" height="40" rx="4" fill="#EC4899" stroke="#DB2777" stroke-width="2"/>
+  <rect x="120" y="80" width="30" height="40" rx="4" fill="#EC4899" stroke="#DB2777" stroke-width="2"/>
+  <rect x="160" y="80" width="30" height="40" rx="4" fill="#EC4899" stroke="#DB2777" stroke-width="2"/>
+  
+  <!-- Numbers in buckets -->
+  <text x="55" y="105" font-size="14" font-family="Arial, sans-serif" fill="white" text-anchor="middle" font-weight="bold">2</text>
+  <text x="95" y="105" font-size="14" font-family="Arial, sans-serif" fill="white" text-anchor="middle" font-weight="bold">1</text>
+  <text x="135" y="105" font-size="14" font-family="Arial, sans-serif" fill="white" text-anchor="middle" font-weight="bold">3</text>
+  <text x="175" y="105" font-size="14" font-family="Arial, sans-serif" fill="white" text-anchor="middle" font-weight="bold">1</text>
+  
+  <!-- Bucket labels -->
+  <text x="55" y="75" font-size="12" font-family="Arial, sans-serif" fill="#BE185D" text-anchor="middle">0</text>
+  <text x="95" y="75" font-size="12" font-family="Arial, sans-serif" fill="#BE185D" text-anchor="middle">1</text>
+  <text x="135" y="75" font-size="12" font-family="Arial, sans-serif" fill="#BE185D" text-anchor="middle">2</text>
+  <text x="175" y="75" font-size="12" font-family="Arial, sans-serif" fill="#BE185D" text-anchor="middle">3</text>
+  
+  <!-- Input numbers -->
+  <circle cx="60" cy="40" r="8" fill="#F59E0B"/>
+  <text x="60" y="45" font-size="12" font-family="Arial, sans-serif" fill="white" text-anchor="middle" font-weight="bold">2</text>
+  
+  <circle cx="80" cy="40" r="8" fill="#F59E0B"/>
+  <text x="80" y="45" font-size="12" font-family="Arial, sans-serif" fill="white" text-anchor="middle" font-weight="bold">1</text>
+  
+  <circle cx="100" cy="40" r="8" fill="#F59E0B"/>
+  <text x="100" y="45" font-size="12" font-family="Arial, sans-serif" fill="white" text-anchor="middle" font-weight="bold">3</text>
+  
+  <circle cx="120" cy="40" r="8" fill="#F59E0B"/>
+  <text x="120" y="45" font-size="12" font-family="Arial, sans-serif" fill="white" text-anchor="middle" font-weight="bold">1</text>
+  
+  <text x="16" y="24" font-size="14" font-family="Arial, sans-serif" fill="#BE185D">计数排序</text>
+</svg>

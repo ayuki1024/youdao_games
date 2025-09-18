@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="zh">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>U1｜找不同：cout / 分号 / 括号 / 变量 a</title>
+    <link rel="stylesheet" href="common.css">
+</head>
+
+<body>
+    <header>
+        <h1>
+            <span class="emoji">🧸🎈</span>U1：找不同！
+        </h1>
+        <div class="toolbar">
+            <span class="badge">⏱️ 时间：<span id="timer">60</span>s</span>
+            <span class="badge">⭐ 分数：<span id="score">0</span>
+            </span>
+            <span class="badge">🏆 最高分：<span id="high">0</span>
+            </span>
+            <button id="resetBtn" class="btn">重新游戏</button>
+        </div>
+    </header>
+    <main>
+        <p id="desc" class="big"></p>
+        <button id="nextBtn" class="btn" style="padding:6px 10px;font-size:14px;margin:6px 0 12px 0">下一关</button>
+        <div class="board">
+            <section class="panel">
+                <h2>错误代码（点击找不同）</h2>
+                <div id="left" class="code">
+                </div>
+            </section>
+            <section class="panel">
+                <h2>正确代码（对照参考）</h2>
+                <div id="right" class="code">
+                </div>
+            </section>
+        </div>
+        <div class="tip">提示：<b>;</b> 分号别忘了；<b>(){}</b> 括号要配对；<b>cout</b> 用 <code>&lt;&lt;</code> 往左左左！变量 <b>a</b>
+            要先正确定义再输出。</div>
+
+        <div class="footer">完成后可点击“再来一局”刷新题目。加油小小程序员！<span class="cute">🌟🍭</span></div>
+    </main>
+    <script>
+        (function () {
+            "use strict";
+            const leftEl = document.getElementById("left"), rightEl = document.getElementById("right"), scoreEl = document.getElementById("score"), timerEl = document.getElementById("timer"), highEl = document.getElementById("high"), resetBtn = document.getElementById("resetBtn"), nextBtn = document.getElementById("nextBtn");
+
+            const puzzles = [
+                {
+                    right: ["#include <iostream>", "using namespace std;", "int main(){", "    int a = 8;", "    int b = 2;", "    int sum = a + b;", "    cout << \"a=\" << a << \", sum=\" << sum << endl;", "    return 0;", "}"],
+                    left: ["#include <iostream>", "using namespace std;", "int main){", "    inta a = 8;", "    int b = 2", "    int sum = a + b;", "    cout < \"a=\" << a << \", sum=\" << sum << end;", "    return 0;", "}"],
+                    diffs: [3, 4, 5, 7],
+                    hints: {
+                        3: "main 函数缺少括号：应为 int main()",
+                        4: "类型或变量名拼写错误：应为 int a = 8;",
+                        5: "少了行末分号：应为 int b = 2;",
+                        7: "cout 运算符与 endl 错误：应为 << 和 endl"
+                    }
+                },
+                {
+                    right: ["#include <iostream>", "using namespace std;", "int main(){", "    int x = 3;", "    int y = 4;", "    cout << x + y << endl;", "    return 0;", "}"],
+                    left: ["#include <iostream>", "using namespace std;", "int main(){", "    int x = ;", "    int y = 4", "    cout < x + y << end;", "    return 0", "}"],
+                    diffs: [4, 5, 6, 7],
+                    hints: {
+                        4: "变量初始化缺少值：应为 int x = 3;",
+                        5: "行末缺少分号：应为 int y = 4;",
+                        6: "cout 运算符或 endl 错误：应为 cout << x + y << endl;",
+                        7: "return 语句缺少分号：应为 return 0;"
+                    }
+                },
+                {
+                    right: ["#include <iostream>", "using namespace std;", "int main(){", "    int a = 5;", "    int b = 7;", "    int c = a * b;", "    cout << \"c=\" << c << endl;", "    return 0;", "}"],
+                    left: ["#include <iostream>", "using namespace std;", "int main){", "    int a = 5", "    int b == 7;", "    int c = a ** b;", "    cout << \"c=\" < c << end;", "    return 0;", "}"],
+                    diffs: [3, 4, 5, 6, 7],
+                    hints: {
+                        3: "main 括号错误：应为 int main()",
+                        4: "缺少分号：应为 int a = 5;",
+                        5: "赋值错误：应为 = 而不是 ==",
+                        6: "乘法运算符是 *，不是 **",
+                        7: "cout 运算符或 endl 错误：应为 << 和 endl"
+                    }
+                },
+                {
+                    right: ["#include <iostream>", "using namespace std;", "int main(){", "    int n = 10;", "    cout << n << endl;", "    return 0;", "}"],
+                    left: ["#include <iostream>", "using namespace std;", "int main(){", "    inta n = 10;", "    cout >> n << endl", "    return 0;", "}"],
+                    diffs: [4, 5],
+                    hints: {
+                        4: "类型拼写错误：应为 int n = 10;",
+                        5: "cout 方向错误或缺少分号：应为 cout << n << endl;"
+                    }
+                }
+            ];
+
+            let rightLines = [], leftLines = [], differences = new Set(), hints = {}, found = new Set();
+            let score = 0, total = 0, timeLeft = 60, timerId = null;
+            let gameEnded = false;
+            let cumulative = 0; // 刷新页面时重置累计分数为 0
+            localStorage.setItem('u1_total', '0');
+            const descEl = document.getElementById('desc');
+
+            function pickPuzzle() {
+                const p = puzzles[Math.floor(Math.random() * puzzles.length)];
+                rightLines = p.right;
+                leftLines = p.left;
+                differences = new Set(p.diffs);
+                hints = p.hints || {};
+                total = differences.size;
+                descEl.innerHTML = `规则：点击左侧“错误代码”的错误行，找出 <b>${total} 处</b>常见错误。<span class="cute">🦄🐱</span> 找对 +2 分，点错 <b>-3</b> 分，60 秒倒计时！`;
+            }
+
+            function render() {
+                leftEl.innerHTML = "";
+                rightEl.innerHTML = "";
+                for (let i = 0; i < Math.max(leftLines.length, rightLines.length); i++) {
+                    const leftTxt = leftLines[i] ?? '';
+                    const rightTxt = rightLines[i] ?? '';
+
+                    const rowL = document.createElement('div');
+                    rowL.className = 'line';
+                    rowL.dataset.idx = String(i + 1);
+                    rowL.innerHTML = `<span class=\"ln\">${i + 1}</span><code>${escapeHtml(leftTxt)}</code>`;
+                    rowL.addEventListener('click', () => onClick(i + 1, rowL));
+                    leftEl.appendChild(rowL);
+
+                    const rowR = document.createElement('div');
+                    rowR.className = 'line muted';
+                    rowR.innerHTML = `<span class=\"ln\">${i + 1}</span><code>${escapeHtml(rightTxt)}</code>`;
+                    rightEl.appendChild(rowR);
+                }
+                updateScore()
+            }
+
+            function escapeHtml(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") }
+
+            function showHint(row, msg) {
+                const tip = document.createElement('span');
+                tip.className = 'hint';
+                tip.style.marginLeft = '8px';
+                tip.style.color = 'red';
+                tip.textContent = `提示：${msg}`;
+                row.appendChild(tip);
+                setTimeout(() => { tip.remove() }, 3200);
+            }
+
+            function onClick(lineNumber, row) {
+                if (gameEnded || found.has(lineNumber) || timeLeft <= 0) { return }
+                if (differences.has(lineNumber)) {
+                    found.add(lineNumber);
+                    row.classList.remove("wrong");
+                    row.classList.add("correct");
+                    score += 2;
+                    cumulative = Math.max(0, cumulative + 2);
+                    localStorage.setItem('u1_total', String(cumulative));
+                    flashStars(row);
+                    // 禁止再次点击已答对的行
+                    row.style.pointerEvents = 'none';
+                    if (hints[lineNumber]) { showHint(row, hints[lineNumber]) }
+                } else {
+                    row.classList.add("wrong");
+                    score = Math.max(0, score - 3);
+                    cumulative = Math.max(0, cumulative - 3);
+                    localStorage.setItem('u1_total', String(cumulative));
+                }
+                updateScore();
+                if (found.size === total) { win() }
+            }
+
+            function updateScore() { scoreEl.textContent = String(cumulative) }
+
+            function flashStars(row) { const s = document.createElement('span'); s.className = 'stars'; s.textContent = ' ✨⭐ '; row.appendChild(s); setTimeout(() => { s.remove() }, 600) }
+
+            function tick() { timeLeft--; timerEl.textContent = String(timeLeft); if (timeLeft <= 10) { timerEl.style.color = '#ef476f' } if (timeLeft <= 0) { clearInterval(timerId); timerId = null; gameOver(false) } }
+
+            function startTimer() { clearTimer(); timeLeft = 60; timerEl.textContent = String(timeLeft); timerEl.style.color = '#d90429'; timerId = setInterval(tick, 1000) }
+            function clearTimer() { if (timerId) { clearInterval(timerId); timerId = null } }
+
+            function win() { /* 不清除计时器，保持倒计时进行 */ confetti(); gameOver(true) }
+
+            function updateHighWith(candidate) {
+                const bestRaw = localStorage.getItem('u1_high');
+                const best = parseInt(bestRaw || '0', 10) || 0;
+                const newBest = candidate > best ? candidate : best;
+                if (newBest !== best) { localStorage.setItem('u1_high', String(newBest)) }
+                highEl.textContent = String(newBest);
+            }
+
+            function gameOver(victory) {
+                gameEnded = true;
+                const msg = victory ? "太棒啦！全部找对！" : "时间到！再试一次~";
+                const overlay = document.createElement('div');
+                overlay.style.position = 'fixed'; overlay.style.inset = '0'; overlay.style.background = 'rgba(0,0,0,0.4)'; overlay.style.display = 'flex'; overlay.style.alignItems = 'center'; overlay.style.justifyContent = 'center'; overlay.style.zIndex = '9999';
+                const card = document.createElement('div');
+                card.style.background = '#fff'; card.style.border = '4px solid #ffd166'; card.style.borderRadius = '16px'; card.style.padding = '20px 24px'; card.style.fontSize = '20px'; card.style.color = '#102a43';
+                card.innerHTML = `<div style=\"text-align:center\">${victory ? '🎉' : '⏰'} ${msg}<br/>总分：<b>${cumulative}</b></div>`;
+                overlay.appendChild(card); document.body.appendChild(overlay);
+                updateHighWith(cumulative);
+                overlay.addEventListener('click', () => { overlay.remove() })
+            }
+
+            function confetti() { const n = 80; for (let i = 0; i < n; i++) { const p = document.createElement('div'); p.textContent = ['🎈', '⭐', '🎀', '🍭', '🧸'][Math.floor(Math.random() * 5)]; p.style.position = 'fixed'; p.style.left = Math.random() * 100 + '%'; p.style.top = '-10%'; p.style.fontSize = (18 + Math.random() * 10) + 'px'; p.style.transition = 'transform 1.2s linear, top 1.2s linear, opacity 1.2s'; document.body.appendChild(p); setTimeout(() => { p.style.top = '110%'; p.style.transform = 'rotate(' + (Math.random() * 360) + 'deg)'; p.style.opacity = '0' }, 10); setTimeout(() => p.remove(), 1400) } }
+
+            function reset() {
+                found = new Set();
+                // 重置前更新最高分（使用总分）
+                updateHighWith(cumulative);
+                score = 0;
+                cumulative = 0;
+                localStorage.setItem('u1_total', '0');
+                document.querySelectorAll('.line').forEach(el => el.classList.remove('correct', 'wrong'));
+                pickPuzzle();
+                render();
+                updateScore();
+                startTimer()
+                gameEnded = false;
+                // 重置后刷新最高分显示
+                highEl.textContent = String(parseInt(localStorage.getItem('u1_high') || '0', 10) || 0);
+            }
+
+            resetBtn.addEventListener("click", reset);
+            nextBtn.addEventListener("click", () => {
+                // 切换题目但保持倒计时继续；如果已停止则重新启动
+                found = new Set();
+                score = 0; // 本关得分清零，避免弹窗显示累计
+                document.querySelectorAll('.line').forEach(el => { el.classList.remove('correct','wrong'); el.style.removeProperty('pointer-events'); });
+                pickPuzzle();
+                render();
+                // 不重置计时；即使已结束也不在此启动，只有“重新游戏”才重置/启动
+                gameEnded = false;
+            });
+            highEl.textContent = String(parseInt(localStorage.getItem('u1_high') || '0', 10) || 0);
+            scoreEl.textContent = String(cumulative);
+            pickPuzzle();
+            render();
+            startTimer();
+
+            // 刷新/关闭页面前，用当前本关分数尝试更新最高分
+            window.addEventListener('beforeunload', () => {
+                try { updateHighWith(cumulative); } catch (e) {}
+            });
+        })();
+    </script>
+</body>
+
+</html>
+

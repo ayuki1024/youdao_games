@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="240" y2="160" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FEF3C7"/>
+      <stop offset="1" stop-color="#FDE68A"/>
+    </linearGradient>
+  </defs>
+  <rect width="240" height="160" rx="12" fill="url(#bg)"/>
+  
+  <!-- Base indicators -->
+  <rect x="40" y="60" width="40" height="30" rx="4" fill="#F59E0B" stroke="#D97706" stroke-width="2"/>
+  <text x="60" y="80" font-size="14" font-family="Arial, sans-serif" fill="white" text-anchor="middle" font-weight="bold">10</text>
+  
+  <rect x="100" y="60" width="40" height="30" rx="4" fill="#8B5CF6" stroke="#7C3AED" stroke-width="2"/>
+  <text x="120" y="80" font-size="14" font-family="Arial, sans-serif" fill="white" text-anchor="middle" font-weight="bold">2</text>
+  
+  <rect x="160" y="60" width="40" height="30" rx="4" fill="#10B981" stroke="#059669" stroke-width="2"/>
+  <text x="180" y="80" font-size="14" font-family="Arial, sans-serif" fill="white" text-anchor="middle" font-weight="bold">16</text>
+  
+  <!-- Number to convert -->
+  <text x="120" y="40" font-size="24" font-family="Arial, sans-serif" fill="#92400E" text-anchor="middle" font-weight="bold">15</text>
+  
+  <!-- Conversion arrows -->
+  <path d="M80 100 L100 100" stroke="#6B7280" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M140 100 L160 100" stroke="#6B7280" stroke-width="2" marker-end="url(#arrow)"/>
+  
+  <!-- Results -->
+  <text x="60" y="120" font-size="12" font-family="Arial, sans-serif" fill="#92400E" text-anchor="middle">15</text>
+  <text x="120" y="120" font-size="12" font-family="Arial, sans-serif" fill="#6B21A8" text-anchor="middle">1111</text>
+  <text x="180" y="120" font-size="12" font-family="Arial, sans-serif" fill="#065F46" text-anchor="middle">F</text>
+  
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6B7280"/>
+    </marker>
+  </defs>
+  
+  <text x="16" y="24" font-size="14" font-family="Arial, sans-serif" fill="#92400E">进制</text>
+</svg>
