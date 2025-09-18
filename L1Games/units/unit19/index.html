@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>饼干制作函数编程游戏</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FF6B35',
+            secondary: '#FFD166',
+            dough: '#F9E0AE',
+            chocolate: '#8B4513',
+            oven: '#D2691E',
+            plate: '#F5F5F5',
+            ingredient: '#9F7AEA',
+          },
+          fontFamily: {
+            game: ['"Comic Sans MS"', '"Marker Felt"', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .function-shadow {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+      }
+      .dough-texture {
+        background-image: radial-gradient(#F9E0AE 80%, #F5D0A0 100%);
+      }
+      .chocolate-texture {
+        background-image: radial-gradient(#8B4513 80%, #6B3503 100%);
+      }
+      .oven-texture {
+        background-image: linear-gradient(to bottom, #D2691E, #A2490E);
+      }
+      .plate-texture {
+        background-image: radial-gradient(#F5F5F5 80%, #E5E5E5 100%);
+      }
+      .ingredient-texture {
+        background-image: radial-gradient(#9F7AEA 80%, #805AD5 100%);
+      }
+      .btn-hover {
+        transition: all 0.3s ease;
+      }
+      .btn-hover:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      }
+      .draggable-item {
+        cursor: grab;
+        user-select: none;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+      .draggable-item:active {
+        cursor: grabbing;
+        transform: scale(1.02);
+      }
+      .drop-zone {
+        transition: all 0.3s ease;
+      }
+      .drop-zone.highlight {
+        background-color: rgba(255, 209, 102, 0.3);
+        transform: scale(1.01);
+      }
+      .bounce-in {
+        animation: bounce-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+      @keyframes bounce-in {
+        0% { transform: scale(0); opacity: 0; }
+        60% { transform: scale(1.1); }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      .fade-in {
+        animation: fade-in 0.5s ease-in;
+      }
+      @keyframes fade-in {
+        0% { opacity: 0; }
+        100% { opacity: 1; }
+      }
+      .slide-up {
+        animation: slide-up 0.5s ease-out;
+      }
+      @keyframes slide-up {
+        0% { transform: translateY(20px); opacity: 0; }
+        100% { transform: translateY(0); opacity: 1; }
+      }
+      .pulse {
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-yellow-50 to-orange-100 min-h-screen font-game">
+  <div class="container mx-auto px-4 py-6 max-w-7xl">
+    <!-- 游戏标题 -->
+    <header class="text-center mb-8 slide-up">
+      <h1 class="text-[clamp(2rem,5vw,3.5rem)] font-bold text-primary mb-2">
+        <i class="fa fa-birthday-cake mr-3"></i>饼干制作函数编程游戏
+      </h1>
+      <p class="text-[clamp(1rem,2vw,1.25rem)] text-gray-700 max-w-3xl mx-auto">
+        通过拖拽不同的函数步骤和原材料来制作美味的饼干，然后在主函数中调用它们！
+      </p>
+    </header>
+
+    <!-- 游戏区域 -->
+    <main class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <!-- 左侧：可用函数区（已打乱顺序） -->
+      <div class="lg:col-span-1 space-y-6">
+        <div class="bg-white rounded-xl shadow-lg p-5 dough-texture">
+          <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <i class="fa fa-list-ul text-primary mr-2"></i>可用函数
+          </h2>
+          <div id="available-functions" class="space-y-3">
+            <!-- 已打乱顺序的函数列表 -->
+            <div class="draggable-item bg-white rounded-lg p-3 function-shadow border-l-4 border-primary" 
+                draggable="true" data-function="coolCookies">
+              <div class="flex items-center">
+                <i class="fa fa-snowflake-o text-primary mr-3"></i>
+                <span class="font-medium">coolCookies()</span>
+                <span class="ml-auto text-xs text-gray-500">冷却饼干</span>
+              </div>
+              <p class="text-xs text-gray-600 mt-1">让饼干在架子上冷却</p>
+            </div>
+            
+            <div class="draggable-item bg-white rounded-lg p-3 function-shadow border-l-4 border-primary" 
+                draggable="true" data-function="bakeCookies">
+              <div class="flex items-center">
+                <i class="fa fa-fire text-primary mr-3"></i>
+                <span class="font-medium">bakeCookies(time)</span>
+                <span class="ml-auto text-xs text-gray-500">烘烤饼干</span>
+              </div>
+              <p class="text-xs text-gray-600 mt-1">将饼干放入烤箱烘烤指定时间</p>
+            </div>
+            
+            <div class="draggable-item bg-white rounded-lg p-3 function-shadow border-l-4 border-primary" 
+                draggable="true" data-function="shapeCookies">
+              <div class="flex items-center">
+                <i class="fa fa-cutlery text-primary mr-3"></i>
+                <span class="font-medium">shapeCookies()</span>
+                <span class="ml-auto text-xs text-gray-500">塑形饼干</span>
+              </div>
+              <p class="text-xs text-gray-600 mt-1">将面团搓成小球并压平</p>
+            </div>
+            
+            <div class="draggable-item bg-white rounded-lg p-3 function-shadow border-l-4 border-primary" 
+                draggable="true" data-function="decorateCookies">
+              <div class="flex items-center">
+                <i class="fa fa-star text-primary mr-3"></i>
+                <span class="font-medium">decorateCookies()</span>
+                <span class="ml-auto text-xs text-gray-500">装饰饼干</span>
+              </div>
+              <p class="text-xs text-gray-600 mt-1">用糖霜和巧克力装饰饼干</p>
+            </div>
+            
+            <div class="draggable-item bg-white rounded-lg p-3 function-shadow border-l-4 border-primary" 
+                draggable="true" data-function="preheatOven">
+              <div class="flex items-center">
+                <i class="fa fa-fire text-primary mr-3"></i>
+                <span class="font-medium">preheatOven()</span>
+                <span class="ml-auto text-xs text-gray-500">预热烤箱</span>
+              </div>
+              <p class="text-xs text-gray-600 mt-1">将烤箱预热至180°C</p>
+            </div>
+            
+            <div class="draggable-item bg-white rounded-lg p-3 function-shadow border-l-4 border-primary" 
+                draggable="true" data-function="prepareIngredients">
+              <div class="flex items-center">
+                <i class="fa fa-cutlery text-primary mr-3"></i>
+                <span class="font-medium">prepareIngredients()</span>
+                <span class="ml-auto text-xs text-gray-500">准备原料</span>
+              </div>
+              <p class="text-xs text-gray-600 mt-1">收集面粉、糖、黄油和巧克力豆</p>
+            </div>
+            
+            <div class="draggable-item bg-white rounded-lg p-3 function-shadow border-l-4 border-primary" 
+                draggable="true" data-function="mixDough">
+              <div class="flex items-center">
+                <i class="fa fa-cutlery text-primary mr-3"></i>
+                <span class="font-medium">mixDough(...ingredients)</span>
+                <span class="ml-auto text-xs text-gray-500">混合面团</span>
+              </div>
+              <p class="text-xs text-gray-600 mt-1">将所有原料混合成面团</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 新增：原材料区 -->
+      <div class="lg:col-span-1 space-y-6">
+        <div class="bg-white rounded-xl shadow-lg p-5 ingredient-texture">
+          <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <i class="fa fa-flask text-white mr-2"></i>原材料
+          </h2>
+          <div id="available-ingredients" class="space-y-3">
+            <div class="draggable-item bg-white rounded-lg p-3 function-shadow border-l-4 border-ingredient" 
+                draggable="true" data-ingredient="chocolatePowder">
+              <div class="flex items-center">
+                <i class="fa fa-coffee text-chocolate mr-3"></i>
+                <span class="font-medium">chocolatePowder</span>
+                <span class="ml-auto text-xs text-gray-500">巧克力粉</span>
+              </div>
+              <p class="text-xs text-gray-600 mt-1">添加巧克力风味</p>
+            </div>
+            
+            <div class="draggable-item bg-white rounded-lg p-3 function-shadow border-l-4 border-ingredient" 
+                draggable="true" data-ingredient="matchaPowder">
+              <div class="flex items-center">
+                <i class="fa fa-leaf text-green-600 mr-3"></i>
+                <span class="font-medium">matchaPowder</span>
+                <span class="ml-auto text-xs text-gray-500">抹茶粉</span>
+              </div>
+              <p class="text-xs text-gray-600 mt-1">添加抹茶风味</p>
+            </div>
+            
+            <div class="draggable-item bg-white rounded-lg p-3 function-shadow border-l-4 border-ingredient" 
+                draggable="true" data-ingredient="strawberryPowder">
+              <div class="flex items-center">
+                <i class="fa fa-heart text-red-500 mr-3"></i>
+                <span class="font-medium">strawberryPowder</span>
+                <span class="ml-auto text-xs text-gray-500">草莓粉</span>
+              </div>
+              <p class="text-xs text-gray-600 mt-1">添加草莓风味</p>
+            </div>
+            
+            <div class="draggable-item bg-white rounded-lg p-3 function-shadow border-l-4 border-ingredient" 
+                draggable="true" data-ingredient="mangoPowder">
+              <div class="flex items-center">
+                <i class="fa fa-sun-o text-yellow-500 mr-3"></i>
+                <span class="font-medium">mangoPowder</span>
+                <span class="ml-auto text-xs text-gray-500">芒果粉</span>
+              </div>
+              <p class="text-xs text-gray-600 mt-1">添加芒果风味</p>
+            </div>
+            
+            <div class="draggable-item bg-white rounded-lg p-3 function-shadow border-l-4 border-ingredient" 
+                draggable="true" data-ingredient="watermelonPowder">
+              <div class="flex items-center">
+                <i class="fa fa-apple text-red-600 mr-3"></i>
+                <span class="font-medium">watermelonPowder</span>
+                <span class="ml-auto text-xs text-gray-500">西瓜粉</span>
+              </div>
+              <p class="text-xs text-gray-600 mt-1">添加西瓜风味</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 中间：函数编辑器 -->
+      <div class="lg:col-span-1 space-y-6">
+        <div class="bg-white rounded-xl shadow-lg p-5 oven-texture">
+          <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <i class="fa fa-code text-white mr-2"></i>函数编辑器
+          </h2>
+          
+          <div class="mb-4">
+            <label for="function-name" class="block text-sm font-medium text-gray-700 mb-1">函数名称:</label>
+            <input type="text" id="function-name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50" placeholder="myFunction">
+          </div>
+          
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">函数参数:</label>
+            <div class="flex space-x-2">
+              <input type="text" id="function-parameter" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50" placeholder="参数名称" style="max-width: calc(100% - 40px);">
+              <button id="add-parameter" class="px-3 py-2 bg-primary text-white rounded-md btn-hover">
+                <i class="fa fa-plus"></i>
+              </button>
+            </div>
+            <div id="parameters-list" class="mt-2 flex flex-wrap gap-2 drop-zone" data-type="parameter">
+              <div class="text-center text-gray-400 w-full" id="parameters-placeholder">
+                <i class="fa fa-arrow-down text-lg mb-1"></i>
+                <p class="text-xs">从左侧拖拽原材料到这里</p>
+              </div>
+            </div>
+          </div>
+          
+          <div id="function-body" class="min-h-[200px] bg-gray-50 rounded-lg p-3 border border-gray-200 drop-zone">
+            <div class="text-center text-gray-400 py-10" id="function-body-placeholder">
+              <i class="fa fa-arrow-down text-2xl mb-2"></i>
+              <p>从左侧拖拽函数步骤到这里</p>
+            </div>
+          </div>
+          
+          <div class="mt-4 flex justify-end">
+            <button id="save-function" class="px-4 py-2 bg-primary text-white rounded-md btn-hover">
+              <i class="fa fa-save mr-1"></i> 保存函数
+            </button>
+          </div>
+        </div>
+        
+        <!-- 保存的函数 -->
+        <div class="bg-white rounded-xl shadow-lg p-5 plate-texture">
+          <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <i class="fa fa-floppy-o text-chocolate mr-2"></i>已保存的函数
+          </h2>
+          <div id="saved-functions" class="space-y-3">
+            <div class="text-center text-gray-400 py-10" id="saved-functions-placeholder">
+              <i class="fa fa-folder-open-o text-2xl mb-2"></i>
+              <p>没有保存的函数</p>
+              <p class="text-xs mt-1">保存一个函数后将显示在这里</p>
+            </div>
+            <!-- 保存的函数将在这里动态生成 -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- 右侧：主函数 -->
+      <div class="lg:col-span-1 space-y-6">
+        <div class="bg-white rounded-xl shadow-lg p-5 chocolate-texture">
+          <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <i class="fa fa-terminal text-white mr-2"></i>主函数
+          </h2>
+          
+          <div id="main-function" class="min-h-[300px] bg-gray-50 rounded-lg p-3 border border-gray-200 drop-zone">
+            <div class="text-center text-gray-400 py-16" id="main-function-placeholder">
+              <i class="fa fa-arrow-down text-2xl mb-2"></i>
+              <p>从已保存的函数中拖拽到这里</p>
+            </div>
+          </div>
+          
+          <div class="mt-4 flex justify-end">
+            <button id="run-program" class="px-4 py-2 bg-secondary text-gray-800 rounded-md btn-hover">
+              <i class="fa fa-play mr-1"></i> 运行程序
+            </button>
+          </div>
+        </div>
+        
+        <!-- 饼干展示区 -->
+        <div class="bg-white rounded-xl shadow-lg p-5 dough-texture">
+          <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <i class="fa fa-birthday-cake text-primary mr-2"></i>饼干展示区
+          </h2>
+          <div id="cookie-display" class="min-h-[200px] flex items-center justify-center">
+            <div class="text-center text-gray-400 py-10">
+              <i class="fa fa-cutlery text-4xl mb-3"></i>
+              <p>运行程序后饼干将显示在这里</p>
+            </div>
+            <!-- 饼干将在这里动态生成 -->
+          </div>
+        </div>
+      </div>
+    </main>
+    
+    <!-- 控制台/日志 -->
+    <div class="mt-8 bg-white rounded-xl shadow-lg p-5">
+      <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+        <i class="fa fa-list-alt text-primary mr-2"></i>程序日志
+      </h2>
+      <div id="console" class="bg-gray-900 text-gray-100 rounded-lg p-4 h-40 overflow-y-auto font-mono text-sm">
+        <!-- 日志将在这里动态生成 -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- 模态框：成功提示 -->
+  <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-xl p-6 max-w-md w-full bounce-in text-center">
+      <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fa fa-check text-green-500 text-2xl"></i>
+      </div>
+      <h3 class="text-xl font-bold text-gray-800 mb-2">操作成功!</h3>
+      <p class="text-gray-600 mb-6" id="success-message">函数已成功保存。</p>
+      <button id="close-success" class="px-4 py-2 bg-primary text-white rounded-md btn-hover">确定</button>
+    </div>
+  </div>
+
+  <script>
+    // DOM 元素
+    const availableFunctions = document.getElementById('available-functions');
+    const availableIngredients = document.getElementById('available-ingredients');
+    const functionBody = document.getElementById('function-body');
+    const functionBodyPlaceholder = document.getElementById('function-body-placeholder');
+    const saveFunctionBtn = document.getElementById('save-function');
+    const functionNameInput = document.getElementById('function-name');
+    const functionParameterInput = document.getElementById('function-parameter');
+    const addParameterBtn = document.getElementById('add-parameter');
+    const parametersList = document.getElementById('parameters-list');
+    const parametersPlaceholder = document.getElementById('parameters-placeholder');
+    const savedFunctionsContainer = document.getElementById('saved-functions');
+    const savedFunctionsPlaceholder = document.getElementById('saved-functions-placeholder');
+    const mainFunction = document.getElementById('main-function');
+    const mainFunctionPlaceholder = document.getElementById('main-function-placeholder');
+    const runProgramBtn = document.getElementById('run-program');
+    const consoleOutput = document.getElementById('console');
+    const cookieDisplay = document.getElementById('cookie-display');
+    const successModal = document.getElementById('success-modal');
+    const successMessage = document.getElementById('success-message');
+    const closeSuccessBtn = document.getElementById('close-success');
+    
+    // 全局变量
+    let draggedItem = null;
+    let currentFunctionParams = [];
+    let savedFunctions = [];
+    let mainFunctionCalls = [];
+    
+    // 初始化拖拽事件
+    function initDragEvents() {
+      // 清空旧的事件监听器（如果有）
+      document.querySelectorAll('.draggable-item').forEach(item => {
+        item.removeEventListener('dragstart', handleDragStart);
+        item.removeEventListener('dragend', handleDragEnd);
+      });
+      
+      document.querySelectorAll('.drop-zone').forEach(zone => {
+        zone.removeEventListener('dragover', handleDragOver);
+        zone.removeEventListener('dragenter', handleDragEnter);
+        zone.removeEventListener('dragleave', handleDragLeave);
+        zone.removeEventListener('drop', handleDrop);
+      });
+      
+      // 重新绑定拖拽事件
+      const draggableItems = document.querySelectorAll('.draggable-item');
+      draggableItems.forEach(item => {
+        item.addEventListener('dragstart', handleDragStart);
+        item.addEventListener('dragend', handleDragEnd);
+      });
+      
+      const dropZones = document.querySelectorAll('.drop-zone');
+      dropZones.forEach(zone => {
+        zone.addEventListener('dragover', handleDragOver);
+        zone.addEventListener('dragenter', handleDragEnter);
+        zone.addEventListener('dragleave', handleDragLeave);
+        zone.addEventListener('drop', handleDrop);
+      });
+    }
+    
+    // 拖拽事件处理函数
+    function handleDragStart(e) {
+      draggedItem = this;
+      
+      // 根据拖拽项类型设置不同的数据
+      if (this.closest('#available-functions')) {
+        e.dataTransfer.setData('text/plain', this.getAttribute('data-function'));
+        e.dataTransfer.setData('type', 'function');
+      } else if (this.closest('#available-ingredients')) {
+        e.dataTransfer.setData('text/plain', this.getAttribute('data-ingredient'));
+        e.dataTransfer.setData('type', 'ingredient');
+      } else if (this.closest('#saved-functions')) {
+        e.dataTransfer.setData('text/plain', this.getAttribute('data-function'));
+        e.dataTransfer.setData('type', 'savedFunction');
+      }
+      
+      // 添加拖拽样式
+      setTimeout(() => {
+        this.classList.add('opacity-50', 'scale-95');
+      }, 0);
+    }
+    
+    function handleDragEnd() {
+      // 移除拖拽样式
+      this.classList.remove('opacity-50', 'scale-95');
+      draggedItem = null;
+      
+      // 重新初始化拖拽事件，确保新添加的元素也有拖拽功能
+      initDragEvents();
+    }
+    
+    function handleDragOver(e) {
+      e.preventDefault(); // 允许放置
+      
+      // 检查拖拽项和放置区域类型是否匹配
+      const itemType = e.dataTransfer.getData('type');
+      const dropZoneType = this.getAttribute('data-type');
+      
+      // 只允许原材料拖放到参数区
+      if ((itemType === 'ingredient' && dropZoneType === 'parameter') ||
+          (itemType === 'function' && dropZoneType !== 'parameter') ||
+          (itemType === 'savedFunction' && this.id === 'main-function')) {
+        this.classList.add('highlight');
+      }
+    }
+    
+    function handleDragEnter(e) {
+      e.preventDefault();
+      
+      // 检查拖拽项和放置区域类型是否匹配
+      const itemType = e.dataTransfer.getData('type');
+      const dropZoneType = this.getAttribute('data-type');
+      
+      // 只允许原材料拖放到参数区
+      if ((itemType === 'ingredient' && dropZoneType === 'parameter') ||
+          (itemType === 'function' && dropZoneType !== 'parameter') ||
+          (itemType === 'savedFunction' && this.id === 'main-function')) {
+        this.classList.add('highlight');
+      }
+    }
+    
+    function handleDragLeave() {
+      this.classList.remove('highlight');
+    }
+    
+    function handleDrop(e) {
+      e.preventDefault();
+      this.classList.remove('highlight');
+      
+      if (draggedItem) {
+        const itemType = e.dataTransfer.getData('type');
+        
+        // 处理原材料拖放到参数区
+        if (itemType === 'ingredient' && this.id === 'parameters-list') {
+          const ingredientName = e.dataTransfer.getData('text/plain');
+          
+          // 检查是否已添加相同的原材料
+          if (currentFunctionParams.includes(ingredientName)) {
+            showSuccessMessage('该原材料已添加到参数中', false);
+            return;
+          }
+          
+          // 添加到参数列表
+          const paramTag = document.createElement('span');
+          paramTag.className = 'px-2 py-1 bg-ingredient/10 text-ingredient rounded-md text-xs flex items-center';
+          paramTag.innerHTML = `${ingredientName} 
+            <button class="ml-1 text-ingredient hover:text-ingredient/70 delete-param" data-param="${ingredientName}">
+              <i class="fa fa-times-circle"></i>
+            </button>`;
+          
+          parametersList.appendChild(paramTag);
+          
+          // 添加到参数数组
+          currentFunctionParams.push(ingredientName);
+          
+          // 隐藏占位符
+          if (parametersList.children.length > 1) {
+            parametersPlaceholder.style.display = 'none';
+          }
+          
+          // 添加删除事件
+          const deleteBtn = paramTag.querySelector('.delete-param');
+          deleteBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const paramToRemove = this.getAttribute('data-param');
+            currentFunctionParams = currentFunctionParams.filter(param => param !== paramToRemove);
+            this.parentNode.remove();
+            
+            // 显示占位符
+            if (parametersList.children.length <= 1) {
+              parametersPlaceholder.style.display = 'block';
+            }
+          });
+          
+          return;
+        }
+        
+        // 处理函数拖放到函数体
+        if ((itemType === 'function' && this.id === 'function-body') ||
+            (itemType === 'savedFunction' && this.id === 'main-function')) {
+          // 克隆拖拽的元素
+          const clone = draggedItem.cloneNode(true);
+          
+          // 移除原有的拖拽事件监听器
+          clone.removeAttribute('draggable');
+          clone.classList.remove('draggable-item');
+          
+          // 添加删除按钮
+          const deleteBtn = document.createElement('button');
+          deleteBtn.innerHTML = '<i class="fa fa-times"></i>';
+          deleteBtn.className = 'ml-2 text-gray-400 hover:text-red-500';
+          deleteBtn.addEventListener('click', function() {
+            clone.remove();
+            updatePlaceholders();
+            
+            // 重新初始化拖拽事件
+            initDragEvents();
+          });
+          
+          // 如果是烘焙函数，添加参数输入
+          if (clone.getAttribute('data-function') === 'bakeCookies') {
+            const inputContainer = document.createElement('div');
+            inputContainer.className = 'mt-2 flex items-center';
+            
+            const inputLabel = document.createElement('label');
+            inputLabel.className = 'text-xs text-gray-600 mr-2';
+            inputLabel.textContent = '时间 (分钟):';
+            
+            const timeInput = document.createElement('input');
+            timeInput.type = 'number';
+            timeInput.min = '5';
+            timeInput.max = '20';
+            timeInput.value = '10';
+            timeInput.className = 'w-16 px-2 py-1 border border-gray-300 rounded text-sm';
+            
+            inputContainer.appendChild(inputLabel);
+            inputContainer.appendChild(timeInput);
+            
+            // 替换原有的参数文本
+            const paramText = clone.querySelector('.text-xs.text-gray-600');
+            paramText.textContent = '将饼干放入烤箱烘烤指定时间';
+            paramText.parentNode.appendChild(inputContainer);
+          }
+          
+          // 将删除按钮添加到元素中
+          const actionContainer = clone.querySelector('.flex.items-center');
+          if (actionContainer) {
+            actionContainer.appendChild(deleteBtn);
+          } else {
+            clone.appendChild(deleteBtn);
+          }
+          
+          // 添加到放置区域
+          this.appendChild(clone);
+          
+          // 隐藏占位符
+          updatePlaceholders();
+          
+          // 重新初始化拖拽事件，确保新添加的元素也有拖拽功能
+          initDragEvents();
+        }
+      }
+    }
+    
+    // 更新占位符显示状态
+    function updatePlaceholders() {
+      if (functionBody.children.length > 1) { // 有内容，减去占位符
+        functionBodyPlaceholder.style.display = 'none';
+      } else {
+        functionBodyPlaceholder.style.display = 'block';
+      }
+      
+      if (mainFunction.children.length > 1) { // 有内容，减去占位符
+        mainFunctionPlaceholder.style.display = 'none';
+      } else {
+        mainFunctionPlaceholder.style.display = 'block';
+      }
+      
+      if (parametersList.children.length > 1) { // 有内容，减去占位符
+        parametersPlaceholder.style.display = 'none';
+      } else {
+        parametersPlaceholder.style.display = 'block';
+      }
+    }
+    
+    // 添加参数
+    addParameterBtn.addEventListener('click', function() {
+      const paramName = functionParameterInput.value.trim();
+      if (paramName) {
+        // 添加到参数列表
+        const paramTag = document.createElement('span');
+        paramTag.className = 'px-2 py-1 bg-primary/10 text-primary rounded-md text-xs flex items-center';
+        paramTag.innerHTML = `${paramName} 
+          <button class="ml-1 text-primary hover:text-primary/70 delete-param" data-param="${paramName}">
+            <i class="fa fa-times-circle"></i>
+          </button>`;
+        
+        parametersList.appendChild(paramTag);
+        
+        // 添加到参数数组
+        currentFunctionParams.push(paramName);
+        
+        // 清空输入
+        functionParameterInput.value = '';
+        
+        // 添加删除事件
+        const deleteBtn = paramTag.querySelector('.delete-param');
+        deleteBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          const paramToRemove = this.getAttribute('data-param');
+          currentFunctionParams = currentFunctionParams.filter(param => param !== paramToRemove);
+          this.parentNode.remove();
+          
+          // 显示占位符
+          if (parametersList.children.length <= 1) {
+            parametersPlaceholder.style.display = 'block';
+          }
+        });
+        
+        // 隐藏占位符
+        if (parametersList.children.length > 1) {
+          parametersPlaceholder.style.display = 'none';
+        }
+      }
+    });
+    
+    // 保存函数
+    saveFunctionBtn.addEventListener('click', function() {
+      const functionName = functionNameInput.value.trim();
+      
+      if (!functionName) {
+        showSuccessMessage('请输入函数名称', false);
+        return;
+      }
+      
+      // 获取函数步骤
+      const functionSteps = [];
+      const steps = functionBody.querySelectorAll('.rounded-lg:not(#function-body-placeholder)');
+      
+      if (steps.length === 0) {
+        showSuccessMessage('函数体不能为空', false);
+        return;
+      }
+      
+      steps.forEach(step => {
+        const functionName = step.getAttribute('data-function');
+        let params = {};
+        
+        // 特殊处理需要参数的函数
+        if (functionName === 'bakeCookies') {
+          const timeInput = step.querySelector('input[type="number"]');
+          if (timeInput) {
+            params.time = parseInt(timeInput.value);
+          }
+        }
+        
+        functionSteps.push({
+          name: functionName,
+          params: params
+        });
+      });
+      
+      // 保存函数
+      const newFunction = {
+        name: functionName,
+        params: [...currentFunctionParams],
+        steps: functionSteps
+      };
+      
+      savedFunctions.push(newFunction);
+      
+      // 更新已保存函数列表
+      updateSavedFunctions();
+      
+      // 清空函数编辑器
+      functionNameInput.value = '';
+      functionBody.innerHTML = `<div class="text-center text-gray-400 py-10" id="function-body-placeholder">
+        <i class="fa fa-arrow-down text-2xl mb-2"></i>
+        <p>从左侧拖拽函数步骤到这里</p>
+      </div>`;
+      parametersList.innerHTML = `<div class="text-center text-gray-400 w-full" id="parameters-placeholder">
+        <i class="fa fa-arrow-down text-lg mb-1"></i>
+        <p class="text-xs">从左侧拖拽原材料到这里</p>
+      </div>`;
+      currentFunctionParams = [];
+      
+      // 显示成功消息
+      showSuccessMessage(`函数 "${functionName}" 已保存`);
+      
+      // 重新初始化拖拽事件
+      initDragEvents();
+    });
+    
+    // 更新已保存函数列表
+    function updateSavedFunctions() {
+      if (savedFunctions.length === 0) {
+        savedFunctionsPlaceholder.style.display = 'block';
+        savedFunctionsContainer.innerHTML = `<div class="text-center text-gray-400 py-10" id="saved-functions-placeholder">
+          <i class="fa fa-folder-open-o text-2xl mb-2"></i>
+          <p>没有保存的函数</p>
+          <p class="text-xs mt-1">保存一个函数后将显示在这里</p>
+        </div>`;
+        return;
+      }
+      
+      savedFunctionsPlaceholder.style.display = 'none';
+      savedFunctionsContainer.innerHTML = '';
+      
+      savedFunctions.forEach(func => {
+        const funcElement = document.createElement('div');
+        funcElement.className = 'bg-white rounded-lg p-3 function-shadow border-l-4 border-chocolate draggable-item';
+        funcElement.setAttribute('draggable', 'true');
+        funcElement.setAttribute('data-function', func.name);
+        
+        // 参数列表
+        let paramList = func.params.length > 0 ? `(${func.params.join(', ')})` : '()';
+        
+        funcElement.innerHTML = `
+          <div class="flex items-center">
+            <i class="fa fa-code text-chocolate mr-3"></i>
+            <span class="font-medium">${func.name}${paramList}</span>
+            <span class="ml-auto text-xs text-gray-500">自定义函数</span>
+          </div>
+          <p class="text-xs text-gray-600 mt-1">包含 ${func.steps.length} 个步骤</p>
+        `;
+        
+        // 添加点击事件来查看函数详情
+        funcElement.addEventListener('click', function() {
+          showFunctionDetails(func);
+        });
+        
+        savedFunctionsContainer.appendChild(funcElement);
+      });
+      
+      // 重新初始化拖拽事件
+      initDragEvents();
+    }
+    
+    // 显示函数详情
+    function showFunctionDetails(func) {
+      // 创建模态框
+      const modal = document.createElement('div');
+      modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+      
+      const modalContent = document.createElement('div');
+      modalContent.className = 'bg-white rounded-xl p-6 max-w-md w-full bounce-in';
+      
+      // 构建参数列表
+      let paramListHTML = func.params.length > 0 ? 
+        `<div class="mb-4">
+          <h4 class="font-medium text-gray-700 mb-2">参数:</h4>
+          <div class="flex flex-wrap gap-2">
+            ${func.params.map(param => `<span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs">${param}</span>`).join('')}
+          </div>
+        </div>` : '';
+      
+      // 构建步骤列表
+      let stepsHTML = `<div class="mb-4">
+        <h4 class="font-medium text-gray-700 mb-2">步骤:</h4>
+        <ul class="space-y-2">
+          ${func.steps.map((step, index) => {
+            let paramText = '';
+            if (step.name === 'bakeCookies' && step.params.time) {
+              paramText = `(${step.params.time} 分钟)`;
+            }
+            
+            return `<li class="flex items-center">
+              <span class="w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center text-xs mr-2">${index + 1}</span>
+              <span>${getFunctionDisplayName(step.name)}${paramText}</span>
+            </li>`;
+          }).join('')}
+        </ul>
+      </div>`;
+      
+      modalContent.innerHTML = `
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-bold text-gray-800">函数详情: ${func.name}</h3>
+          <button class="close-modal text-gray-400 hover:text-gray-600">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+        ${paramListHTML}
+        ${stepsHTML}
+        <div class="flex justify-end">
+          <button class="close-modal px-4 py-2 bg-primary text-white rounded-md btn-hover">关闭</button>
+        </div>
+      `;
+      
+      modal.appendChild(modalContent);
+      document.body.appendChild(modal);
+      
+      // 添加关闭事件
+      const closeButtons = modal.querySelectorAll('.close-modal');
+      closeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          document.body.removeChild(modal);
+        });
+      });
+      
+      // 点击模态框外部关闭
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+          document.body.removeChild(modal);
+        }
+      });
+    }
+    
+    // 辅助函数：获取函数显示名称
+    function getFunctionDisplayName(functionName) {
+      const displayNames = {
+        'prepareIngredients': '准备原料',
+        'preheatOven': '预热烤箱',
+        'mixDough': '混合面团',
+        'shapeCookies': '塑形饼干',
+        'bakeCookies': '烘烤饼干',
+        'coolCookies': '冷却饼干',
+        'decorateCookies': '装饰饼干'
+      };
+      
+      return displayNames[functionName] || functionName;
+    }
+    
+    // 获取原材料显示名称
+    function getIngredientDisplayName(ingredientName) {
+      const displayNames = {
+        'chocolatePowder': '巧克力粉',
+        'matchaPowder': '抹茶粉',
+        'strawberryPowder': '草莓粉',
+        'mangoPowder': '芒果粉',
+        'watermelonPowder': '西瓜粉'
+      };
+      
+      return displayNames[ingredientName] || ingredientName;
+    }
+    
+    // 显示成功消息
+    function showSuccessMessage(message, isSuccess = true) {
+      successMessage.textContent = message;
+      
+      if (!isSuccess) {
+        const icon = successModal.querySelector('.fa-check');
+        if (icon) {
+          icon.className = 'fa fa-exclamation-triangle text-red-500 text-2xl';
+          const iconContainer = successModal.querySelector('.bg-green-100');
+          if (iconContainer) {
+            iconContainer.className = 'w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4';
+          }
+          
+          const title = successModal.querySelector('h3');
+          if (title) {
+            title.textContent = '操作失败';
+          }
+        }
+      } else {
+        const icon = successModal.querySelector('.fa-exclamation-triangle');
+        if (icon) {
+          icon.className = 'fa fa-check text-green-500 text-2xl';
+          const iconContainer = successModal.querySelector('.bg-red-100');
+          if (iconContainer) {
+            iconContainer.className = 'w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4';
+          }
+          
+          const title = successModal.querySelector('h3');
+          if (title) {
+            title.textContent = '操作成功!';
+          }
+        }
+      }
+      
+      successModal.classList.remove('hidden');
+    }
+    
+    // 关闭成功消息
+    closeSuccessBtn.addEventListener('click', function() {
+      successModal.classList.add('hidden');
+    });
+    
+    // 运行程序
+    runProgramBtn.addEventListener('click', function() {
+      // 清空控制台和饼干展示区
+      consoleOutput.innerHTML = '';
+      cookieDisplay.innerHTML = '';
+      
+      // 获取主函数中的函数调用
+      const functionCalls = [];
+      const callElements = mainFunction.querySelectorAll('.rounded-lg:not(#main-function-placeholder)');
+      
+      if (callElements.length === 0) {
+        showSuccessMessage('主函数不能为空', false);
+        return;
+      }
+      
+      callElements.forEach(call => {
+        const functionName = call.getAttribute('data-function');
+        const savedFunc = savedFunctions.find(func => func.name === functionName);
+        
+        if (savedFunc) {
+          functionCalls.push(savedFunc);
+        }
+      });
+      
+      // 执行主函数
+      executeMainFunction(functionCalls);
+    });
+    
+    // 执行主函数
+    function executeMainFunction(functionCalls) {
+      consoleOutput.innerHTML = '<div>开始执行程序...</div>';
+      
+      // 创建饼干制作进度
+      const cookieProgress = document.createElement('div');
+      cookieProgress.className = 'w-full bg-gray-200 rounded-full h-4 mb-4';
+      const progressBar = document.createElement('div');
+      progressBar.className = 'bg-primary h-4 rounded-full w-0 transition-all duration-500';
+      progressBar.id = 'progress-bar';
+      cookieProgress.appendChild(progressBar);
+      consoleOutput.appendChild(cookieProgress);
+      
+      // 异步执行每个函数
+      let currentStep = 0;
+      const totalSteps = functionCalls.reduce((sum, func) => sum + func.steps.length, 0);
+      
+      function executeNextFunction() {
+        if (currentStep >= totalSteps) {
+          logMessage('程序执行完成!', 'success');
+          createCookies(functionCalls); // 传递函数调用列表以确定饼干颜色
+          return;
+        }
+        
+        // 查找当前步骤对应的函数和操作
+        let stepCount = 0;
+        let currentFunc = null;
+        let currentOperation = null;
+        
+        for (const func of functionCalls) {
+          for (const step of func.steps) {
+            if (stepCount === currentStep) {
+              currentFunc = func;
+              currentOperation = step;
+              break;
+            }
+            stepCount++;
+          }
+          
+          if (currentOperation) break;
+        }
+        
+        if (currentOperation) {
+          // 执行当前操作
+          executeOperation(currentFunc, currentOperation)
+            .then(() => {
+              // 更新进度条
+              currentStep++;
+              const progress = (currentStep / totalSteps) * 100;
+              document.getElementById('progress-bar').style.width = `${progress}%`;
+              
+              // 继续执行下一个操作
+              setTimeout(executeNextFunction, 500);
+            })
+            .catch(error => {
+              logMessage(error, 'error');
+            });
+        }
+      }
+      
+      // 开始执行
+      setTimeout(executeNextFunction, 500);
+    }
+    
+    // 执行单个操作
+    function executeOperation(func, operation) {
+      return new Promise((resolve) => {
+        const displayName = getFunctionDisplayName(operation.name);
+        let message = `正在执行: ${func.name}() → ${displayName}`;
+        
+        if (operation.name === 'bakeCookies' && operation.params.time) {
+          message += ` (${operation.params.time} 分钟)`;
+        }
+        
+        logMessage(message);
+        
+        // 模拟操作时间
+        let timeout = 1000;
+        if (operation.name === 'bakeCookies' && operation.params.time) {
+          timeout = operation.params.time * 200; // 每分钟200ms
+        }
+        
+        setTimeout(() => {
+          logMessage(`${displayName} 完成`);
+          resolve();
+        }, timeout);
+      });
+    }
+    
+    // 在控制台记录消息
+    function logMessage(message, type = 'normal') {
+      const logEntry = document.createElement('div');
+      
+      if (type === 'success') {
+        logEntry.className = 'text-green-400 mb-1';
+        logEntry.innerHTML = `<i class="fa fa-check-circle mr-2"></i>${message}`;
+      } else if (type === 'error') {
+        logEntry.className = 'text-red-400 mb-1';
+        logEntry.innerHTML = `<i class="fa fa-exclamation-circle mr-2"></i>${message}`;
+      } else {
+        logEntry.className = 'mb-1';
+        logEntry.innerHTML = `<i class="fa fa-code mr-2"></i>${message}`;
+      }
+      
+      consoleOutput.appendChild(logEntry);
+      consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    }
+    
+    // 创建饼干
+    function createCookies(functionCalls) {
+      cookieDisplay.innerHTML = '';
+      
+      const cookieContainer = document.createElement('div');
+      cookieContainer.className = 'flex flex-wrap justify-center gap-4';
+      
+      // 从函数调用中提取原材料信息
+      const allIngredients = [];
+      functionCalls.forEach(func => {
+        allIngredients.push(...func.params);
+      });
+      
+      // 创建3个饼干
+      for (let i = 0; i < 3; i++) {
+        const cookie = document.createElement('div');
+        cookie.className = 'w-20 h-20 rounded-full relative shadow-lg transform transition-all duration-500 hover:scale-110';
+        
+        // 确定饼干颜色
+        let cookieColor = 'bg-dough';
+        if (allIngredients.includes('chocolatePowder')) {
+          cookieColor = 'bg-chocolate';
+        } else if (allIngredients.includes('matchaPowder')) {
+          cookieColor = 'bg-green-400';
+        } else if (allIngredients.includes('strawberryPowder')) {
+          cookieColor = 'bg-red-400';
+        } else if (allIngredients.includes('mangoPowder')) {
+          cookieColor = 'bg-yellow-400';
+        } else if (allIngredients.includes('watermelonPowder')) {
+          cookieColor = 'bg-red-300';
+        }
+        
+        cookie.classList.add(cookieColor);
+        
+        // 添加巧克力豆（如果是原味或巧克力味）
+        if (!allIngredients.includes('matchaPowder') && 
+            !allIngredients.includes('strawberryPowder') &&
+            !allIngredients.includes('mangoPowder') &&
+            !allIngredients.includes('watermelonPowder')) {
+          for (let j = 0; j < 8; j++) {
+            const chocolateChip = document.createElement('div');
+            const size = Math.random() * 5 + 3;
+            const x = Math.random() * 24 + 3;
+            const y = Math.random() * 24 + 3;
+            
+            chocolateChip.className = 'absolute bg-chocolate rounded-full';
+            chocolateChip.style.width = `${size}px`;
+            chocolateChip.style.height = `${size}px`;
+            chocolateChip.style.left = `${x}px`;
+            chocolateChip.style.top = `${y}px`;
+            
+            cookie.appendChild(chocolateChip);
+          }
+        }
+        
+        // 添加糖霜装饰
+        if (Math.random() > 0.5) {
+          const frosting = document.createElement('div');
+          frosting.className = 'absolute top-2 left-2 right-2 bottom-2 rounded-full bg-white/70 opacity-70';
+          frosting.style.clipPath = `polygon(${Math.random()*100}% ${Math.random()*100}%, ${Math.random()*100}% ${Math.random()*100}%, ${Math.random()*100}% ${Math.random()*100}%)`;
+          cookie.appendChild(frosting);
+        }
+        
+        // 添加动画
+        cookie.style.animation = `bounce-in 0.5s ease-out ${i * 0.2}s forwards`;
+        cookie.style.opacity = '0';
+        
+        cookieContainer.appendChild(cookie);
+      }
+      
+      cookieDisplay.appendChild(cookieContainer);
+      
+      // 添加成功消息
+      const successMsg = document.createElement('div');
+      successMsg.className = 'text-center mt-4 text-green-600 font-medium';
+      
+      // 根据使用的原材料显示不同的消息
+      let ingredientsText = '';
+      if (allIngredients.length > 0) {
+        ingredientsText = `使用了${allIngredients.map(ing => getIngredientDisplayName(ing)).join('、')}的`;
+      }
+      
+      successMsg.innerHTML = `<i class="fa fa-check-circle mr-2"></i>${ingredientsText}饼干制作成功!`;
+      successMsg.style.animation = 'fade-in 1s ease-out 0.5s forwards';
+      successMsg.style.opacity = '0';
+      
+      cookieDisplay.appendChild(successMsg);
+    }
+    
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', function() {
+      // 初始化拖拽事件
+      initDragEvents();
+      
+      // 添加页面加载动画
+      setTimeout(() => {
+        document.body.classList.add('loaded');
+      }, 300);
+    });
+  </script>
+</body>
+</html>
+  

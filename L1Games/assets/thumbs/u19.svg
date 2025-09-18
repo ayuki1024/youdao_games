@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
+  <rect width="320" height="180" fill="#3e2723"/>
+  <text x="16" y="34" fill="#d7ccc8" font-size="26" font-weight="700" font-family="Arial">U19 函数</text>
+  <g>
+    <rect x="50" y="60" width="220" height="60" rx="8" ry="8" fill="#6d4c41"/>
+    <text x="60" y="98" fill="#efebe9" font-family="Courier New" font-size="18">int bake(int flour){...}</text>
+  </g>
+</svg>
+

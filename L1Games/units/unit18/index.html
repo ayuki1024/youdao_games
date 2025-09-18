@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二维数组对角线可视化</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#f97316',
+                        neutral: '#f3f4f6',
+                        dark: '#1e293b'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .grid-cell {
+                @apply border-2 border-gray-300 flex items-center justify-center transition-all duration-300;
+            }
+            .main-diagonal {
+                @apply bg-blue-100 border-primary text-primary font-bold;
+            }
+            .anti-diagonal {
+                @apply bg-orange-100 border-secondary text-secondary font-bold;
+            }
+            .btn-active {
+                @apply bg-primary text-white shadow-lg transform -translate-y-1;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <header class="bg-dark text-white py-6 px-4 shadow-lg">
+        <div class="container mx-auto text-center">
+            <h1 class="text-[clamp(1.8rem,4vw,2.8rem)] font-bold mb-2">二维数组对角线可视化</h1>
+            <p class="text-gray-300 text-[clamp(1rem,2vw,1.2rem)]">观察主对角线和副对角线的下标位置</p>
+        </div>
+    </header>
+
+    <main class="flex-grow container mx-auto p-4 md:p-8">
+        <div class="mb-8 text-center">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-800">选择数组大小</h2>
+            <div class="flex flex-wrap justify-center gap-3">
+                <button id="size-3" class="size-btn btn-active px-5 py-2 rounded-lg bg-gray-200 hover:bg-primary hover:text-white transition-all duration-300 shadow-md">
+                    3×3
+                </button>
+                <button id="size-4" class="size-btn px-5 py-2 rounded-lg bg-gray-200 hover:bg-primary hover:text-white transition-all duration-300 shadow-md">
+                    4×4
+                </button>
+                <button id="size-5" class="size-btn px-5 py-2 rounded-lg bg-gray-200 hover:bg-primary hover:text-white transition-all duration-300 shadow-md">
+                    5×5
+                </button>
+                <button id="size-6" class="size-btn px-5 py-2 rounded-lg bg-gray-200 hover:bg-primary hover:text-white transition-all duration-300 shadow-md">
+                    6×6
+                </button>
+                <button id="size-custom" class="size-btn px-5 py-2 rounded-lg bg-gray-200 hover:bg-primary hover:text-white transition-all duration-300 shadow-md">
+                    <i class="fa fa-sliders mr-2"></i>自定义
+                </button>
+            </div>
+        </div>
+
+        <div id="custom-size-container" class="hidden mb-6 bg-blue-50 p-4 rounded-lg shadow-sm">
+            <div class="flex flex-col md:flex-row gap-4 items-center justify-center">
+                <label for="custom-size" class="text-gray-700 font-medium">自定义大小 (2-10):</label>
+                <input type="number" id="custom-size" min="2" max="10" value="5" 
+                    class="w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50">
+                <button id="apply-custom-size" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">
+                    应用
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-xl p-6 mb-8 transform transition-all duration-500 hover:shadow-2xl">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-4">
+                <h3 id="matrix-title" class="text-xl font-bold text-gray-800">3×3 数组</h3>
+                <div class="mt-4 md:mt-0 text-sm text-gray-600 flex items-center">
+                    <span class="inline-block w-3 h-3 rounded-full bg-blue-200 border border-primary mr-1"></span>
+                    主对角线
+                    <span class="inline-block w-3 h-3 rounded-full bg-orange-200 border border-secondary ml-3 mr-1"></span>
+                    副对角线
+                </div>
+            </div>
+            
+            <div class="mb-4 flex flex-wrap justify-center gap-3">
+                <div class="inline-flex rounded-md shadow-sm" role="group">
+                    <button id="start-zero" class="btn-active px-4 py-2 text-sm font-medium rounded-l-lg border border-gray-200 bg-white text-gray-900 hover:bg-gray-100 hover:text-primary focus:z-10 focus:ring-2 focus:ring-primary focus:text-primary transition-all">
+                        下标从0开始
+                    </button>
+                    <button id="start-one" class="px-4 py-2 text-sm font-medium rounded-r-lg border border-gray-200 bg-white text-gray-900 hover:bg-gray-100 hover:text-primary focus:z-10 focus:ring-2 focus:ring-primary focus:text-primary transition-all">
+                        下标从1开始
+                    </button>
+                </div>
+                
+                <div class="inline-flex rounded-md shadow-sm ml-0 md:ml-4" role="group">
+                    <button id="highlight-main" class="btn-active px-4 py-2 text-sm font-medium rounded-l-lg border border-gray-200 bg-white text-gray-900 hover:bg-gray-100 hover:text-primary focus:z-10 focus:ring-2 focus:ring-primary focus:text-primary transition-all">
+                        高亮主对角线
+                    </button>
+                    <button id="highlight-anti" class="px-4 py-2 text-sm font-medium rounded-r-lg border border-gray-200 bg-white text-gray-900 hover:bg-gray-100 hover:text-primary focus:z-10 focus:ring-2 focus:ring-primary focus:text-primary transition-all">
+                        高亮副对角线
+                    </button>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <div id="matrix-container" class="flex justify-center my-6">
+                    <!-- 矩阵将在这里动态生成 -->
+                </div>
+            </div>
+            
+            <div class="text-center text-sm text-gray-500 mt-4">
+                <p>主对角线：行下标等于列下标 (i = j)</p>
+                <p>副对角线：行下标加列下标等于n-1 (i + j = n-1)</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-xl font-bold mb-4 text-gray-800">什么是对角线？</h3>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h4 class="text-lg font-semibold text-primary mb-2">主对角线</h4>
+                    <p class="text-gray-700">主对角线是从矩阵的左上角到右下角的对角线。在数学中，主对角线上的元素满足行下标等于列下标（i = j）。</p>
+                    <p class="text-gray-700 mt-2">例如，在一个3×3的矩阵中，主对角线上的元素是(0,0)、(1,1)和(2,2)（下标从0开始时）。</p>
+                </div>
+                <div class="bg-orange-50 p-4 rounded-lg">
+                    <h4 class="text-lg font-semibold text-secondary mb-2">副对角线</h4>
+                    <p class="text-gray-700">副对角线是从矩阵的右上角到左下角的对角线。副对角线上的元素满足行下标加列下标等于n-1（i + j = n-1），其中n是矩阵的大小。</p>
+                    <p class="text-gray-700 mt-2">例如，在一个3×3的矩阵中，副对角线上的元素是(0,2)、(1,1)和(2,0)（下标从0开始时）。</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-dark text-white py-6 mt-8">
+        <div class="container mx-auto text-center">
+            <p>© 2025 二维数组可视化工具 | 使用 HTML, Tailwind CSS 和 JavaScript 构建</p>
+        </div>
+    </footer>
+
+    <script>
+        // 当前选中的按钮和矩阵大小
+        let currentSize = 3;
+        let currentBtn = document.getElementById('size-3');
+        currentBtn.classList.add('btn-active');
+        
+        // 下标起始设置
+        let startFromZero = true;
+        const startZeroBtn = document.getElementById('start-zero');
+        const startOneBtn = document.getElementById('start-one');
+        
+        // 对角线高亮设置
+        let highlightMain = true;
+        const highlightMainBtn = document.getElementById('highlight-main');
+        const highlightAntiBtn = document.getElementById('highlight-anti');
+        
+        // 初始化按钮状态
+        startZeroBtn.classList.add('btn-active');
+        startOneBtn.classList.remove('btn-active');
+        highlightMainBtn.classList.add('btn-active');
+        highlightAntiBtn.classList.remove('btn-active');
+
+        // 按钮事件监听
+        document.querySelectorAll('.size-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // 移除之前按钮的活动状态
+                currentBtn.classList.remove('btn-active');
+                
+                // 设置当前按钮为活动状态
+                this.classList.add('btn-active');
+                currentBtn = this;
+                
+                // 隐藏自定义大小容器
+                document.getElementById('custom-size-container').classList.add('hidden');
+                
+                // 根据按钮ID设置矩阵大小
+                if (this.id === 'size-custom') {
+                    document.getElementById('custom-size-container').classList.remove('hidden');
+                } else {
+                    currentSize = parseInt(this.id.split('-')[1]);
+                    generateMatrix(currentSize);
+                }
+            });
+        });
+
+        // 应用自定义大小按钮事件
+        document.getElementById('apply-custom-size').addEventListener('click', function() {
+            const customSize = parseInt(document.getElementById('custom-size').value);
+            if (customSize >= 2 && customSize <= 10) {
+                currentSize = customSize;
+                generateMatrix(currentSize);
+                
+                // 更新标题和选中的按钮
+                document.getElementById('matrix-title').textContent = `${currentSize}×${currentSize} 数组`;
+                currentBtn.classList.remove('btn-active');
+                currentBtn = document.getElementById('size-custom');
+                currentBtn.classList.add('btn-active');
+            } else {
+                alert('请输入2到10之间的数字');
+            }
+        });
+
+        // 下标起始切换按钮事件
+        startZeroBtn.addEventListener('click', function() {
+            if (!startFromZero) {
+                startFromZero = true;
+                startZeroBtn.classList.add('btn-active');
+                startOneBtn.classList.remove('btn-active');
+                generateMatrix(currentSize);
+            }
+        });
+        
+        startOneBtn.addEventListener('click', function() {
+            if (startFromZero) {
+                startFromZero = false;
+                startZeroBtn.classList.remove('btn-active');
+                startOneBtn.classList.add('btn-active');
+                generateMatrix(currentSize);
+            }
+        });
+
+        // 对角线高亮切换按钮事件
+        highlightMainBtn.addEventListener('click', function() {
+            if (!highlightMain) {
+                highlightMain = true;
+                highlightMainBtn.classList.add('btn-active');
+                highlightAntiBtn.classList.remove('btn-active');
+                generateMatrix(currentSize);
+            }
+        });
+        
+        highlightAntiBtn.addEventListener('click', function() {
+            if (highlightMain) {
+                highlightMain = false;
+                highlightMainBtn.classList.remove('btn-active');
+                highlightAntiBtn.classList.add('btn-active');
+                generateMatrix(currentSize);
+            }
+        });
+
+        // 生成矩阵函数
+        function generateMatrix(size) {
+            const container = document.getElementById('matrix-container');
+            container.innerHTML = '';
+            
+            // 创建网格容器
+            const grid = document.createElement('div');
+            grid.className = 'grid grid-cols-[repeat(' + size + ',1fr)] gap-1';
+            grid.style.maxWidth = '800px';
+            
+            // 更新标题
+            document.getElementById('matrix-title').textContent = `${size}×${size} 数组`;
+            
+            // 生成矩阵单元格
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell aspect-square rounded-md text-center text-[clamp(0.8rem,2vw,1.2rem)]';
+                    
+                    // 设置对角线样式
+                    if (i === j && highlightMain) {
+                        cell.classList.add('main-diagonal');
+                    } else if (i + j === size - 1 && !highlightMain) {
+                        cell.classList.add('anti-diagonal');
+                    }
+                    
+                    // 根据起始设置显示下标
+                    const displayI = startFromZero ? i : i + 1;
+                    const displayJ = startFromZero ? j : j + 1;
+                    
+                    // 设置单元格内容
+                    cell.textContent = `(${displayI},${displayJ})`;
+                    
+                    // 添加悬停效果
+                    cell.addEventListener('mouseenter', function() {
+                        this.classList.add('scale-110', 'shadow-md');
+                    });
+                    
+                    cell.addEventListener('mouseleave', function() {
+                        this.classList.remove('scale-110', 'shadow-md');
+                    });
+                    
+                    grid.appendChild(cell);
+                }
+            }
+            
+            container.appendChild(grid);
+            
+            // 添加动画效果
+            grid.style.opacity = '0';
+            grid.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                grid.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                grid.style.opacity = '1';
+                grid.style.transform = 'translateY(0)';
+            }, 50);
+        }
+
+        // 初始化生成3×3矩阵
+        generateMatrix(currentSize);
+    </script>
+</body>
+</html>
+    

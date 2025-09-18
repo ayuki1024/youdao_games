@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>套圈圈游戏</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5',
+                        secondary: '#F59E0B',
+                        background: '#F9FAFB',
+                        surface: '#FFFFFF',
+                        dark: '#1F2937'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .prize-cell {
+                @apply w-12 h-12 flex items-center justify-center rounded-lg transition-all duration-300 cursor-pointer;
+            }
+            .prize-cell:hover {
+                @apply transform scale-110 shadow-lg;
+            }
+            .prize-highlight {
+                @apply ring-2 ring-secondary ring-offset-2;
+            }
+            .btn-primary {
+                @apply bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-md;
+            }
+            .btn-secondary {
+                @apply bg-secondary hover:bg-secondary/90 text-white font-medium py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-md;
+            }
+            .input-field {
+                @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300;
+            }
+            .section-card {
+                @apply bg-white rounded-xl shadow-lg p-6 mb-6 transition-all duration-300 hover:shadow-xl;
+            }
+            .result-item {
+                @apply p-3 border-b border-gray-100 last:border-b-0 flex justify-between items-center;
+            }
+        }
+    </style>
+</head>
+<body class="bg-background font-inter text-dark min-h-screen flex flex-col">
+    <header class="bg-gradient-to-r from-primary to-primary/80 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <h1 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold flex items-center">
+                <i class="fa fa-circle-o mr-3"></i>套圈圈游戏
+            </h1>
+            <p class="text-primary-100 mt-2 opacity-90">投中奖品，计算总价值</p>
+        </div>
+    </header>
+
+    <main class="flex-grow container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2">
+                <div class="section-card">
+                    <h2 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fa fa-th mr-2 text-primary"></i>套圈地图
+                    </h2>
+                    <div class="grid grid-cols-5 gap-2 mb-4" id="prize-map">
+                        <!-- 奖品地图将通过JS生成 -->
+                    </div>
+                    <div class="flex flex-wrap gap-3 mt-4">
+                        <button id="random-map" class="btn-primary">
+                            <i class="fa fa-random mr-2"></i>随机生成地图
+                        </button>
+                        <button id="custom-map" class="btn-secondary">
+                            <i class="fa fa-pencil mr-2"></i>自定义地图
+                        </button>
+                    </div>
+                </div>
+
+                <div class="section-card">
+                    <h2 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fa fa-crosshairs mr-2 text-primary"></i>投圈操作
+                    </h2>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <div class="flex-grow">
+                            <label for="coordinate-x" class="block text-sm font-medium text-gray-700 mb-1">X坐标 (1-5):</label>
+                            <input type="number" id="coordinate-x" min="1" max="5" value="1" class="input-field">
+                        </div>
+                        <div class="flex-grow">
+                            <label for="coordinate-y" class="block text-sm font-medium text-gray-700 mb-1">Y坐标 (1-5):</label>
+                            <input type="number" id="coordinate-y" min="1" max="5" value="1" class="input-field">
+                        </div>
+                        <div class="flex items-end">
+                            <button id="throw-ring" class="btn-primary">
+                                <i class="fa fa-hand-pointer-o mr-2"></i>投圈
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-card">
+                    <h2 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fa fa-list-alt mr-2 text-primary"></i>奖品记录
+                    </h2>
+                    <div class="max-h-[400px] overflow-y-auto" id="prize-list">
+                        <div class="text-center text-gray-500 py-8">
+                            <i class="fa fa-info-circle text-2xl mb-2 block"></i>
+                            <p>还没有投中任何奖品</p>
+                            <p class="text-sm mt-1">点击"投圈"开始游戏</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-card bg-gradient-to-br from-primary/5 to-primary/10">
+                    <h2 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fa fa-calculator mr-2 text-primary"></i>总计
+                    </h2>
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-lg font-medium">投中次数:</span>
+                        <span id="total-count" class="text-2xl font-bold text-primary">0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-lg font-medium">总价值:</span>
+                        <span id="total-value" class="text-2xl font-bold text-primary">¥0</span>
+                    </div>
+                    <button id="reset-game" class="btn-secondary w-full mt-6">
+                        <i class="fa fa-refresh mr-2"></i>重置游戏
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-dark text-white py-6 mt-12">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <p class="text-sm opacity-80">© 2025 套圈圈游戏演示</p>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-white/80 hover:text-white transition-colors">
+                        <i class="fa fa-question-circle"></i> 帮助
+                    </a>
+                    <a href="#" class="text-white/80 hover:text-white transition-colors">
+                        <i class="fa fa-github"></i> 源码
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 初始化奖品地图
+        let prizeMap = [
+            [10, 20, 30, 20, 10],
+            [20, 50, 80, 50, 20],
+            [30, 80, 100, 80, 30],
+            [20, 50, 80, 50, 20],
+            [10, 20, 30, 20, 10]
+        ];
+
+        // 奖品记录
+        let prizeRecords = [];
+
+        // 渲染奖品地图
+        function renderPrizeMap() {
+            const mapContainer = document.getElementById('prize-map');
+            mapContainer.innerHTML = '';
+
+            prizeMap.forEach((row, y) => {
+                row.forEach((prizeValue, x) => {
+                    const cell = document.createElement('div');
+                    cell.className = getPrizeCellClass(prizeValue);
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    cell.innerHTML = `
+                        <span class="text-white font-bold">${prizeValue}</span>
+                    `;
+                    
+                    // 添加点击事件
+                    cell.addEventListener('click', () => {
+                        document.getElementById('coordinate-x').value = x + 1;
+                        document.getElementById('coordinate-y').value = y + 1;
+                    });
+                    
+                    mapContainer.appendChild(cell);
+                });
+            });
+        }
+
+        // 根据奖品价值获取单元格样式
+        function getPrizeCellClass(value) {
+            let bgColor = '';
+            if (value >= 100) bgColor = 'bg-red-500';
+            else if (value >= 80) bgColor = 'bg-orange-500';
+            else if (value >= 50) bgColor = 'bg-yellow-500';
+            else if (value >= 30) bgColor = 'bg-green-500';
+            else bgColor = 'bg-blue-500';
+            
+            return `prize-cell ${bgColor}`;
+        }
+
+        // 渲染奖品记录
+        function renderPrizeRecords() {
+            const listContainer = document.getElementById('prize-list');
+            
+            if (prizeRecords.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        <i class="fa fa-info-circle text-2xl mb-2 block"></i>
+                        <p>还没有投中任何奖品</p>
+                        <p class="text-sm mt-1">点击"投圈"开始游戏</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            listContainer.innerHTML = '';
+            prizeRecords.forEach((record, index) => {
+                const item = document.createElement('div');
+                item.className = 'result-item';
+                item.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="w-6 h-6 rounded-full flex items-center justify-center bg-primary text-white text-xs mr-2">${index + 1}</span>
+                        <span>坐标: (${record.x + 1}, ${record.y + 1})</span>
+                    </div>
+                    <span class="font-bold text-primary">¥${record.value}</span>
+                `;
+                listContainer.appendChild(item);
+            });
+            
+            // 更新总计
+            updateTotal();
+        }
+
+        // 更新总计信息
+        function updateTotal() {
+            const count = prizeRecords.length;
+            const totalValue = prizeRecords.reduce((sum, record) => sum + record.value, 0);
+            
+            document.getElementById('total-count').textContent = count;
+            document.getElementById('total-value').textContent = `¥${totalValue}`;
+        }
+
+        // 投圈
+        function throwRing(x, y) {
+            // 检查坐标是否有效
+            if (x < 0 || x >= 5 || y < 0 || y >= 5) {
+                alert('坐标超出范围，请输入1-5之间的数字');
+                return false;
+            }
+            
+            // 添加到记录
+            const prizeValue = prizeMap[y][x];
+            prizeRecords.push({ x, y, value: prizeValue });
+            
+            // 更新UI
+            renderPrizeRecords();
+            
+            // 高亮显示投中的奖品
+            highlightPrize(x, y);
+            
+            return true;
+        }
+
+        // 高亮显示投中的奖品
+        function highlightPrize(x, y) {
+            const cells = document.querySelectorAll('#prize-map > div');
+            cells.forEach(cell => {
+                if (parseInt(cell.dataset.x) === x && parseInt(cell.dataset.y) === y) {
+                    cell.classList.add('prize-highlight');
+                    // 3秒后移除高亮
+                    setTimeout(() => {
+                        cell.classList.remove('prize-highlight');
+                    }, 3000);
+                }
+            });
+        }
+
+        // 随机生成奖品地图
+        function generateRandomMap() {
+            prizeMap = [];
+            for (let y = 0; y < 5; y++) {
+                const row = [];
+                for (let x = 0; x < 5; x++) {
+                    // 根据位置权重生成不同价值的奖品
+                    const baseValue = 10;
+                    const maxValue = 100;
+                    const distanceFromCenter = Math.max(Math.abs(x - 2), Math.abs(y - 2));
+                    const weight = (2.5 - distanceFromCenter) / 2.5;
+                    const value = Math.floor(baseValue + (maxValue - baseValue) * weight * Math.random());
+                    row.push(value);
+                }
+                prizeMap.push(row);
+            }
+            renderPrizeMap();
+        }
+
+        // 自定义地图
+        function promptCustomMap() {
+            const mapString = prompt('请输入自定义地图数据（5x5的数字矩阵，用逗号分隔）', '10,20,30,20,10\n20,50,80,50,20\n30,80,100,80,30\n20,50,80,50,20\n10,20,30,20,10');
+            
+            if (!mapString) return;
+            
+            try {
+                const rows = mapString.trim().split('\n');
+                if (rows.length !== 5) throw new Error('必须输入5行数据');
+                
+                prizeMap = rows.map(row => {
+                    const values = row.split(',').map(val => parseInt(val.trim()));
+                    if (values.length !== 5) throw new Error('每行必须包含5个数字');
+                    return values;
+                });
+                
+                renderPrizeMap();
+            } catch (error) {
+                alert(`地图格式错误: ${error.message}`);
+            }
+        }
+
+        // 重置游戏
+        function resetGame() {
+            prizeRecords = [];
+            renderPrizeRecords();
+        }
+
+        // 初始化事件监听
+        function initEventListeners() {
+            // 投圈按钮
+            document.getElementById('throw-ring').addEventListener('click', () => {
+                const x = parseInt(document.getElementById('coordinate-x').value) - 1;
+                const y = parseInt(document.getElementById('coordinate-y').value) - 1;
+                throwRing(x, y);
+            });
+            
+            // 随机生成地图按钮
+            document.getElementById('random-map').addEventListener('click', generateRandomMap);
+            
+            // 自定义地图按钮
+            document.getElementById('custom-map').addEventListener('click', promptCustomMap);
+            
+            // 重置游戏按钮
+            document.getElementById('reset-game').addEventListener('click', resetGame);
+            
+            // 坐标输入框回车事件
+            document.getElementById('coordinate-x').addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') {
+                    document.getElementById('coordinate-y').focus();
+                }
+            });
+            
+            document.getElementById('coordinate-y').addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') {
+                    document.getElementById('throw-ring').click();
+                }
+            });
+        }
+
+        // 初始化
+        function init() {
+            renderPrizeMap();
+            renderPrizeRecords();
+            initEventListeners();
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
+    

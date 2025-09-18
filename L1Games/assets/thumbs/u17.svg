@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
+  <rect width="320" height="180" fill="#004d40"/>
+  <text x="16" y="34" fill="#b2dfdb" font-size="26" font-weight="700" font-family="Arial">U17 二维数组</text>
+  <g>
+    <rect x="60" y="60" width="30" height="30" fill="#26a69a"/>
+    <rect x="95" y="60" width="30" height="30" fill="#26a69a"/>
+    <rect x="130" y="60" width="30" height="30" fill="#26a69a"/>
+    <rect x="165" y="60" width="30" height="30" fill="#26a69a"/>
+  </g>
+  <g>
+    <rect x="60" y="95" width="30" height="30" fill="#4db6ac"/>
+    <rect x="95" y="95" width="30" height="30" fill="#4db6ac"/>
+    <rect x="130" y="95" width="30" height="30" fill="#4db6ac"/>
+    <rect x="165" y="95" width="30" height="30" fill="#4db6ac"/>
+  </g>
+</svg>
+

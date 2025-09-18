@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据类型识别游戏 - 教室版</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="classroom">
+        <!-- 黑板区域 -->
+        <div class="blackboard">
+            <div class="blackboard-frame">
+                <div class="chalk-holder"></div>
+                <div class="question-area">
+                    <div class="code-display">
+                        <div class="code-line">#include &lt;iostream&gt;</div>
+                        <div class="code-line">using namespace std;</div>
+                        <div class="code-line">int main() {</div>
+                        <div class="code-line">    <span class="highlight" id="question-value">42</span>;</div>
+                        <div class="code-line">    return 0;</div>
+                        <div class="code-line">}</div>
+                    </div>
+                    <div class="question-text">
+                        <p>请识别上面代码中高亮部分的数据类型：</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 课桌区域 -->
+        <div class="desk">
+            <div class="paper">
+                <div class="paper-lines"></div>
+                <div class="answer-area">
+                    <input type="text" id="answer-input" placeholder="在这里输入你的答案..." maxlength="20">
+                    <button id="submit-btn">提交答案</button>
+                </div>
+            </div>
+            <div class="pen"></div>
+            <div class="pencil-case"></div>
+        </div>
+
+        <!-- 红旗计数区域 -->
+        <div class="flag-counter">
+            <div class="flag-display">
+                <span class="flag-label">红旗数量：</span>
+                <div class="flags" id="flags-container">
+                    <!-- 红旗将通过JavaScript动态添加 -->
+                </div>
+            </div>
+            <div class="score-display">
+                <span>得分：<span id="score">0</span></span>
+            </div>
+        </div>
+
+        <!-- 反馈区域 -->
+        <div class="feedback" id="feedback">
+            <div class="feedback-content">
+                <div class="feedback-icon" id="feedback-icon"></div>
+                <div class="feedback-text" id="feedback-text"></div>
+            </div>
+        </div>
+
+        <!-- 游戏控制区域 -->
+        <div class="game-controls">
+            <button id="new-question-btn">新题目</button>
+            <button id="reset-game-btn">重新开始</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+

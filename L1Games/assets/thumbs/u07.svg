@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
+  <rect width="320" height="180" fill="#880e4f"/>
+  <text x="18" y="38" fill="#f8bbd0" font-size="24" font-weight="700" font-family="Arial">U7 while</text>
+  <g>
+    <circle cx="70" cy="110" r="16" fill="#e53935"/>
+    <circle cx="120" cy="110" r="16" fill="#e53935"/>
+    <circle cx="170" cy="110" r="16" fill="#e53935"/>
+    <text x="210" y="116" fill="#ffcdd2" font-family="Courier New" font-size="18">while(eat){}</text>
+  </g>
+</svg>
+

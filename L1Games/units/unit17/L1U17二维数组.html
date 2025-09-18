@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+
+<head>
+    <title>二维数组演示动画</title>
+    <meta charset="utf-8" />
+</head>
+
+<style type="text/css">
+    * {
+        font-family: 'Consolas', sans-serif;
+    }
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+    }
+
+    input[type="number"] {
+        outline: none;
+        border: none;
+        border-radius: 0.25em;
+        background: #dfefff;
+        text-align: center;
+    }
+
+    .runBar {
+        position: absolute;
+        left: 7em;
+        top: 12.5em;
+        width: 9em;
+        height: 1.5em;
+        background: #bfff7f;
+        border-radius: 0.25em;
+        text-align: center;
+    }
+
+    .codeArea {
+        position: absolute;
+        left: 4em;
+        top: 4em;
+    }
+
+    .codeTextArea {
+        padding: 1em;
+        line-height: 1.5em;
+        border: 1px solid gray;
+        border-radius: 0 1em 1em 1em;
+        box-shadow: 0.25em 0.25em 0.25em gray;
+    }
+
+    .codeTitle {
+        left: 4em;
+        top: 2.5em;
+        width: 5em;
+        height: 1.5em;
+        background: #3f7fff;
+        border: none;
+        border-radius: 0.5em 0.5em 0 0;
+        text-align: center;
+        color: white;
+    }
+
+    .arrayTable {
+        position: absolute;
+        left: 35em;
+        top: 8.5em;
+        border-collapse: collapse;
+        background: #afcfff;
+        text-align: center;
+    }
+
+    .arrayTd {
+        padding: 2em;
+        border-collapse: collapse;
+        border: 2px solid #3f7fff;
+    }
+
+    .speedTable {
+        padding: 0;
+        table-layout: fixed;
+        width: 0;
+        font-size: small;
+        text-align: center;
+        border-collapse: collapse;
+    }
+
+    .speedTd {
+        padding: 0;
+        width: 2.05em;
+        white-space: nowrap;
+        border-collapse: collapse;
+    }
+
+    /* Run button */
+
+    .codeRunButton {
+        margin: 0 0 0 2em;
+        width: 5em;
+        height: 2em;
+        background: #3fbf7f;
+        border: none;
+        border-radius: 1em;
+        text-align: center;
+        color: white;
+        transition: 0.2s;
+    }
+
+    .codeRunButton:hover {
+        background: #3fcf7f;
+        box-shadow: 0 0 0.5em #3fcf7f;
+    }
+
+    .codeRunButton:active {
+        background: #2faf5f;
+    }
+
+    .codeRunButton:disabled {
+        background: #cfcfcf;
+    }
+
+    /* Pause button */
+
+    .codePauseButton {
+        margin: 0 0 0 2em;
+        width: 5em;
+        height: 2em;
+        background: #cf6f3f;
+        border: none;
+        border-radius: 1em;
+        text-align: center;
+        color: white;
+        transition: 0.2s;
+    }
+
+    .codePauseButton:hover {
+        background: #df7f3f;
+        box-shadow: 0 0 0.5em #ff7f00;
+    }
+
+    .codePauseButton:active {
+        background: #af5f2f;
+    }
+
+    .codePauseButton:disabled {
+        background: #cfcfcf;
+    }
+
+    /* Stop button */
+
+    .codeStopButton {
+        margin: 0 0 0 0.5em;
+        height: 2em;
+        width: 5em;
+        background: #bf3f3f;
+        border: none;
+        border-radius: 1em;
+        text-align: center;
+        color: white;
+        transition: 0.2s;
+    }
+
+    .codeStopButton:not([disabled]):hover {
+        background: #cf5f5f;
+        box-shadow: 0 0 0.5em #cf5f5f;
+    }
+
+    .codeStopButton:not([disabled]):active {
+        background: #af2f2f;
+    }
+
+    .codeStopButton:disabled {
+        background: #cfcfcf;
+    }
+
+    .rowNum {
+        color: #003fff;
+        text-align: center;
+    }
+
+    .colNum {
+        color: #3fbf00;
+        text-align: center;
+    }
+
+    .loopVarI {
+        display: inline-block;
+        color: #007fff;
+        text-align: center;
+    }
+
+    .loopVarJ {
+        display: inline-block;
+        color: #3f7f00;
+        text-align: center;
+    }
+
+    .animArea {
+        position: absolute;
+        left: 0em;
+        top: 0em;
+    }
+
+    .animElem {
+        position: absolute;
+        display: block;
+        text-align: center;
+    }
+
+    .arrayBox {
+        position: absolute;
+        display: block;
+        border: 5px solid;
+        border-radius: 1em;
+    }
+
+    input[type="range"] {
+        width: 15em;
+    }
+
+    /* Switch */
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 3em;
+        height: 1.5em;
+    }
+
+    .switch input { 
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #cccccc;
+        transition: 0.2s;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 1.3em;
+        width: 1.3em;
+        left: 0.1em;
+        bottom: 0.1em;
+        background-color: white;
+        transition: 0.2s;
+    }
+
+    /* Switch I */
+
+    .inputI[type="checkbox"]:not([disabled]):checked + .slider {
+        background-color: #007fff;
+        box-shadow: 0 0 0.1em #003f7f;
+    }
+
+    .inputI[type="checkbox"]:not([disabled]):checked + .slider:before {
+        transform: translateX(1.5em);
+    }
+
+    .inputI[type="checkbox"]:not([disabled]):hover + .slider {
+        box-shadow: 0 0 0.5em #003f7f;
+    }
+
+    .inputI[type="checkbox"]:disabled + .slider:before {
+        background-color: #eeeeee;
+    }
+
+    .inputI[type="checkbox"]:disabled:checked + .slider {
+        background-color: #005faf;
+        box-shadow: 0 0 0.1em #003f7f;
+    }
+
+    .inputI[type="checkbox"]:disabled:checked + .slider:before {
+        transform: translateX(1.5em);
+    }
+
+    /* Switch J */
+
+    .inputJ[type="checkbox"]:not([disabled]):checked + .slider {
+        background-color: #3faf00;
+        box-shadow: 0 0 0.1em #0f5f00;
+    }
+
+    .inputJ[type="checkbox"]:not([disabled]):checked + .slider:before {
+        transform: translateX(1.5em);
+    }
+
+    .inputJ[type="checkbox"]:not([disabled]):hover + .slider {
+        box-shadow: 0 0 0.5em #0f5f00;
+    }
+
+    .inputJ[type="checkbox"]:disabled + .slider:before {
+        background-color: #eeeeee;
+    }
+
+    .inputJ[type="checkbox"]:disabled:checked + .slider {
+        background-color: #1f7f00;
+        box-shadow: 0 0 0.1em #0f5f00;
+    }
+
+    .inputJ[type="checkbox"]:disabled:checked + .slider:before {
+        transform: translateX(1.5em);
+    }
+
+    /* Round slider */
+
+    .slider.round {
+        border-radius: 0.75em;
+    }
+
+    .slider.round:before {
+        border-radius: 50%;
+    }
+</style>
+
+<script type="text/javascript">
+    var runBar, codeArea, rowNumInput, colNumInput, loopI, loopJ, loopVarI, loopVarJ, animArea, runButton, pauseButton, stopButton, speedRange, dirICheckbox, dirJCheckbox, dirIText, dirJText;
+    var animStyleSheet;
+    var defaultRowNum = defaultColNum = rowNum = colNum = 5;
+    var maxRowNum = maxColNum = 9, minRowNum = minColNum = 1;
+    var run = false, pause = false;
+
+    function listToString(elemList) {
+        s = "[";
+        for (let i = 0; i < elemList.length; ++i) {
+            if (i > 0) {
+                s += ", "
+            }
+            s += elemList[i].toString();
+        }
+        s += "]";
+        return s;
+    }
+
+    function init() {
+        runBar = document.getElementById("runBar");
+        codeArea = document.getElementById("codeArea");
+        rowNumInput = document.getElementById("rowNum");
+        colNumInput = document.getElementById("colNum");
+        loopI = document.getElementById("loopI");
+        loopJ = document.getElementById("loopJ");
+        loopVarI = document.getElementById("loopVarI");
+        loopVarJ = document.getElementById("loopVarJ");
+        animArea = document.getElementById("animArea");
+        runButton = document.getElementById("runButton");
+        pauseButton = document.getElementById("pauseButton");
+        stopButton = document.getElementById("stopButton");
+        speedRange = document.getElementById("speedRange");
+        dirICheckbox = document.getElementById("dirICheckbox");
+        dirJCheckbox = document.getElementById("dirJCheckbox");
+        dirIText = document.getElementById("dirIText");
+        dirJText = document.getElementById("dirJText");
+
+        animStyleSheet = document.createElement("style");
+        animStyleSheet.type = "text/css";
+        document.head.appendChild(animStyleSheet);
+        runBar.style.display = "none";
+    }
+
+    function createArrayTable() {
+        let arrayTable = document.createElement("table");
+        arrayTable.id = "arrayTable";
+        arrayTable.className = "arrayTable";
+        for (let i = 0; i < rowNum; ++i) {
+            let arrayTr = document.createElement("tr");
+            for (let j = 0; j < colNum; ++j) {
+                let arrayTd = document.createElement("td");
+                arrayTd.className = "arrayTd";
+                arrayTr.appendChild(arrayTd);
+            }
+            arrayTable.appendChild(arrayTr);
+        }
+        return arrayTable;
+    }
+
+    function createAnimElement() {
+        animArea.innerHTML = "";
+
+        animArea.appendChild(createArrayTable());
+
+        let pointerI = document.createElement("div");
+        pointerI.id = "pointerI";
+        pointerI.className = "animElem";
+        pointerI.style.width = "4em";
+        pointerI.style.height = "1.5em";
+        pointerI.style.lineHeight = "1.5em";
+        pointerI.style.left = "11.55em";
+        pointerI.style.top = "14.05em";
+        pointerI.style.color = "#007fff";
+        pointerI.innerText = "i : 0";
+        animArea.appendChild(pointerI);
+
+        let pointerJ = document.createElement("div");
+        pointerJ.id = "pointerJ";
+        pointerJ.className = "animElem";
+        pointerJ.style.width = "4em";
+        pointerJ.style.height = "1.5em";
+        pointerJ.style.lineHeight = "1.5em";
+        pointerJ.style.left = "13.75em";
+        pointerJ.style.top = "15.55em";
+        pointerJ.style.color = "#3f7f00";
+        pointerJ.innerText = "j : 0";
+        animArea.appendChild(pointerJ);
+
+        let ipp = document.createElement("div");
+        ipp.id = "ipp";
+        ipp.className = "animElem";
+        ipp.style.width = "3em";
+        ipp.style.height = "1.5em";
+        ipp.style.lineHeight = "1.5em";
+        ipp.style.left = "19.25em";
+        ipp.style.top = "14.05em";
+        ipp.style.color = "#007fff";
+        ipp.innerText = "i++";
+        animArea.appendChild(ipp);
+
+        let jpp = document.createElement("div");
+        jpp.id = "jpp";
+        jpp.className = "animElem";
+        jpp.style.width = "3em";
+        jpp.style.height = "1.5em";
+        jpp.style.lineHeight = "1.5em";
+        jpp.style.left = "21.45em";
+        jpp.style.top = "15.55em";
+        jpp.style.color = "#3f7f00";
+        jpp.innerText = "j++";
+        animArea.appendChild(jpp);
+
+        let arrayBoxI = document.createElement("div");
+        arrayBoxI.id = "arrayBoxI";
+        arrayBoxI.className = "arrayBox";
+        arrayBoxI.style.width = `${4.1 * colNum + 0.5}em`;
+        arrayBoxI.style.height = "4.5em";
+        arrayBoxI.style.left = "34.5em";
+        arrayBoxI.style.top = "8.05em";
+        arrayBoxI.style.borderColor = "#003fbf";
+        animArea.appendChild(arrayBoxI);
+
+        let arrayBoxJ = document.createElement("div");
+        arrayBoxJ.id = "arrayBoxJ";
+        arrayBoxJ.className = "arrayBox";
+        arrayBoxJ.style.width = "3.6em";
+        arrayBoxJ.style.height = "3.6em";
+        arrayBoxJ.style.left = "35em";
+        arrayBoxJ.style.top = "8.5em";
+        arrayBoxJ.style.borderColor = "#3f7f00";
+        animArea.appendChild(arrayBoxJ);
+
+        for (let i = 0; i < rowNum; ++i) {
+            for (let j = 0; j < colNum; ++j) {
+                let valueIJ = document.createElement("div");
+                valueIJ.id = `value_${i}_${j}`;
+                valueIJ.className = "animElem";
+                valueIJ.style.width = "4em";
+                valueIJ.style.height = "4em";
+                valueIJ.style.lineHeight = "4em";
+                valueIJ.style.left = "15.45em";
+                valueIJ.style.top = "15.8em";
+                valueIJ.style.color = "#ff7f00";
+                valueIJ.innerText = "0";
+                animArea.appendChild(valueIJ);
+            }
+        }
+
+        for (let elem of animArea.children) {
+            elem.style.display = "none";
+        }
+    }
+
+    function setRowNum(num) {
+        rowNum = num;
+        document.getElementById("loopRowNum").innerText = (directionI == 1 ? num : num - 1);
+    }
+
+    function setColNum(num) {
+        colNum = num;
+        document.getElementById("loopColNum").innerText = (directionJ == 1 ? num : num - 1);
+    }
+
+    function onRowNumInput() {
+        let value = parseInt(rowNumInput.value);
+        if (isNaN(value)) {
+            setRowNum(defaultRowNum);
+        } else {
+            setRowNum(value);
+        }
+    }
+
+    function onColNumInput() {
+        let value = parseInt(colNumInput.value);
+        if (isNaN(value)) {
+            setColNum(defaultColNum);
+        } else {
+            setColNum(value);
+        }
+    }
+
+    function onRowNumChange() {
+        let value = parseInt(rowNumInput.value);
+        if (isNaN(value)) {
+            setRowNum(defaultRowNum);
+            rowNumInput.value = "";
+        } else {
+            if (value < minRowNum) {
+                setRowNum(minRowNum);
+                rowNumInput.value = minRowNum;
+            } else if (value > maxRowNum) {
+                setRowNum(maxRowNum);
+                rowNumInput.value = maxRowNum;
+            } else {
+                setRowNum(value);
+                rowNumInput.value = value;
+            }
+        }
+    }
+
+    function onColNumChange() {
+        let value = parseInt(colNumInput.value);
+        if (isNaN(value)) {
+            setColNum(defaultColNum);
+            colNumInput.value = "";
+        } else {
+            if (value < 1) {
+                setColNum(minColNum);
+                colNumInput.value = minColNum;
+            } else if (value > maxColNum) {
+                setColNum(maxColNum);
+                colNumInput.value = maxColNum;
+            } else {
+                setColNum(value);
+                colNumInput.value = value;
+            }
+        }
+    }
+
+    function onSpeedValueUpdate() {
+        let value = speedRange.value;
+        if (value == 0) {
+            speed = 0.25;
+        } else if (value == 1) {
+            speed = 0.5;
+        } else if (value == 2) {
+            speed = 1.0;
+        } else if (value == 3) {
+            speed = 2.0;
+        } else if (value == 4) {
+            speed = 4.0;
+        } else if (value == 5) {
+            speed = 8.0;
+        } else if (value == 6) {
+            speed = 16.0;
+        } else if (value == 7) {
+            speed = 32.0;
+        }
+        let factor = lastSpeed / speed;
+        leftTime *= factor;
+        for (let curAnimElemId of curAnimElemIdList) {
+            let animElem = document.getElementById(curAnimElemId);
+            let newDura = parseFloat(animElem.style.animationDuration) * factor + "s";
+            animElem.style.animationDuration = newDura;
+        }
+    }
+
+    function onDirIChange() {
+        if (dirICheckbox.checked) {
+            directionI = -1;
+            dirIText.innerText = "逆向";
+            let loopIBackwardHTML = `&nbsp;&nbsp;&nbsp;&nbsp;for (int <span class="loopVarI">i</span> = <span id="loopRowNum" class="rowNum">${rowNum - 1}</span>; <span class="loopVarI">i</span> &gt;= 0; <span class="loopVarI">i</span>--) {`;
+            loopI.innerHTML = loopIBackwardHTML;
+        } else {
+            directionI = 1;
+            dirIText.innerText = "正向";
+            let loopIForwardHTML = `&nbsp;&nbsp;&nbsp;&nbsp;for (int <span class="loopVarI">i</span> = 0; <span class="loopVarI">i</span> &lt; <span id="loopRowNum" class="rowNum">${rowNum}</span>; <span class="loopVarI">i</span>++) {`;
+            loopI.innerHTML = loopIForwardHTML;
+        }
+    }
+
+    function onDirJChange() {
+        if (dirJCheckbox.checked) {
+            directionJ = -1;
+            dirJText.innerText = "逆向";
+            let loopJBackwardHTML = `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (int <span class="loopVarJ">j</span> = <span id="loopColNum" class="colNum">${colNum - 1}</span>; <span class="loopVarJ">j</span> &gt;= 0; <span class="loopVarJ">j</span>--) {`;
+            loopJ.innerHTML = loopJBackwardHTML;
+        } else {
+            directionJ = 1;
+            dirJText.innerText = "正向";
+            let loopJForwardHTML = `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (int <span class="loopVarJ">j</span> = 0; <span class="loopVarJ">j</span> &lt; <span id="loopColNum" class="colNum">${colNum}</span>; <span class="loopVarJ">j</span>++) {`;
+            loopJ.innerHTML = loopJForwardHTML;
+        }
+    }
+
+    /* Animation */
+    var startAnimIndex = 0;
+    var lastSpeed = speed = 1.0;
+    var directionI = 1, directionJ = 1;
+
+    /* animation: name duration timing-function delay iteration-count direction fill-mode play-state */
+    var animList = [];
+    var animId = 0;
+    var curAnimElemIdList = [];
+
+    /* Entry by wiping */
+    function getEntryWipeKeyFrame(direction="", rect=[]) {
+        var rectStr = "";
+        if (rect.length > 0) {
+            rectStr = `left: ${rect[0]}em;
+        top: ${rect[1]}em;
+        width: ${rect[2]}em;
+        height: ${rect[3]}em;`;
+        }
+        if (direction == "right") {
+            return `@keyframes anim${animId.toString().padStart(4, "0")} {
+    0% {
+        ${rectStr}
+        clip-path: rect(0 0 100% 0);
+    }
+    100% {
+        ${rectStr}
+        clip-path: rect(0 100% 100% 0);
+    }
+}`;
+        } else if (direction == "down") {
+            return `@keyframes anim${animId.toString().padStart(4, "0")} {
+    0% {
+        ${rectStr}
+        clip-path: rect(0 100% 0 0);
+    }
+    100% {
+        ${rectStr}
+        clip-path: rect(0 100% 100% 0);
+    }
+}`;
+        } else if (direction == "left") {
+            return `@keyframes anim${animId.toString().padStart(4, "0")} {
+    0% {
+        ${rectStr}
+        clip-path: rect(0 100% 100% 100%);
+    }
+    100% {
+        ${rectStr}
+        clip-path: rect(0 100% 100% 0);
+    }
+}`;
+        } else if (direction == "up") {
+            return `@keyframes anim${animId.toString().padStart(4, "0")} {
+    0% {
+        ${rectStr}
+        clip-path: rect(100% 100% 100% 0);
+    }
+    100% {
+        ${rectStr}
+        clip-path: rect(0 100% 100% 0);
+    }
+}`;
+        } else if (direction == "expand") {
+            return `@keyframes anim${animId.toString().padStart(4, "0")} {
+    0% {
+        ${rectStr}
+        clip-path: rect(50% 50% 50% 50%);
+    }
+    100% {
+        ${rectStr}
+        clip-path: rect(0 100% 100% 0);
+    }
+}`;
+        } else {
+            return `@keyframes anim${animId.toString().padStart(4, "0")} {
+    0% {
+        ${rectStr}
+        clip-path: rect(0 0 0 0);
+    }
+    100% {
+        ${rectStr}
+        clip-path: rect(0 100% 100% 0);
+    }
+}`;
+        }
+    }
+    
+    /* Leave by wiping*/
+    function getLeaveWipeKeyFrame(direction="", rect=[], scale=1) {
+        var rectStr = "";
+        if (rect.length > 0) {
+            rectStr = `left: ${rect[0]}em;
+        top: ${rect[1]}em;
+        width: ${rect[2]}em;
+        height: ${rect[3]}em;`;
+        }
+        if (direction == "right") {
+            return `@keyframes anim${animId.toString().padStart(4, "0")} {
+    0% {
+        ${rectStr}
+        clip-path: rect(0 100% 100% 0);
+        ${scale != 1 ? ("transform: scale(" + scale + ");") : ""}
+    }
+    100% {
+        ${rectStr}
+        clip-path: rect(0 100% 100% 100%);
+        ${scale != 1 ? ("transform: scale(" + scale + ");") : ""}
+    }
+}`;
+        } else if (direction == "down") {
+            return `@keyframes anim${animId.toString().padStart(4, "0")} {
+    0% {
+        ${rectStr}
+        clip-path: rect(0 100% 100% 0);
+        ${scale != 1 ? ("transform: scale(" + scale + ");") : ""}
+    }
+    100% {
+        ${rectStr}
+        clip-path: rect(100% 100% 100% 0);
+        ${scale != 1 ? ("transform: scale(" + scale + ");") : ""}
+    }
+}`;
+        } else if (direction == "left") {
+            return `@keyframes anim${animId.toString().padStart(4, "0")} {
+    0% {
+        ${rectStr}
+        clip-path: rect(0 100% 100% 0);
+        ${scale != 1 ? ("transform: scale(" + scale + ");") : ""}
+    }
+    100% {
+        ${rectStr}
+        clip-path: rect(0 0 100% 0);
+        ${scale != 1 ? ("transform: scale(" + scale + ");") : ""}
+    }
+}`;
+        } else if (direction == "up") {
+            return `@keyframes anim${animId.toString().padStart(4, "0")} {
+    0% {
+        ${rectStr}
+        clip-path: rect(0 100% 100% 0);
+        ${scale != 1 ? ("transform: scale(" + scale + ");") : ""}
+    }
+    100% {
+        ${rectStr}
+        clip-path: rect(0 100% 0 0);
+        ${scale != 1 ? ("transform: scale(" + scale + ");") : ""}
+    }
+}`;
+        } else if (direction == "expand") {
+            return `@keyframes anim${animId.toString().padStart(4, "0")} {
+    0% {
+        ${rectStr}
+        clip-path: rect(0 100% 100% 0);
+        ${scale != 1 ? ("transform: scale(" + scale + ");") : ""}
+    }
+    100% {
+        ${rectStr}
+        clip-path: rect(50% 50% 50% 50%);
+        ${scale != 1 ? ("transform: scale(" + scale + ");") : ""}
+    }
+}`;
+        } else {
+            return `@keyframes anim${animId.toString().padStart(4, "0")} {
+    0% {
+        ${rectStr}
+        clip-path: rect(0 100% 100% 0);
+        ${scale != 1 ? ("transform: scale(" + scale + ");") : ""}
+    }
+    100% {
+        ${rectStr}
+        clip-path: rect(100% 100% 100% 100%);
+        ${scale != 1 ? ("transform: scale(" + scale + ");") : ""}
+    }
+}`;
+        }
+    }
+    
+    /* Entry by fade in */
+    function getFadeInKeyFrame(rect=[]) {
+        var rectStr = "";
+        if (rect.length > 0) {
+            rectStr = `left: ${rect[0]}em;
+        top: ${rect[1]}em;
+        width: ${rect[2]}em;
+        height: ${rect[3]}em;`;
+        }
+        return `@keyframes anim${animId.toString().padStart(4, "0")} {
+    0% { 
+        ${rectStr}
+        opacity: 0%;
+    }
+    100% {
+        ${rectStr}
+        opacity: 100%;
+    }
+}`;
+    }
+
+    /* Leave by fade out */
+    function getFadeOutKeyFrame(rect=[], scale=1, color="", colorType="") {
+        var rectStr = "";
+        if (rect.length > 0) {
+            rectStr = `left: ${rect[0]}em;
+        top: ${rect[1]}em;
+        width: ${rect[2]}em;
+        height: ${rect[3]}em;`;
+        }
+        return `@keyframes anim${animId.toString().padStart(4, "0")} {
+    0% {
+        ${rectStr}
+        ${scale != 1 ? ("transform: scale(" + scale + ");") : ""}
+        ${(color.length > 0) ? (((colorType.length > 0) ? colorType : "background-color") + ": " + color + ";") : ""}
+        opacity: 100%;
+    }
+    100% {
+        ${rectStr}
+        ${scale != 1 ? ("transform: scale(" + scale + ");") : ""}
+        ${(color.length > 0) ? (((colorType.length > 0) ? colorType : "background-color") + ": " + color + ";") : ""}
+        opacity: 0%;
+    }
+}`;
+    }
+
+    /* Rectangle transform with color */
+    function getRectKeyFrame(srcRect, dstRect, srcColor="", dstColor="", colorType="") {
+        return `@keyframes anim${animId.toString().padStart(4, "0")} {
+    0% { 
+        left: ${srcRect[0]}em;
+        top: ${srcRect[1]}em;
+        width: ${srcRect[2]}em;
+        height: ${srcRect[3]}em;
+        ${(srcColor.length > 0) ? (((colorType.length > 0) ? colorType : "background-color") + ": " + srcColor + ";") : ""}
+    }
+    100% {
+        left: ${dstRect[0]}em;
+        top: ${dstRect[1]}em;
+        width: ${dstRect[2]}em;
+        height: ${dstRect[3]}em;
+        ${(dstColor.length > 0) ? (((colorType.length > 0) ? colorType : "background-color") + ": " + dstColor + ";") : ""}
+    }
+}`;
+    }
+
+    /* Translate*/
+    function getTranslateFrame(srcPos, dstPos, srcColor="", dstColor="", colorType="") {
+        return `@keyframes anim${animId.toString().padStart(4, "0")} {
+    0% { 
+        left: ${srcPos[0]}em;
+        top: ${srcPos[1]}em;
+        ${(srcColor.length > 0) ? (((colorType.length > 0) ? colorType : "background-color") + ": " + srcColor + ";") : ""}
+    }
+    100% {
+        left: ${dstPos[0]}em;
+        top: ${dstPos[1]}em;
+        ${(dstColor.length > 0) ? (((colorType.length > 0) ? colorType : "background-color") + ": " + dstColor + ";") : ""}
+    }
+}`;
+    }
+
+    /* Translate and scale */
+    function getTranslateAndScaleFrame(srcPos, dstPos, scale, srcColor="", dstColor="", colorType="") {
+        return `@keyframes anim${animId.toString().padStart(4, "0")} {
+    0% { 
+        left: ${srcPos[0]}em;
+        top: ${srcPos[1]}em;
+        transform: scale(1);
+        ${(srcColor.length > 0) ? (((colorType.length > 0) ? colorType : "background-color") + ": " + srcColor + ";") : ""}
+    }
+    100% {
+        left: ${dstPos[0]}em;
+        top: ${dstPos[1]}em;
+        transform: scale(${scale});
+        ${(dstColor.length > 0) ? (((colorType.length > 0) ? colorType : "background-color") + ": " + dstColor + ";") : ""}
+    }
+}`;
+    }
+
+    /* Emphasize by size and color */
+    function getEmphasizeKeyFram(scale, srcColor="", emphColor="", colorType="", rect=[]) {
+        var rectStr = "";
+        if (rect.length > 0) {
+            rectStr = `left: ${rect[0]}em;
+        top: ${rect[1]}em;
+        width: ${rect[2]}em;
+        height: ${rect[3]}em;`;
+        }
+        return `@keyframes anim${animId.toString().padStart(4, "0")} {
+    0% { 
+        transform: scale(1);
+        ${(srcColor.length > 0) ? (((colorType.length > 0) ? colorType : "background-color") + ": " + srcColor + ";") : ""}
+        ${rectStr}
+    }
+    50% {
+        transform: scale(${scale});
+        ${(emphColor.length > 0) ? (((colorType.length > 0) ? colorType : "background-color") + ": " + emphColor + ";") : ""}
+        ${rectStr}
+    }
+    100% {
+        transform: scale(1);
+        ${(srcColor.length > 0) ? (((colorType.length > 0) ? colorType : "background-color") + ": " + srcColor + ";") : ""}
+        ${rectStr}
+    }
+}`;
+    }
+
+    function addAnim(id, keyFrame, duration, interval, text="") {
+        animStyleSheet.append(keyFrame);
+        animList.push({ "id": id, "anim": `anim${animId.toString().padStart(4, "0")}`, "dura": duration, "intv": interval, "text": text });
+        animId++;
+    }
+
+    var runBarRects = [[7, 12.5, 9, 1.5],   // int a[r][c];
+    [10, 14, 5.5, 1.5],                     // int i = 0;
+    [15.5, 14, 4, 1.5],                     // i < r;
+    [12, 15.5, 6, 1.5],                     // int j = 0;
+    [17.75, 15.5, 4, 1.5],                  // j < c;
+    [11.25, 17, 7.25, 1.5],                 // a[i][j] = 0;
+    [21.75, 15.5, 2, 1.5],                  // j++
+    [19.5, 14, 2.125, 1.5],                 // i++
+    [7, 21.5, 5.5, 1.5],                    // return 0;
+    ];
+
+    function setAnim() {
+        /* Create elements for animation */
+        createAnimElement();
+
+        let runBarColor = runBar.style.backgroundColor;
+        let arrayBoxI = document.getElementById("arrayBoxI");
+        let arrayBoxJ = document.getElementById("arrayBoxJ");
+        let pointerI = document.getElementById("pointerI");
+        let pointerJ = document.getElementById("pointerJ");
+        let boxIColor = arrayBoxI.style.borderColor;
+        let boxJColor = arrayBoxJ.style.borderColor;
+        let pointerIColor = pointerI.style.borderColor;
+        let pointerJColor = pointerJ.style.borderColor;
+        let emphColor = "#ff3f3f", emphColor2 = "#ffff00";
+
+        let lastBoxIPos = [34.5, 8.05], boxIPos = [34.5, 8.05];
+        let lastBoxJPos = [35, 8.5], boxJPos = [35, 8.5];
+        let pointerIPos = [11.55, 14.05], pointerJPos = [13.75, 15.55];
+        let pointerILeftOffset = 0;
+        let pointerSize = [4, 1.5], ppSize = [3, 1.5], valueSize = [4, 4];
+        let valuePos = [15.45, 15.8];
+        let runBarI = 1, lastRunBarI = 0;
+
+        if (directionI == -1) {
+            lastBoxIPos[1] += 4.1 * (rowNum - 1);
+            boxIPos[1] += 4.1 * (rowNum - 1);
+            lastBoxJPos[1] += 4.1 * (rowNum - 1);
+            boxJPos[1] += 4.1 * (rowNum - 1);
+            runBarRects[2][2] += 0.45;
+            runBarRects[7][0] += 0.6;
+        }
+        if (directionJ == -1) {
+            lastBoxJPos[0] += 4.1 * (colNum - 1);
+            boxJPos[0] += 4.1 * (colNum - 1);
+            pointerILeftOffset = 4.1 * (colNum + 1) + 1;
+            runBarRects[4][2] += 0.45;
+            runBarRects[6][0] += 0.6;
+        }
+
+        arrayBoxI.style.left = `${boxIPos[0]}em`;
+        arrayBoxI.style.top = `${boxIPos[1]}em`;
+        arrayBoxJ.style.left = `${boxJPos[0]}em`;
+        arrayBoxJ.style.top = `${boxJPos[1]}em`;
+        pointerI.innerText = `i : ${directionI == 1 ? 0 : (rowNum - 1)}`;
+        pointerJ.innerText = `j : ${directionJ == 1 ? 0 : (colNum - 1)}`;
+
+        animStyleSheet.innerHTML = "";
+
+        if (animId > 0) {
+            animId = 0;
+        }
+        if (animList.length > 0) {
+            animList = [];
+        }
+
+        /* int a[r][c]; Run bar appears */
+        addAnim("runBar", getEntryWipeKeyFrame("right"), 1, 1);
+        /* a[r][c] array appears */
+        addAnim("arrayTable", getEntryWipeKeyFrame(), 1, 1);
+        /* i = 0 */
+        addAnim("runBar", getRectKeyFrame(runBarRects[lastRunBarI], runBarRects[runBarI]), 1, 1);
+        lastRunBarI = runBarI;
+        runBarI++;
+        /* Array box i appears */
+        addAnim("arrayBoxI", getEntryWipeKeyFrame("right"), 1, 0);
+        /* Pointer i appears */
+        addAnim("pointerI", getTranslateFrame(pointerIPos, [boxIPos[0] - 4 + pointerILeftOffset, boxIPos[1] + 2]), 1, 1);
+        for (let i = (directionI == 1 ? 0 : rowNum - 1); i >= 0 && i < rowNum; i += directionI) {
+            /* i < r */
+            addAnim("runBar", getRectKeyFrame(runBarRects[lastRunBarI], runBarRects[runBarI]), 1, 1);
+            lastRunBarI = runBarI;
+            runBarI++;
+            /* j = 0 */
+            addAnim("runBar", getRectKeyFrame(runBarRects[lastRunBarI], runBarRects[runBarI]), 1, 1);
+            lastRunBarI = runBarI;
+            runBarI++;
+            if (directionI == 1 && i == 0 || directionI == -1 && (i == rowNum - 1)) {
+                /* Array box j appears */
+                addAnim("arrayBoxJ", getEntryWipeKeyFrame("right"), 1, 0);
+                /* Pointer j appears */
+                addAnim("pointerJ", getTranslateFrame(pointerJPos, [boxJPos[0], boxJPos[1] - 2]), 1, 1);
+            } else {
+                /* Array box j moves */
+                boxJPos[0] = 35;
+                if (directionJ == -1) {
+                    boxJPos[0] += 4.1 * (colNum - 1);
+                }
+                addAnim("arrayBoxJ", getTranslateFrame(lastBoxJPos, boxJPos, emphColor, boxJColor, "border-color"), 1, 0);
+                /* Pointer j moves */
+                addAnim("pointerJ", getTranslateFrame([lastBoxJPos[0], lastBoxJPos[1] - 2], [boxJPos[0], boxJPos[1] - 2], emphColor, pointerJColor, "color"), 1, 1, `j : ${directionJ == 1 ? 0 : (colNum - 1)}`);
+                lastBoxJPos = boxJPos.concat();
+            }
+            for (let j = (directionJ == 1 ? 0 : colNum - 1); j >= 0 &&  j < colNum; j += directionJ) {
+                /* j < c */
+                addAnim("runBar", getRectKeyFrame(runBarRects[lastRunBarI], runBarRects[runBarI]), 1, 1);
+                lastRunBarI = runBarI;
+                runBarI++;
+                /* a[i][j] = 0 */
+                addAnim("runBar", getRectKeyFrame(runBarRects[lastRunBarI], runBarRects[runBarI]), 1, 1);
+                lastRunBarI = runBarI;
+                runBarI++;
+                /* Emphasize i, j */
+                addAnim("loopVarI", getEmphasizeKeyFram(2.0), 1, 0);
+                addAnim("arrayBoxI", getEmphasizeKeyFram(1.25, boxIColor, emphColor2, "border-color", boxIPos), 1, 1);
+                addAnim("loopVarJ", getEmphasizeKeyFram(2.0), 1, 0);
+                addAnim("arrayBoxJ", getEmphasizeKeyFram(1.25, boxJColor, emphColor2, "border-color", boxJPos), 1, 1);
+                /* Set value */
+                addAnim(`value_${i}_${j}`, getTranslateAndScaleFrame(valuePos, boxJPos, 2), 1, 1, j.toString());
+                /* j++ */
+                addAnim("runBar", getRectKeyFrame(runBarRects[lastRunBarI], runBarRects[runBarI]), 1, 1);
+                lastRunBarI = runBarI;
+                runBarI -= 2;
+                /* Array box j moves */
+                boxJPos[0] += 4.1 * directionJ;
+                addAnim("arrayBoxJ", getTranslateFrame(lastBoxJPos, boxJPos), 1, 0);
+                /* Pointer j moves */
+                addAnim("pointerJ", getTranslateFrame([lastBoxJPos[0], lastBoxJPos[1] - 2], [boxJPos[0], boxJPos[1] - 2]), 1, 1, `j : ${j + directionJ}`);
+                lastBoxJPos = boxJPos.concat();
+            }
+            /* j < c does not meet the condition */
+            addAnim("runBar", getRectKeyFrame(runBarRects[lastRunBarI], runBarRects[runBarI]), 1, 1);
+            lastRunBarI = runBarI;
+            addAnim("runBar", getRectKeyFrame(runBarRects[lastRunBarI], runBarRects[runBarI], runBarColor, emphColor, "background-color"), 1, 0);
+            addAnim("arrayBoxJ", getTranslateFrame(lastBoxJPos, boxJPos, boxJColor, emphColor, "border-color"), 1, 0);
+            addAnim("pointerJ", getTranslateFrame([lastBoxJPos[0], lastBoxJPos[1] - 2], [boxJPos[0], boxJPos[1] - 2], pointerJColor, emphColor, "color"), 1, 1);
+            /* i++ */
+            runBarI = 7;
+            addAnim("runBar", getRectKeyFrame(runBarRects[lastRunBarI], runBarRects[runBarI], emphColor, runBarColor, "background-color"), 1, 1);
+            lastRunBarI = runBarI;
+            runBarI = 2;
+            /* Array box i moves */
+            boxIPos[1] += 4.1 * directionI;
+            addAnim("arrayBoxI", getTranslateFrame(lastBoxIPos, boxIPos), 1, 0);
+            /* Pointer i moves */
+            addAnim("pointerI", getTranslateFrame([lastBoxIPos[0] - 4 + pointerILeftOffset, lastBoxIPos[1] + 2], [boxIPos[0] - 4 + pointerILeftOffset, boxIPos[1] + 2]), 1, 0, `i : ${i + directionI}`);
+            lastBoxIPos = boxIPos.concat();
+            /* Array box j moves with i */
+            boxJPos[1] += 4.1 * directionI;
+            addAnim("arrayBoxJ", getTranslateFrame(lastBoxJPos, boxJPos, emphColor, emphColor, "border-color"), 1, 0);
+            /* Pointer j moves with i */
+            addAnim("pointerJ", getTranslateFrame([lastBoxJPos[0], lastBoxJPos[1] - 2], [boxJPos[0], boxJPos[1] - 2], emphColor, emphColor, "color"), 1, 1);
+            lastBoxJPos = boxJPos.concat();
+        }
+        /* i < r does not meet the condition */
+        addAnim("runBar", getRectKeyFrame(runBarRects[lastRunBarI], runBarRects[runBarI]), 1, 1);
+        lastRunBarI = runBarI;
+        addAnim("runBar", getRectKeyFrame(runBarRects[lastRunBarI], runBarRects[runBarI], runBarColor, emphColor, "background-color"), 1, 0);
+        addAnim("arrayBoxI", getTranslateFrame(lastBoxIPos, boxIPos, boxIColor, emphColor, "border-color"), 1, 0);
+        addAnim("pointerI", getTranslateFrame([lastBoxIPos[0] - 4 + pointerILeftOffset, lastBoxIPos[1] + 2], [boxIPos[0] - 4 + pointerILeftOffset, boxIPos[1] + 2], pointerIColor, emphColor, "color"), 1, 0);
+        addAnim("arrayBoxJ", getTranslateFrame(lastBoxJPos, boxJPos, emphColor, emphColor, "border-color"), 1, 0);
+        addAnim("pointerJ", getTranslateFrame([lastBoxJPos[0], lastBoxJPos[1] - 2], [boxJPos[0], boxJPos[1] - 2], emphColor, emphColor, "color"), 1, 1);
+        lastBoxIPos = boxIPos.concat();
+        lastBoxJPos = boxJPos.concat();
+
+        /* return 0; */
+        runBarI = 8;
+        addAnim("runBar", getRectKeyFrame(runBarRects[lastRunBarI], runBarRects[runBarI], emphColor, runBarColor, "background-color"), 1, 1);
+        lastRunBarI = runBarI;
+
+        /* Fade out */
+        let intv = 0.05;
+        addAnim("runBar", getLeaveWipeKeyFrame("right", runBarRects[lastRunBarI]), 1, intv);
+        addAnim("arrayBoxI", getFadeOutKeyFrame(boxIPos, 1.0, emphColor, "border-color"), 1, intv);
+        addAnim("pointerI", getFadeOutKeyFrame([boxIPos[0] - 4 + pointerILeftOffset, boxIPos[1] + 2], 1.0, emphColor, "color"), 1, intv);
+        addAnim("arrayBoxJ", getFadeOutKeyFrame(boxJPos, 1.0, emphColor, "border-color"), 1, intv);
+        addAnim("pointerJ", getFadeOutKeyFrame([boxJPos[0], boxJPos[1] - 2], 1.0, emphColor, "color"), 1, intv);
+        for (let i = (directionI == 1 ? 0 : rowNum - 1); i >= 0 && i < rowNum; i += directionI) {
+            for (let j = (directionJ == 1 ? 0 : colNum - 1); j >= 0 &&  j < colNum; j += directionJ) {
+                let elemId = `value_${i}_${j}`;
+                let left = 35 + 4.1 * j;
+                let top = 8.5 + 4.1 * i;
+                let width = valueSize[0];
+                let height = valueSize[1];
+                addAnim(elemId, getFadeOutKeyFrame([left, top, width, height], 2.0), 1, intv);
+            }
+        }
+        addAnim("arrayTable", getFadeOutKeyFrame(), 1, 2);
+    }
+
+    function clearAnim() {
+        animStyleSheet.innerHTML = "";
+        animArea.innerHTML = "";
+        animList = [];
+        animId = 0;
+        curAnimElem = null;
+        curAnimElemIdList = [];
+        runBar.style.animation = "none";
+        loopVarI.style.animation = "none";
+        loopVarJ.style.animation = "none";
+    }
+
+    var lastTime, nowTime;
+    var deltaTime = 0.0;
+    var leftTime = 0.0;
+    var animIndex = 0;
+
+    function playAnim() {
+        nowTime = performance.now();
+        deltaTime = nowTime - lastTime;
+        if (!pause) {
+            leftTime -= deltaTime;
+        }
+        if (leftTime <= 0) {
+            if (animIndex < animList.length) {
+                anim = animList[animIndex];
+                let curAnimElemId = anim["id"];
+                let curAnimElem = document.getElementById(curAnimElemId);
+                if (anim["text"].length > 0) {
+                    curAnimElem.innerText = anim["text"];
+                }
+                curAnimElem.style.animation = `${anim["anim"]} ${anim["dura"] / speed}s ease 0s 1 normal forwards`;
+                if (curAnimElem.style.display == "none") {
+                    curAnimElem.style.display = "block";
+                }
+                if (curAnimElemIdList.indexOf(curAnimElemId) == -1) {
+                    curAnimElemIdList.push(curAnimElemId);
+                    // console.log(parseInt(performance.now()) + ": Add an anim elem: " + curAnimElemId + "\nCurrent anim elem list: " + listToString(curAnimElemIdList));
+                }
+                curAnimElem.addEventListener('animationend', function() { endAnim(curAnimElemId); }, { once: true });
+                leftTime = anim["intv"] * 1000 / speed;
+                animIndex++;
+            } else {
+                stopCode();
+            }
+        }
+        lastTime = nowTime;
+        if (run) {
+            setTimeout(playAnim, 0);
+        }
+    }
+
+    function endAnim(elemId) {
+        let index = curAnimElemIdList.indexOf(elemId);
+        if (index !== -1) {
+            curAnimElemIdList.splice(index, 1);
+            // console.log(parseInt(performance.now())  + ": " + elemId + "'s animation ended.\nCurrent anim elem list: " + listToString(curAnimElemIdList));
+        }
+    }
+
+    function runCode() {
+        rowNumInput.disabled = true;
+        colNumInput.disabled = true;
+        dirICheckbox.disabled = true;
+        dirJCheckbox.disabled = true;
+        runButton.style.display = "none";
+        pauseButton.style.display = "inline-block";
+        stopButton.disabled = false;
+        animIndex = startAnimIndex;
+        setAnim();
+        run = true;
+        setTimeout(function () {
+            lastTime = performance.now();
+            leftTime = 0.0;
+            playAnim();
+        }, 0);
+    }
+
+    function pauseCode() {
+        if (!pause) {
+            pause = true;
+            pauseButton.innerText = "继续";
+            for (let curAnimElemId of curAnimElemIdList) {
+                document.getElementById(curAnimElemId).style.animationPlayState = "paused";
+            }
+        } else {
+            pause = false;
+            pauseButton.innerText = "暂停";
+            for (let curAnimElemId of curAnimElemIdList) {
+                document.getElementById(curAnimElemId).style.animationPlayState = "";
+            }
+        }
+    }
+
+    function stopCode() {
+        run = false;
+        pause = false;
+        runButton.style.display = "inline-block";
+        pauseButton.style.display = "none";
+        stopButton.disabled = true;
+        pauseButton.innerText = "暂停";
+        runBar.style.display = "none";
+        clearAnim();
+        rowNumInput.disabled = false;
+        colNumInput.disabled = false;
+        dirICheckbox.disabled = false;
+        dirJCheckbox.disabled = false;
+    }
+
+    window.onload = init;
+</script>
+
+<body>
+    <div id="runBar" class="runBar"></div>
+    <div id="codeArea" class="codeArea">
+        <div class="codeTitle">代码</div>
+        <div id="codeTextArea" class="codeTextArea">
+            <span>#include &lt;iostream&gt;</span>
+            <br />
+            <span>using namespace std;</span>
+            <br />
+            <br />
+            <span>int main() {</span>
+            <br />
+            <span>&nbsp;&nbsp;&nbsp;&nbsp;int a[<input class="rowNum" type="number" id="rowNum" min="1" max="9"
+                    placeholder="5" style="width: 1.5em;" oninput="onRowNumInput()"
+                    onchange="onRowNumChange()" />][<input class="colNum" type="number" id="colNum" min="1" max="9"
+                    placeholder="5" style="width: 1.5em;" oninput="onColNumInput()"
+                    onchange="onColNumChange()" />];</span>
+            <br />
+            <span id="loopI">&nbsp;&nbsp;&nbsp;&nbsp;for (int <span class="loopVarI">i</span> = 0; <span class="loopVarI">i</span> &lt; <span id="loopRowNum" class="rowNum">5</span>; <span class="loopVarI">i</span>++) {</span>
+            <br />
+            <span id="loopJ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (int <span class="loopVarJ">j</span> = 0; <span class="loopVarJ">j</span> &lt; <span id="loopColNum" class="colNum">5</span>; <span class="loopVarJ">j</span>++) {</span>
+            <br />
+            <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a[<span id="loopVarI"
+                    class="loopVarI">i</span>][<span id="loopVarJ" class="loopVarJ">j</span>] = j;</span>
+            <br />
+            <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</span>
+            <br />
+            <span>&nbsp;&nbsp;&nbsp;&nbsp;}</span>
+            <br />
+            <span>&nbsp;&nbsp;&nbsp;&nbsp;return 0;</span>
+            <br />
+            <span>}</span>
+        </div>
+        <div style="margin-top: 1em;"></div>
+        <label>
+            <span>速度: </span><input id="speedRange" type="range" min="0" max="7" step="1" value="2" onchange="onSpeedValueUpdate()" />
+        </label>
+        <div style="margin-left: 2.5em; margin-top: -0.25em; user-select: none;">
+            <table class="speedTable">
+                <tr>
+                    <td class="speedTd" style="transform: scaleX(75%); width: 2.5em;">0.25x</td>
+                    <td class="speedTd" style="transform: scaleX(75%);">0.5x</td>
+                    <td class="speedTd">1x</td>
+                    <td class="speedTd">2x</td>
+                    <td class="speedTd">4x</td>
+                    <td class="speedTd">8x</td>
+                    <td class="speedTd" style="transform: scaleX(80%);">16x</td>
+                    <td class="speedTd" style="transform: scaleX(80%);">32x</td>
+                </tr>
+            </table>
+        </div>
+        <div style="margin-top: 1em;"></div>
+        <div style="line-height: 1.5em;">
+            <span>i循环方向: </span>
+            <label class="switch">
+                <input id="dirICheckbox" type="checkbox" class="inputI" onchange="onDirIChange()" /><span class="slider round"></span>
+            </label>
+            <span id="dirIText">正向</span>
+            <button id="runButton" class="codeRunButton" onclick="runCode()">运行</button>
+            <button id="pauseButton" class="codePauseButton" style="display: none;" onclick="pauseCode()">暂停</button>
+            <button id="stopButton" class="codeStopButton" onclick="stopCode()" disabled>停止</button>
+        </div>
+        <div style="margin-top: 1em;"></div>
+        <div style="line-height: 1.5em;">
+            <span>j循环方向: </span>
+            <label class="switch">
+                <input id="dirJCheckbox" type="checkbox" class="inputJ" onchange="onDirJChange()" /><span class="slider round"></span>
+            </label>
+            <span id="dirJText">正向</span>
+        </div>
+    </div>
+    <div id="animArea" class="animArea"></div>
+</body>

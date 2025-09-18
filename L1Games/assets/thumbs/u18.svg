@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
+  <rect width="320" height="180" fill="#01579b"/>
+  <text x="16" y="34" fill="#bbdefb" font-size="26" font-weight="700" font-family="Arial">U18 二位数组综合</text>
+  <g stroke="#90caf9" stroke-width="3">
+    <line x1="60" y1="60" x2="200" y2="140"/>
+    <line x1="60" y1="140" x2="200" y2="60"/>
+  </g>
+</svg>
+
