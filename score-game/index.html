@@ -380,7 +380,7 @@
         
         .runner {
             position: absolute;
-            left: 0;
+            left: 20%;
             top: 50%;
             transform: translateY(-50%);
             width: 30px;
@@ -388,14 +388,27 @@
             background: linear-gradient(135deg, #3b82f6, #1d4ed8);
             border-radius: 50%;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 12px;
             color: white;
             font-weight: 700;
             transition: left 4s ease-in-out;
             box-shadow: 0 3px 8px rgba(59, 130, 246, 0.3);
             z-index: 10;
+        }
+        
+        .runner-icon {
+            font-size: 14px;
+            line-height: 1;
+        }
+        
+        .runner-current-score {
+            font-size: 8px;
+            line-height: 1;
+            margin-top: 1px;
+            opacity: 0.9;
         }
         
         .runner.at-finish {
@@ -439,7 +452,7 @@
         
         .runner-name {
             position: absolute;
-            left: 40px;
+            left: 10px;
             top: 50%;
             transform: translateY(-50%);
             font-weight: 600;
@@ -1142,6 +1155,7 @@
         let raceSpeed = 5;
         let raceRunning = false;
         let racePaused = false;
+        let examTotalScore = 100; // 考试总分，默认为100
         
         
         
@@ -1166,8 +1180,8 @@
             
             gamePlayers.forEach((player, index) => {
                 const rankClass = getRankClass(player.rank);
-                // 确保1000分不会跑出去，最大95%
-                const progress = Math.min((player.score / 1000) * 95, 95);
+                // 根据实际总分计算进度，确保不会跑出跑道
+                const progress = Math.min((player.score / examTotalScore) * 95, 95);
                 
                 html += `
                     <div class="track-lane">
@@ -1184,10 +1198,11 @@
                             <div class="track-mark"></div>
                             <div class="track-mark"></div>
                         </div>
-                        <div class="runner ${rankClass}" id="runner-${index}" style="left: 0%;">
-                            ${player.name.charAt(0)}
-                        </div>
                         <div class="runner-name">${player.name}</div>
+                        <div class="runner ${rankClass}" id="runner-${index}" style="left: 20%;">
+                            <span class="runner-icon">${player.name.charAt(0)}</span>
+                            <span class="runner-current-score">${player.score}</span>
+                        </div>
                         <div class="runner-score">${player.score}分</div>
                         <div class="runner-time">${player.time}分钟</div>
                     </div>
@@ -1204,8 +1219,8 @@
             
             gamePlayers.forEach((player, index) => {
                 const runner = document.getElementById(`runner-${index}`);
-                // 确保1000分不会跑出去，最大95%
-                const progress = Math.min((player.score / 1000) * 95, 95);
+                // 根据实际总分计算进度，确保不会跑出跑道
+                const progress = Math.min((player.score / examTotalScore) * 95, 95);
                 const duration = (6 / raceSpeed) * 1000; // 更慢的动画，根据速度调整
                 
                 // 添加跑步动画效果
@@ -1214,10 +1229,12 @@
                 // 延迟启动每个跑步者，创造更自然的起跑效果
                 setTimeout(() => {
                     runner.style.transition = `left ${duration}ms ease-in-out`;
-                    runner.style.left = `${progress}%`;
+                    // 计算最终位置：起点20% + 进度百分比 * (跑道宽度 - 起点位置)
+                    const finalPosition = 20 + (progress / 100) * (100 - 20);
+                    runner.style.left = `${finalPosition}%`;
                     
                     // 满分学生添加鲜花效果
-                    if (player.score >= 1000) {
+                    if (player.score >= examTotalScore) {
                         runner.classList.add('full-score');
                         // 满分学生到达终点
                         setTimeout(() => {
@@ -1265,7 +1282,7 @@
             
             gamePlayers.forEach((player, index) => {
                 const runner = document.getElementById(`runner-${index}`);
-                runner.style.left = '0%';
+                runner.style.left = '20%';
                 runner.style.animation = 'none';
                 runner.style.transition = 'none';
                 runner.classList.remove('running', 'full-score', 'at-finish');
@@ -1349,7 +1366,7 @@
             if (!file) return;
             
             // 获取考试信息
-            const examTotalScore = parseFloat(document.getElementById('examTotalScore').value) || 100;
+            examTotalScore = parseFloat(document.getElementById('examTotalScore').value) || 100;
             const examStartTime = document.getElementById('examStartTime').value;
             
             if (!examStartTime) {
@@ -1626,7 +1643,7 @@
                                     name: name,
                                     score: score,
                                     time: time,
-                                    totalScore: Math.floor(score * 10), // 假设满分1000
+                                    totalScore: Math.floor(score * 10), // 根据得分率计算总分
                                     startTime: submitTime,
                                     completionRate: completionRate,
                                     accuracyRate: accuracyRate
@@ -1829,6 +1846,12 @@
                 // 设置为当前时间
                 const timeString = now.toISOString().slice(0, 16);
                 examStartTimeInput.value = timeString;
+            }
+            
+            // 设置默认总分
+            const examTotalScoreInput = document.getElementById('examTotalScore');
+            if (examTotalScoreInput) {
+                examTotalScoreInput.value = examTotalScore;
             }
         }
         
