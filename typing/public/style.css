@@ -76,6 +76,7 @@ body {
   background-position: 0 0;
   background-repeat: repeat-x;
   overflow: hidden;
+  z-index: 0; /* 建立层叠上下文 */
 }
 
 .ground {
@@ -99,7 +100,7 @@ body {
   background-repeat: no-repeat;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 2;
+  z-index: 10; /* 提高层级，确保在背景和障碍物之上 */
 }
 
 .obstacle {
@@ -110,6 +111,7 @@ body {
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
+  z-index: 5; /* 障碍物在背景之上，但在飞机之下 */
 }
 
 .word {
@@ -132,7 +134,7 @@ body {
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
   text-shadow: none;
-  z-index: 3; /* 确保单词位于飞机上方 */
+  z-index: 15; /* 确保单词位于所有元素上方 */
 }
 
 .input-panel {
