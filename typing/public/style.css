@@ -71,10 +71,12 @@ body {
   position: relative;
   height: 360px;
   border-radius: 10px;
-  background-image: url("imgs/background.png");
-  background-size: auto 100%;
-  background-position: 0 0;
-  background-repeat: repeat-x;
+  /* 暂时注释掉背景图片用于测试 */
+  /* background-image: url("imgs/background.png"); */
+  /* background-size: auto 100%; */
+  /* background-position: 0 0; */
+  /* background-repeat: repeat-x; */
+  background-color: #87CEEB; /* 临时添加天空蓝色背景以便观察 */
   overflow: hidden;
   z-index: 0; /* 建立层叠上下文 */
 }
@@ -94,7 +96,7 @@ body {
   position: absolute;
   width: 110px;
   height: 80px;
-  background-image: url("imgs/Planes/planeRed1.png"); /* 修复：Planes 首字母大写 */
+  background-image: url("imgs/planes/planeRed1.png");
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
