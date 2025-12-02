@@ -1,0 +1,295 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #222;
+  color: #123456;
+}
+
+.page {
+  max-width: 1280px;
+  margin: 24px auto;
+  padding: 0 16px 24px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 32px;
+  letter-spacing: 0.08em;
+}
+
+.subtitle {
+  margin-top: 4px;
+  color: #35506b;
+  font-size: 14px;
+}
+
+.main {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .main {
+    grid-template-columns: 1fr;
+  }
+}
+
+.game-panel {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+  padding: 16px 16px 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.side-panel {
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+  font-size: 14px;
+}
+
+.side-panel h2 {
+  margin-top: 0;
+}
+
+.side-panel ol {
+  padding-left: 20px;
+}
+
+.sky {
+  position: relative;
+  height: 360px;
+  border-radius: 10px;
+  background-image: url("imgs/background.png");
+  background-size: auto 100%;
+  background-position: 0 0;
+  background-repeat: repeat-x;
+  overflow: hidden;
+}
+
+.ground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 40px;
+  background: #e1d8a7;
+  box-shadow: 0 -2px 0 rgba(0, 0, 0, 0.1) inset;
+  display: none; /* 去掉底部黄色条 */
+}
+
+.bird {
+  position: absolute;
+  width: 110px;
+  height: 80px;
+  background-image: url("imgs/planes/planeRed1.png");
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+.obstacle {
+  position: absolute;
+  width: 72px;
+  height: 100px;
+  background-image: url("imgs/rock.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.word {
+  font-size: 22px;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  min-height: 32px;
+  text-align: center;
+}
+
+.word-over-bird {
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 28px;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 6px 12px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  text-shadow: none;
+  z-index: 3; /* 确保单词位于飞机上方 */
+}
+
+.input-panel {
+  margin-top: 10px;
+}
+
+#typingInput {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 18px;
+  border-radius: 6px;
+  border: 1px solid #c3d1e6;
+  outline: none;
+  font-family: "Consolas", "Courier New", monospace;
+}
+
+#typingInput:focus {
+  border-color: #4a7bff;
+  box-shadow: 0 0 0 1px rgba(74, 123, 255, 0.25);
+}
+
+.hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+.hud-left {
+  display: flex;
+  gap: 8px;
+}
+
+.hud-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 260px;
+}
+
+.stat {
+  background: #f7f9fc;
+  border-radius: 6px;
+  padding: 6px 8px;
+  min-width: 90px;
+}
+
+.stat-label {
+  display: block;
+  color: #666;
+  font-size: 12px;
+}
+
+.stat-value {
+  display: block;
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+.pill {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #e1ebff;
+  color: #234f9b;
+  font-size: 12px;
+}
+
+.progress-bar {
+  margin-top: 0;
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: #dde6f3;
+  overflow: hidden;
+}
+
+.progress-inner {
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #4caf50, #8bc34a);
+  transition: width 0.15s ease-out;
+}
+
+.message {
+  min-height: 22px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #333;
+}
+
+.message.ok {
+  color: #2e7d32;
+}
+
+.message.error {
+  color: #c62828;
+}
+
+.buttons {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.letter {
+  display: inline-block;
+  padding: 0 1px;
+  border-bottom: 2px solid transparent;
+}
+
+.letter.correct {
+  color: #2e7d32;
+  border-bottom-color: #2e7d32;
+}
+
+.letter.wrong {
+  color: #c62828;
+  border-bottom-color: #c62828;
+}
+
+button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: none;
+  background: #3f68ff;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(63, 104, 255, 0.3);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+}
+
+button.secondary {
+  background: #eef2ff;
+  color: #334155;
+  box-shadow: none;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+button:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(63, 104, 255, 0.35);
+}
+
+.tip {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #526072;
+  line-height: 1.5;
+}
+
+

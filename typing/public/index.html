@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>键跃飞鸟 - 打字游戏</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <h1>键跃飞鸟</h1>
+      <p class="subtitle">通过打字让小鸟飞得更远</p>
+    </header>
+
+    <main class="main">
+      <section class="game-panel">
+        <div class="hud">
+          <div class="hud-left">
+            <div class="stat">
+              <span class="stat-label">时间</span>
+              <span id="timeLabel" class="stat-value">0.0 s</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">正确率</span>
+              <span id="accuracyLabel" class="stat-value">100%</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">WPM</span>
+              <span id="wpmLabel" class="stat-value">0</span>
+            </div>
+          </div>
+          <div class="hud-right">
+            <span id="wordIndex" class="pill">1 / 20</span>
+            <div class="progress-bar">
+              <div id="progressInner" class="progress-inner"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sky">
+          <div id="currentWord" class="word word-over-bird"></div>
+          <div id="bird" class="bird"></div>
+          <div class="ground"></div>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <div class="buttons">
+          <button id="restartBtn" class="secondary" disabled>重新开始</button>
+        </div>
+      </section>
+
+      <section class="side-panel">
+        <h2>玩法说明</h2>
+        <ol>
+          <li>开始输入任意字母即可自动进入训练模式，系统会依次给出 20 个英文单词。</li>
+          <li>不需要输入框，直接在键盘上按字母，小飞机头顶的单词会逐字高亮。</li>
+          <li>字母正确会变成绿色；一旦某个位置打错会变成红色，必须按退格键改对以后才能继续。</li>
+          <li>全部 20 个单词完成后，展示你的用时、WPM 和准确率。</li>
+        </ol>
+        <p class="tip">
+          可以把这里当作「反应 + 打字」训练：<br />
+          尽量打对的同时，保持节奏和速度。
+        </p>
+      </section>
+    </main>
+  </div>
+
+  <script src="words.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
+
+
