@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>循环嵌套可视化演示工具</title>
+  <style>
+    body {
+      margin: 0;
+      background: #21407d;
+      font-family: "Microsoft Yahei", Arial;
+    }
+    .main {
+      width: 1100px;
+      margin: 20px auto;
+      background: #2873b7;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      padding: 0 0 10px 0;
+      overflow: hidden;
+    }
+    .title {
+      color: #fff;
+      font-size: 30px;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 10px;
+      margin-bottom: 5px;
+      letter-spacing: 2px;
+      text-shadow: 0 2px 12px #1d2c48;
+    }
+    .sub-title {
+      color: #d2e8fc;
+      font-size: 18px;
+      text-align: center;
+      margin-bottom: 16px;
+      letter-spacing: 1px;
+    }
+    .content {
+      display: flex;
+      background: #111;
+      border-radius: 18px;
+      margin: 0 40px;
+      overflow: hidden;
+      height: 380px;
+    }
+    .code-area {
+      width: 55%;
+      background: #181818;
+      color: #fff;
+      font-size: 18px;
+      font-family: "Fira Mono", "Consolas", "Menlo", monospace;
+      padding: 28px 0 28px 18px;
+      position: relative;
+      line-height: 1.8;
+    }
+    .code-line {
+      transition: background 0.2s;
+    }
+    .highlight {
+      background: #fff2d6;
+      color: #d13c00 !important;
+      border-radius: 7px;
+      box-shadow: 0 0 8px #ffbb5b;
+      animation: flash 0.7s;
+    }
+    @keyframes flash {
+      0%   { background: #fffad6; }
+      60%  { background: #fff2d6; }
+      100% { background: #fff2d6; }
+    }
+    .comment { color: #6fcf97; font-style: italic; }
+    .kw { color: #63a4ff; }
+    .num { color: #ffb454; }
+    .var { color: #e16b8c; }
+    .str { color: #ff6f00; }
+    .code-inner { white-space: pre; }
+    /* 右侧面板 */
+    .panel {
+      width: 45%;
+      background: #fff;
+      padding: 0;
+      border-radius: 0 18px 18px 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .panel-head {
+      font-size: 20px;
+      color: #333;
+      padding: 22px 0 10px 28px;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+    .var-board {
+      display: flex;
+      margin: 0 0 10px 0;
+      justify-content: center;
+      gap: 18px;
+    }
+    .var-box {
+      flex: 1;
+      background: #2590e7;
+      color: #fff;
+      border-radius: 13px;
+      padding: 13px 0 10px 0;
+      font-size: 20px;
+      text-align: center;
+      margin: 0 20px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      min-height: 62px;
+      transition: background 0.2s;
+    }
+    .var-value {
+      font-size: 34px;
+      font-weight: bold;
+      color: #ffe45e;
+      display: block;
+      margin-top: 8px;
+      min-height: 34px;
+    }
+    .output-area {
+      background: #222;
+      color: #fff;
+      margin: 16px 28px;
+      border-radius: 10px;
+      min-height: 150px;
+      font-size: 18px;
+      padding: 18px 16px;
+      font-family: "Fira Mono", "Consolas", "Menlo", monospace;
+      overflow-y: auto;
+      line-height: 1.7;
+      box-shadow: 0 1px 3px #0004;
+    }
+    /* 按钮 */
+    .btns {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 16px;
+    }
+    .btn {
+      font-size: 16px;
+      border: none;
+      outline: none;
+      border-radius: 32px;
+      padding: 14px 46px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 2px 18px #0002;
+      transition: background 0.15s, color 0.15s;
+      margin: 0 10px;
+      letter-spacing: 2px;
+    }
+    .btn-next { background: #23d978; color: #fff; }
+    .btn-next:active { background: #1bb161;}
+    .btn-stop { background: #ffa426; color: #fff; }
+    .btn-stop:active { background: #e37d08;}
+    .btn-reset { background: #f14b3c; color: #fff; }
+    .btn-reset:active { background: #b83223;}
+  </style>
+</head>
+<body>
+  <div class="main">
+    <div class="title">循环嵌套可视化演示工具</div>
+    <div class="sub-title">实时追踪C++嵌套循环执行过程</div>
+    <div class="content">
+      <div class="code-area">
+        <div class="code-inner">
+<span class="code-line" id="cl0"><span class="comment">// 外层循环控制行</span></span>
+<span class="code-line" id="cl1"><span class="kw">for</span> (<span id="hl-iinit">int i = 1</span>; <span id="hl-icond">i &lt;= 3</span>; <span id="hl-iinc">i++</span>) {</span>
+<span class="code-line" id="cl2">   <span class="comment">// 内层循环控制列</span></span>
+<span class="code-line" id="cl3" style="position:relative;">   <span id="hl-jfor"><span class="kw">for</span> (int j = 1; j &lt;= 3; j++) {</span></span></span>
+<span class="code-line" id="cl4">       <span class="comment">// 输出循环变量值</span></span>
+<span class="code-line" id="cl5">       cout &lt;&lt;<span class="str">"外层循环:"</span>&lt;&lt; i &lt;&lt;<span class="str">"|内层循环:"</span>&lt;&lt; j &lt;&lt; "\n";</span>
+<span class="code-line" id="cl6">   }</span>
+<span class="code-line" id="cl7">}</span>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span style="float:right;color:#444;font-size:16px;font-weight:normal;margin-right:30px;"></span>执行状态</span></div>
+        <div class="var-board">
+          <div class="var-box" id="vbox-i">
+            外层循环（i）<br>
+            <span class="var-value" id="v-i">-</span>
+          </div>
+          <div class="var-box" id="vbox-j">
+            内层循环（j）<br>
+            <span class="var-value" id="v-j">-</span>
+          </div>
+        </div>
+        <div class="output-area" id="output">
+          输出窗口已就绪...
+        </div>
+      </div>
+    </div>
+    <div class="btns">
+      <button class="btn btn-next" id="btn-next">下一步</button>
+      <button class="btn btn-stop" id="btn-stop">暂停</button>
+      <button class="btn btn-reset" id="btn-reset">重置</button>
+    </div>
+  </div>
+ <script>
+  // 步骤状态机
+  // phase: init,i_init,i_cond,j_for,i_inc,end
+  let state = {
+    i: null,
+    phase: 'init',
+    output: [],
+    running: true
+  };
+
+  // 代码高亮清理
+  function clearHighlight() {
+    document.getElementById('hl-iinit').classList.remove('highlight');
+    document.getElementById('hl-icond').classList.remove('highlight');
+    document.getElementById('hl-iinc').classList.remove('highlight');
+    document.getElementById('hl-jfor').classList.remove('highlight');
+    for(let idx=0;idx<=7;idx++) {
+      document.getElementById('cl'+idx).classList.remove('highlight');
+    }
+  }
+
+  // 变量面板刷新
+  function updateVarPanel(i, jShow) {
+    document.getElementById('v-i').textContent = (i !== null && i !== undefined) ? i : '-';
+    document.getElementById('v-j').innerHTML = jShow || '-';
+  }
+
+  // 输出区刷新
+  function setOutput(arr) {
+    let html = arr.map(line => line).join('<br>');
+    document.getElementById('output').innerHTML = html;
+    document.getElementById('output').scrollTop = 99999;
+  }
+
+  // 步骤推进
+  function nextStep() {
+    if(!state.running) return;
+    clearHighlight();
+
+    switch(state.phase) {
+      case 'init':
+        // 外层循环初始化 int i=1
+        document.getElementById('hl-iinit').classList.add('highlight');
+        updateVarPanel('-', '-');
+        setOutput(['输出窗口已就绪...','<span style="color:#ffe45e">外层循环初始化: int i = 1</span>']);
+        state.i = 1;
+        state.phase = 'i_cond';
+        break;
+      case 'i_cond':
+        // 外层循环条件判断 i<=3
+        document.getElementById('hl-icond').classList.add('highlight');
+        updateVarPanel(state.i, '-');
+        setOutput([
+          ...state.output,
+          `<span style="color:#ffe45e">外层循环条件判断: i <= 3 (${state.i} <= 3 ${state.i <=3 ? '为真' : '为假'})</span>`
+        ]);
+        if(state.i <= 3) {
+          state.phase = 'j_for';
+        } else {
+          state.phase = 'end';
+        }
+        break;
+      case 'j_for':
+        // 内层for循环，整个for块高亮，j依次1,2,3，输出三行
+        // 修正：只高亮 cl3,cl4,cl5,cl6
+        for(let idx of [3,4,5,6]) {
+          document.getElementById('cl'+idx).classList.add('highlight');
+        }
+        let outputLines = [];
+        let jShow = '';
+        for(let j=1;j<=3;j++) {
+          outputLines.push(`<span style="color:#f99">外层循环：${state.i} | 内层循环：${j}</span>`);
+          jShow += (j>1?'，':'') + j;
+        }
+        updateVarPanel(state.i, jShow);
+        setOutput([
+          ...state.output,
+          `<span style="color:#72e9b4">内层循环执行，j=1,2,3，输出如下：</span>`,
+          ...outputLines
+        ]);
+        state.phase = 'i_inc';
+        break;
+      case 'i_inc':
+        // 外层循环自增
+        document.getElementById('hl-iinc').classList.add('highlight');
+        setOutput([
+          ...state.output,
+          `<span style="color:#ffe45e">外层循环自增: i++</span>`
+        ]);
+        state.i++;
+        updateVarPanel(state.i <=3 ? state.i : '-', '-');
+        state.phase = 'i_cond';
+        break;
+      case 'end':
+        // 结束
+        // 修正：高亮cl7
+        document.getElementById('cl7').classList.add('highlight');
+        setOutput([
+          ...state.output,
+          '<span style="color:#7ee">循环结束</span>'
+        ]);
+        updateVarPanel('-', '-');
+        state.running = false;
+        document.getElementById('btn-next').disabled = true;
+        break;
+    }
+    // 更新输出记录
+    if(state.phase !== 'init') {
+      // 记录输出内容
+      state.output = [];
+      let outArea = document.getElementById('output').innerHTML.split('<br>');
+      state.output = outArea;
+    }
+  }
+
+  document.getElementById('btn-next').onclick = function() {
+    nextStep();
+  }
+  document.getElementById('btn-stop').onclick = function() {
+    state.running = false;
+    document.getElementById('btn-next').disabled = true;
+  }
+  document.getElementById('btn-reset').onclick = function() {
+    // 重置所有
+    state = {
+      i: null,
+      phase: 'init',
+      output: [],
+      running: true
+    };
+    clearHighlight();
+    updateVarPanel('-', '-');
+    setOutput(['输出窗口已就绪...']);
+    document.getElementById('btn-next').disabled = false;
+  }
+
+  window.onload = function() {
+    document.getElementById('btn-reset').click();
+  }
+</script>
+</body>
+</html>
