@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>棋盘覆盖 - 分治算法演示</title>
+    <style>
+        /* 全屏布局，居中显示，黑色背景用于留边 */
+        body {
+            margin: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #2C3E50;
+            font-family: 'Comic Sans MS', 'Microsoft YaHei', cursive, sans-serif;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* 主画布容器：严格保持 3:2 纵横比，等比例缩放 */
+        .canvas-container {
+            width: min(100vw, 150vh);
+            aspect-ratio: 3 / 2;
+            position: relative;
+            overflow: hidden;
+            background: #ECF0F1;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            border-radius: 12px;
+        }
+
+        /* 触屏优化 */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+        }
+
+        /* 标题区域 - 稍微上移 */
+        .header {
+            position: absolute;
+            top: 3%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: #2C3E50;
+            font-size: 4vh;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        .instruction {
+            position: absolute;
+            top: 9%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: #7F8C8D;
+            font-size: 2.2vh;
+        }
+
+        /* 控制区域 - 稍微上移 */
+        .controls {
+            position: absolute;
+            top: 15%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 20;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .controls label {
+            font-size: 2vh;
+            color: #2C3E50;
+            font-weight: bold;
+        }
+
+        .controls select {
+            padding: 0.5vh 1vh;
+            font-size: 2vh;
+            border-radius: 6px;
+            border: 2px solid #BDC3C7;
+            background: white;
+            color: #2C3E50;
+            font-family: inherit;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .controls select:focus {
+            border-color: #3498DB;
+        }
+
+        /* 棋盘区域 - 调整位置和大小 */
+        .board-container {
+            position: absolute;
+            top: 23%;
+            left: 5%;
+            width: 50%; /* 增大宽度 */
+            aspect-ratio: 1;
+            background: #BDC3C7;
+            border-radius: 8px;
+            padding: 1%;
+            display: grid;
+            /* grid-template-columns 由JS动态设置 */
+            /* grid-template-rows 由JS动态设置 */
+            gap: 1px;
+            position: relative; /* 确保子元素绝对定位相对于此 */
+        }
+
+        .cell {
+            background: #FFF;
+            border-radius: 2px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* font-size 由JS动态设置 */
+            color: #95A5A6;
+            transition: background-color 0.3s;
+        }
+
+        /* 特殊方格样式 */
+        .cell.special {
+            background: #E74C3C;
+            animation: pulse 2s infinite;
+            z-index: 2;
+        }
+        
+        .cell.special::after {
+            content: '★';
+            color: white;
+            font-size: 120%;
+        }
+
+        /* 伪特殊方格（覆盖后） */
+        .cell.covered {
+            background: #3498DB;
+            color: white;
+            font-weight: bold;
+            transition: background 0.3s, transform 0.3s;
+            z-index: 2;
+        }
+        
+        .cell.covered::before {
+            content: none; 
+        }
+
+        /* 象限分割线 */
+        .divider-h {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: #2C3E50;
+            z-index: 5;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        .divider-v {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: #2C3E50;
+            z-index: 5;
+            transform: translateX(-50%);
+            pointer-events: none;
+        }
+
+        /* 骨牌库区域 - 布局调整为 Grid */
+        .sidebar {
+            position: absolute;
+            top: 23%;
+            right: 5%;
+            width: 35%;
+            height: 60%;
+            background: #FFF;
+            border-radius: 12px;
+            border: 2px solid #BDC3C7;
+            
+            /* 改为 Grid 布局，2列显示 */
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto 1fr 1fr;
+            justify-items: center;
+            align-items: center;
+            
+            padding: 2%;
+            gap: 10px;
+            overflow: hidden; /* 不再需要滚动 */
+        }
+        
+        .sidebar-title {
+            font-size: 2.5vh;
+            color: #2C3E50;
+            font-weight: bold;
+            margin-bottom: 1vh;
+            grid-column: 1 / -1; /* 标题跨两列 */
+        }
+
+        /* L型骨牌容器 - 固定预览大小 */
+        .domino-wrapper {
+            /* 强制固定大小用于预览，不再随棋盘变化 */
+            width: 9vh !important;
+            height: 9vh !important;
+            position: relative;
+            cursor: grab;
+            touch-action: none;
+        }
+
+        /* 骨牌绘制 - 使用CSS Grid绘制L型 */
+        .domino {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 2px;
+            pointer-events: none;
+            position: relative;
+        }
+
+        .domino div {
+            background: #3498DB;
+            border-radius: 4px;
+            border: 1px solid #2980B9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            /* 预览时固定字体大小 */
+            font-size: 2.5vh !important; 
+        }
+
+        /* 四种朝向 */
+        .type-1 div:nth-child(1) { visibility: hidden; } /* 缺左上 */
+        .type-2 div:nth-child(2) { visibility: hidden; } /* 缺右上 */
+        .type-3 div:nth-child(3) { visibility: hidden; } /* 缺左下 */
+        .type-4 div:nth-child(4) { visibility: hidden; } /* 缺右下 */
+
+        .domino::after {
+            display: none;
+        }
+
+        /* 使用伪元素在每个小方块里显示数字 */
+        .type-1 div::before { content: '3'; }
+        .type-2 div::before { content: '1'; }
+        .type-3 div::before { content: '4'; }
+        .type-4 div::before { content: '2'; }
+
+        /* 拖拽时的样式 */
+        .dragging {
+            opacity: 0.8;
+            z-index: 1000;
+            /* transform: scale(1.1); 移除缩放，因为我们会手动设置大小 */
+            cursor: grabbing;
+            pointer-events: none;
+        }
+        
+        /* 拖拽时的字体大小调整，使其看起来像棋盘上的骨牌 */
+        .dragging .domino div {
+            font-size: inherit !important; /* 继承 JS 设置的字体大小 */
+        }
+
+        /* 放置区域 - 动态生成 */
+        .drop-target {
+            position: absolute;
+            border: 2px dashed rgba(52, 152, 219, 0.5);
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 4px;
+            z-index: 20;
+            transform: translate(-50%, -50%); /* 居中定位 */
+            animation: pulse-border 2s infinite;
+        }
+        
+        .drop-target::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 2px;
+            background: rgba(52, 152, 219, 0.6);
+            transform: translateX(-50%);
+        }
+
+        .drop-target::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 2px;
+            background: rgba(52, 152, 219, 0.6);
+            transform: translateY(-50%);
+        }
+        
+        @keyframes pulse-border {
+            0% { border-color: rgba(52, 152, 219, 0.3); }
+            50% { border-color: rgba(52, 152, 219, 0.8); }
+            100% { border-color: rgba(52, 152, 219, 0.3); }
+        }
+
+        /* 反馈弹窗 */
+        .feedback {
+            position: absolute;
+            bottom: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 1.5vh 3vh;
+            border-radius: 50px;
+            font-size: 2.5vh;
+            color: white;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 100;
+        }
+
+        .feedback.success { background: #2ECC71; opacity: 1; animation: bounce 0.5s; }
+        .feedback.error { background: #E74C3C; opacity: 1; animation: shake 0.4s; }
+
+        /* 按钮 */
+        .btn-reset {
+            position: absolute;
+            bottom: 5%;
+            right: 5%;
+            padding: 1vh 2vh;
+            background: #F1C40F;
+            border: none;
+            border-radius: 8px;
+            font-size: 2vh;
+            font-weight: bold;
+            color: #2C3E50;
+            cursor: pointer;
+            box-shadow: 0 4px #F39C12;
+            z-index: 30;
+        }
+        
+        .btn-reset:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        /* 验证按钮（困难模式用） */
+        .btn-check {
+            position: absolute;
+            bottom: 5%;
+            right: 20%; /* 在重置按钮左边 */
+            padding: 1vh 2vh;
+            background: #2ECC71;
+            border: none;
+            border-radius: 8px;
+            font-size: 2vh;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px #27AE60;
+            z-index: 30;
+            display: none; /* 默认隐藏 */
+        }
+
+        .btn-check:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        /* 动画 */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(-50%); }
+            25% { transform: translateX(calc(-50% - 10px)); }
+            75% { transform: translateX(calc(-50% + 10px)); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.1); }
+        }
+
+        /* 成功后的高亮遮罩 */
+        .quadrant-highlight {
+            position: absolute;
+            background: rgba(46, 204, 113, 0.2);
+            border: 2px dashed #27AE60;
+            border-radius: 8px;
+            display: none;
+            pointer-events: none;
+            z-index: 15;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="canvas-container">
+        <div class="header">分治算法：棋盘覆盖</div>
+        <div class="instruction" id="instructionText">请将 L 型骨牌拖到待处理区域的中心，逐步完成覆盖</div>
+
+        <!-- 棋盘大小设置 -->
+        <div class="controls">
+            <label for="sizeSelect">大小:</label>
+            <select id="sizeSelect" onchange="changeSize()">
+                <option value="2" selected>k=2 (4x4)</option>
+                <option value="3">k=3 (8x8)</option>
+                <option value="4">k=4 (16x16)</option>
+            </select>
+
+            <label for="modeSelect" style="margin-left: 10px;">模式:</label>
+            <select id="modeSelect" onchange="changeMode()">
+                <option value="simple" selected>简单 (教学)</option>
+                <option value="hard">困难 (自由)</option>
+            </select>
+        </div>
+
+        <!-- 棋盘 -->
+        <div class="board-container" id="board">
+            <!-- 格子由JS生成 -->
+            <div class="divider-h"></div>
+            <div class="divider-v"></div>
+            <!-- 放置检测区域容器 -->
+            <div id="dropZonesLayer" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10;"></div>
+        </div>
+
+        <!-- 骨牌选择区 -->
+        <div class="sidebar">
+            <div class="sidebar-title">骨牌仓库</div>
+            
+            <!-- 骨牌1: 缺左上 -->
+            <div class="domino-wrapper" data-type="1" draggable="true">
+                <div class="domino type-1"><div></div><div></div><div></div><div></div></div>
+            </div>
+
+            <!-- 骨牌2: 缺右上 -->
+            <div class="domino-wrapper" data-type="2" draggable="true">
+                <div class="domino type-2"><div></div><div></div><div></div><div></div></div>
+            </div>
+
+            <!-- 骨牌3: 缺左下 -->
+            <div class="domino-wrapper" data-type="3" draggable="true">
+                <div class="domino type-3"><div></div><div></div><div></div><div></div></div>
+            </div>
+
+            <!-- 骨牌4: 缺右下 -->
+            <div class="domino-wrapper" data-type="4" draggable="true">
+                <div class="domino type-4"><div></div><div></div><div></div><div></div></div>
+            </div>
+        </div>
+
+        <div id="feedback" class="feedback"></div>
+        <button class="btn-check" id="btnCheck" onclick="checkHardModeAnswer()">验证答案</button>
+        <button class="btn-reset" onclick="initGame()">重置题目</button>
+    </div>
+
+    <script>
+        const board = document.getElementById('board');
+        const feedback = document.getElementById('feedback');
+        const dropZonesLayer = document.getElementById('dropZonesLayer');
+        const instructionText = document.getElementById('instructionText');
+        const btnCheck = document.getElementById('btnCheck');
+        
+        // 游戏状态
+        let k = 2;
+        let boardSize = 4; // 2^k
+        let tileCount = 0; // 骨牌计数器
+        let pendingTasks = []; // 待处理的子问题队列
+        let isGameComplete = false;
+        let gameMode = 'simple'; // 'simple' or 'hard'
+        let dominoIdCounter = 0; // 用于困难模式追踪骨牌
+        
+        // 全局变量存储当前棋盘对应的骨牌实际大小
+        let currentDominoSize = 0;
+        let currentFontSize = '2vh';
+
+        // 切换大小
+        function changeSize() {
+            const select = document.getElementById('sizeSelect');
+            k = parseInt(select.value);
+            boardSize = Math.pow(2, k);
+            initGame();
+        }
+
+        // 切换模式
+        function changeMode() {
+            const select = document.getElementById('modeSelect');
+            gameMode = select.value;
+            initGame();
+        }
+
+        // 获取格子元素
+        function getCell(r, c) {
+            return document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+        }
+
+        // 同步骨牌大小的函数 - 修改：只计算大小，不改变侧边栏DOM
+        function updateDominoScale() {
+            const cell = document.querySelector('.cell');
+            if (!cell) return;
+            
+            // 获取棋盘格子的实际像素大小
+            const rect = cell.getBoundingClientRect();
+            const cellSize = rect.width;
+            
+            // 计算实际骨牌大小：格子宽度 * 2 + 骨牌gap(2px)
+            currentDominoSize = (cellSize * 2) + 2;
+            
+            // 记录当前棋盘字体大小
+            currentFontSize = cell.style.fontSize;
+        }
+
+        // 监听窗口大小变化，实时调整骨牌大小
+        window.addEventListener('resize', updateDominoScale);
+
+        // 初始化游戏
+        function initGame() {
+            isGameComplete = false;
+            tileCount = 0;
+            pendingTasks = [];
+            dominoIdCounter = 0;
+            
+            // 重置棋盘结构
+            board.innerHTML = `
+                <div class="divider-h"></div>
+                <div class="divider-v"></div>
+                <div id="dropZonesLayer" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10;"></div>
+            `;
+            
+            // 动态设置网格布局
+            board.style.gridTemplateColumns = `repeat(${boardSize}, 1fr)`;
+            board.style.gridTemplateRows = `repeat(${boardSize}, 1fr)`;
+
+            feedback.className = 'feedback';
+            feedback.textContent = '';
+            
+            // 随机生成特殊方格位置 (0 到 boardSize-1)
+            const specialRow = Math.floor(Math.random() * boardSize);
+            const specialCol = Math.floor(Math.random() * boardSize);
+
+            // 计算字体大小
+            const fontSize = k === 4 ? '1vh' : (k === 3 ? '1.5vh' : '2vh');
+
+            // 生成格子
+            for (let r = 0; r < boardSize; r++) {
+                for (let c = 0; c < boardSize; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.style.fontSize = fontSize;
+                    cell.dataset.r = r;
+                    cell.dataset.c = c;
+                    if (r === specialRow && c === specialCol) {
+                        cell.classList.add('special');
+                    }
+                    board.appendChild(cell);
+                }
+            }
+
+            // 关键：生成格子后，延迟一小段时间计算并同步骨牌大小
+            setTimeout(updateDominoScale, 50);
+
+            if (gameMode === 'simple') {
+                instructionText.textContent = "请将 L 型骨牌拖到待处理区域的中心，逐步完成覆盖";
+                btnCheck.style.display = 'none';
+                // 初始化第一个任务：整个棋盘
+                pendingTasks.push({
+                    r: 0, 
+                    c: 0, 
+                    size: boardSize, 
+                    sr: specialRow, 
+                    sc: specialCol
+                });
+                renderDropZones();
+            } else {
+                instructionText.textContent = "困难模式：自由拖拽骨牌覆盖棋盘，点击已放置的骨牌可移除";
+                btnCheck.style.display = 'block';
+                // 困难模式不需要 pendingTasks 和 dropZones
+            }
+        }
+
+        // 渲染所有待处理任务的放置区域 (仅简单模式)
+        function renderDropZones() {
+            const layer = document.getElementById('dropZonesLayer');
+            layer.innerHTML = ''; // 清空旧的
+
+            if (pendingTasks.length === 0) {
+                showFeedback(true, "恭喜！所有覆盖任务已完成！");
+                isGameComplete = true;
+                return;
+            }
+
+            pendingTasks.forEach((task, index) => {
+                // 只有大于1x1的区域才需要放置骨牌
+                if (task.size > 1) {
+                    const zone = document.createElement('div');
+                    zone.className = 'drop-target';
+                    zone.dataset.taskIndex = index;
+                    
+                    const unit = 100 / boardSize;
+                    const centerX = (task.c + task.size/2) * unit;
+                    const centerY = (task.r + task.size/2) * unit;
+                    
+                    // 放置区大小：2个单位格
+                    const zoneSize = unit * 2;
+
+                    zone.style.left = `${centerX}%`;
+                    zone.style.top = `${centerY}%`;
+                    zone.style.width = `${zoneSize}%`;
+                    zone.style.height = `${zoneSize}%`;
+
+                    layer.appendChild(zone);
+                }
+            });
+        }
+
+        // 拖拽逻辑
+        let currentDraggable = null;
+        let cloneEl = null;
+
+        const draggables = document.querySelectorAll('.domino-wrapper');
+
+        draggables.forEach(el => {
+            // 鼠标事件
+            el.addEventListener('dragstart', (e) => {
+                if (isGameComplete) { e.preventDefault(); return; }
+                e.dataTransfer.setData('type', el.dataset.type);
+                e.dataTransfer.effectAllowed = 'copy';
+            });
+
+            // 触摸事件
+            el.addEventListener('touchstart', (e) => handleTouchStart(e, el), {passive: false});
+        });
+
+        // 统一处理放置逻辑
+        function checkDrop(type, clientX, clientY) {
+            if (isGameComplete) return;
+
+            if (gameMode === 'simple') {
+                checkDropSimple(type, clientX, clientY);
+            } else {
+                checkDropHard(type, clientX, clientY);
+            }
+        }
+
+        // 简单模式放置逻辑
+        function checkDropSimple(type, clientX, clientY) {
+            // 寻找最近的放置区
+            const targets = document.querySelectorAll('.drop-target');
+            let closestTarget = null;
+            let minDistance = Infinity;
+
+            targets.forEach(target => {
+                const rect = target.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const dist = Math.sqrt(Math.pow(clientX - centerX, 2) + Math.pow(clientY - centerY, 2));
+                
+                if (dist < rect.width * 0.6) {
+                    if (dist < minDistance) {
+                        minDistance = dist;
+                        closestTarget = target;
+                    }
+                }
+            });
+
+            if (closestTarget) {
+                const taskIndex = parseInt(closestTarget.dataset.taskIndex);
+                attemptSolveTask(taskIndex, parseInt(type));
+            }
+        }
+
+        // 困难模式放置逻辑
+        function checkDropHard(type, clientX, clientY) {
+            const boardRect = board.getBoundingClientRect();
+            
+            // 检查是否在棋盘内
+            if (clientX < boardRect.left || clientX > boardRect.right || 
+                clientY < boardRect.top || clientY > boardRect.bottom) {
+                return;
+            }
+
+            const cellSize = boardRect.width / boardSize;
+            
+            // 计算鼠标位置相对于棋盘的坐标 (浮点数)
+            const relX = (clientX - boardRect.left) / cellSize;
+            const relY = (clientY - boardRect.top) / cellSize;
+
+            // 我们假设用户拖拽的是2x2骨牌的中心。
+            // 找到最近的网格交点 (r, c)，这个交点是2x2区域的中心
+            // r, c 范围应在 1 到 boardSize-1 之间
+            const c = Math.round(relX);
+            const r = Math.round(relY);
+
+            // 检查边界：2x2的中心不能在边缘
+            if (r < 1 || r > boardSize - 1 || c < 1 || c > boardSize - 1) {
+                return;
+            }
+
+            // 确定2x2区域的左上角
+            const startR = r - 1;
+            const startC = c - 1;
+
+            // 根据类型确定要填充的3个格子
+            // Type 1 (缺左上): (0,1), (1,0), (1,1) -> (startR, startC+1), (startR+1, startC), (startR+1, startC+1)
+            // Type 2 (缺右上): (0,0), (1,0), (1,1)
+            // Type 3 (缺左下): (0,0), (0,1), (1,1)
+            // Type 4 (缺右下): (0,0), (0,1), (1,0)
+            
+            const offsets = {
+                1: [[0,1], [1,0], [1,1]],
+                2: [[0,0], [1,0], [1,1]],
+                3: [[0,0], [0,1], [1,1]],
+                4: [[0,0], [0,1], [1,0]]
+            };
+
+            const cellsToFill = offsets[type].map(o => ({r: startR + o[0], c: startC + o[1]}));
+
+            // 检查冲突
+            for (let p of cellsToFill) {
+                const cell = getCell(p.r, p.c);
+                if (cell.classList.contains('special') || cell.classList.contains('covered')) {
+                    showFeedback(false, "位置冲突！");
+                    return;
+                }
+            }
+
+            // 放置成功
+            const labelMap = {1: '3', 2: '1', 3: '4', 4: '2'};
+            const label = labelMap[type];
+            const currentDominoId = ++dominoIdCounter;
+
+            cellsToFill.forEach(p => {
+                const cell = getCell(p.r, p.c);
+                cell.className = 'cell covered';
+                cell.textContent = label;
+                cell.dataset.dominoId = currentDominoId; // 标记ID以便移除
+                cell.dataset.dominoType = type; // 标记类型以便拖出
+                
+                // 动画
+                cell.style.transform = 'scale(0.1)';
+                setTimeout(() => cell.style.transform = 'scale(1)', 50);
+            });
+        }
+
+        // 尝试解决某个子任务 (简单模式)
+        function attemptSolveTask(taskIndex, type) {
+            const task = pendingTasks[taskIndex];
+            const half = task.size / 2;
+            
+            const midR = task.r + half;
+            const midC = task.c + half;
+
+            let quadrant = 0;
+            if (task.sr < midR && task.sc < midC) quadrant = 1;
+            else if (task.sr < midR && task.sc >= midC) quadrant = 2;
+            else if (task.sr >= midR && task.sc < midC) quadrant = 3;
+            else quadrant = 4;
+
+            if (type === quadrant) {
+                tileCount++;
+                const points = [
+                    {r: midR-1, c: midC-1, q: 1}, 
+                    {r: midR-1, c: midC,   q: 2}, 
+                    {r: midR,   c: midC-1, q: 3}, 
+                    {r: midR,   c: midC,   q: 4} 
+                ];
+
+                let nextSpecialPoints = {};
+                const labelMap = {1: '3', 2: '1', 3: '4', 4: '2'};
+                const label = labelMap[type];
+
+                points.forEach(p => {
+                    if (p.q !== quadrant) {
+                        const cell = getCell(p.r, p.c);
+                        if (cell) {
+                            cell.className = 'cell covered';
+                            cell.textContent = label;
+                            cell.style.transform = 'scale(0.1)';
+                            setTimeout(() => cell.style.transform = 'scale(1)', 50);
+                        }
+                        nextSpecialPoints[p.q] = {r: p.r, c: p.c};
+                    } else {
+                        nextSpecialPoints[p.q] = {r: task.sr, c: task.sc};
+                    }
+                });
+
+                pendingTasks.splice(taskIndex, 1);
+
+                if (half >= 2) {
+                    pendingTasks.push({r: task.r, c: task.c, size: half, sr: nextSpecialPoints[1].r, sc: nextSpecialPoints[1].c});
+                    pendingTasks.push({r: task.r, c: task.c + half, size: half, sr: nextSpecialPoints[2].r, sc: nextSpecialPoints[2].c});
+                    pendingTasks.push({r: task.r + half, c: task.c, size: half, sr: nextSpecialPoints[3].r, sc: nextSpecialPoints[3].c});
+                    pendingTasks.push({r: task.r + half, c: task.c + half, size: half, sr: nextSpecialPoints[4].r, sc: nextSpecialPoints[4].c});
+                }
+
+                showFeedback(true, "覆盖正确！生成新的子问题...");
+                renderDropZones();
+
+            } else {
+                showFeedback(false, "方向错误！骨牌缺口应朝向特殊方格所在的象限。");
+            }
+        }
+
+        // 困难模式验证
+        function checkHardModeAnswer() {
+            let isFull = true;
+            const cells = document.querySelectorAll('.cell');
+            for (let cell of cells) {
+                if (!cell.classList.contains('special') && !cell.classList.contains('covered')) {
+                    isFull = false;
+                    break;
+                }
+            }
+
+            if (isFull) {
+                showFeedback(true, "恭喜！你成功覆盖了整个棋盘！");
+                isGameComplete = true;
+            } else {
+                showFeedback(false, "棋盘尚未完全覆盖，请继续尝试。");
+            }
+        }
+
+        // 困难模式：点击/触摸棋盘处理 (移除骨牌并开始拖拽)
+        function handleBoardInteraction(e) {
+            if (gameMode !== 'hard' || isGameComplete) return;
+
+            let target = e.target;
+            // 向上查找直到找到 cell
+            while (target && !target.classList.contains('cell') && target !== board) {
+                target = target.parentElement;
+            }
+
+            if (target && target.classList.contains('covered')) {
+                e.preventDefault(); // 防止默认行为
+                
+                const dominoId = target.dataset.dominoId;
+                const dominoType = target.dataset.dominoType;
+                
+                if (dominoId) {
+                    // 1. 移除该骨牌的所有部分
+                    const parts = document.querySelectorAll(`.cell[data-domino-id="${dominoId}"]`);
+                    parts.forEach(part => {
+                        part.className = 'cell';
+                        part.textContent = '';
+                        delete part.dataset.dominoId;
+                        delete part.dataset.dominoType;
+                    });
+
+                    // 2. 立即开始拖拽 (模拟)
+                    // 我们需要找到侧边栏对应的骨牌模板来生成 ghost
+                    const template = document.querySelector(`.domino-wrapper[data-type="${dominoType}"]`);
+                    if (template) {
+                        // 触发触摸开始逻辑，传入事件对象和模板
+                        if (e.type === 'touchstart') {
+                            handleTouchStart(e, template);
+                        }
+                    }
+                }
+            }
+        }
+
+        // 绑定棋盘交互
+        board.addEventListener('touchstart', handleBoardInteraction, {passive: false});
+        board.addEventListener('mousedown', handleBoardInteraction);
+
+        function showFeedback(isSuccess, msg) {
+            feedback.textContent = msg;
+            feedback.className = `feedback ${isSuccess ? 'success' : 'error'}`;
+            setTimeout(() => {
+                if (!isSuccess || !isGameComplete) feedback.className = 'feedback'; 
+            }, 2000);
+        }
+
+        // 触摸拖拽处理
+        function handleTouchStart(e, targetEl) {
+            if (isGameComplete) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            
+            // 创建克隆体用于拖拽显示
+            cloneEl = targetEl.cloneNode(true);
+            cloneEl.classList.add('dragging');
+            cloneEl.style.position = 'fixed';
+            
+            // 修改：使用计算出的实际骨牌大小，而不是侧边栏预览大小
+            const dragSize = currentDominoSize > 0 ? currentDominoSize : targetEl.offsetWidth;
+            cloneEl.style.width = dragSize + 'px';
+            cloneEl.style.height = dragSize + 'px';
+            
+            // 同步字体大小
+            const divs = cloneEl.querySelectorAll('div');
+            divs.forEach(d => d.style.fontSize = currentFontSize);
+
+            // 居中显示在手指下
+            cloneEl.style.left = (touch.clientX - dragSize/2) + 'px';
+            cloneEl.style.top = (touch.clientY - dragSize/2) + 'px';
+            document.body.appendChild(cloneEl);
+
+            currentDraggable = targetEl;
+            
+            // 绑定移动和结束事件
+            document.addEventListener('touchmove', handleTouchMove, {passive: false});
+            document.addEventListener('touchend', handleTouchEnd);
+        }
+
+        function handleTouchMove(e) {
+            if (!cloneEl) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            cloneEl.style.left = (touch.clientX - cloneEl.offsetWidth/2) + 'px';
+            cloneEl.style.top = (touch.clientY - cloneEl.offsetHeight/2) + 'px';
+        }
+
+        function handleTouchEnd(e) {
+            if (!cloneEl) return;
+            const touch = e.changedTouches[0];
+            
+            // 检查放置
+            checkDrop(currentDraggable.dataset.type, touch.clientX, touch.clientY);
+
+            // 清理
+            cloneEl.remove();
+            cloneEl = null;
+            currentDraggable = null;
+            document.removeEventListener('touchmove', handleTouchMove);
+            document.removeEventListener('touchend', handleTouchEnd);
+        }
+
+        // 鼠标拖拽放置监听
+        board.addEventListener('dragover', (e) => e.preventDefault());
+        board.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const type = e.dataTransfer.getData('type');
+            if (type) {
+                checkDrop(type, e.clientX, e.clientY);
+            }
+        });
+
+        // 初始化
+        initGame();
+
+    </script>
+</body>
+</html>
