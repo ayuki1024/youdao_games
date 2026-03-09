@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>编程僵尸答题大战</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { overflow: hidden; background: #1a1a2e; font-family: 'Microsoft YaHei', sans-serif; }
+canvas { display: block; }
+#gameContainer { position: relative; width: 100vw; height: 100vh; }
+#uiOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+#scoreBoard { position: absolute; top: 10px; left: 10px; color: #0f0; font-size: 18px; text-shadow: 0 0 10px #0f0; }
+#scoreBoard div { margin: 5px 0; }
+#questionPanel { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); border: 2px solid #4a9; border-radius: 15px; padding: 20px 30px; min-width: 500px; max-width: 700px; pointer-events: auto; box-shadow: 0 0 30px rgba(74,153,153,0.3); }
+#questionText { color: #fff; font-size: 20px; margin-bottom: 15px; text-align: center; line-height: 1.5; }
+#answerOptions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.optionBtn { background: linear-gradient(145deg, #2a2a4a, #1a1a3a); color: #aef; border: 2px solid #4a9; border-radius: 10px; padding: 10px 20px; font-size: 16px; cursor: pointer; transition: all 0.3s; min-width: 120px; text-align: center; }
+.optionBtn:hover { background: linear-gradient(145deg, #3a4a6a, #2a3a5a); border-color: #6cf; transform: scale(1.05); box-shadow: 0 0 15px rgba(102,204,255,0.3); }
+.optionBtn.correct { background: linear-gradient(145deg, #2a6a2a, #1a4a1a); border-color: #0f0; animation: correctPulse 0.5s; }
+.optionBtn.wrong { background: linear-gradient(145deg, #6a2a2a, #4a1a1a); border-color: #f00; animation: wrongShake 0.5s; }
+@keyframes correctPulse { 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.1); } }
+@keyframes wrongShake { 0%,100%{ transform:translateX(0); } 25%{ transform:translateX(-10px); } 75%{ transform:translateX(10px); } }
+#comboDisplay { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); color: #ff0; font-size: 48px; font-weight: bold; text-shadow: 0 0 20px #f80; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+#healthBar { position: absolute; top: 10px; right: 10px; width: 200px; }
+#healthBar .label { color: #f66; font-size: 14px; margin-bottom: 3px; }
+#healthBar .bar { width: 100%; height: 20px; background: #333; border-radius: 10px; overflow: hidden; border: 1px solid #f66; }
+#healthBar .fill { width: 100%; height: 100%; background: linear-gradient(90deg, #f00, #f66); transition: width 0.3s; }
+#startScreen, #gameOverScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: auto; z-index: 100; }
+#startScreen h1 { color: #4f8; font-size: 48px; text-shadow: 0 0 30px #4f8; margin-bottom: 10px; }
+#startScreen p, #gameOverScreen p { color: #aaa; font-size: 18px; margin: 10px; }
+#gameOverScreen h1 { color: #f44; font-size: 48px; text-shadow: 0 0 30px #f44; margin-bottom: 10px; }
+#gameOverScreen .finalScore { color: #ff0; font-size: 36px; margin: 15px; }
+.startBtn { background: linear-gradient(145deg, #4a9, #2a6); color: #fff; border: none; border-radius: 15px; padding: 15px 50px; font-size: 24px; cursor: pointer; transition: all 0.3s; margin-top: 20px; }
+.startBtn:hover { transform: scale(1.1); box-shadow: 0 0 30px rgba(74,170,153,0.5); }
+#difficultySelect { margin: 15px; display: flex; gap: 10px; }
+.diffBtn { background: #2a2a4a; color: #aef; border: 2px solid #4a9; border-radius: 8px; padding: 8px 20px; cursor: pointer; font-size: 16px; transition: all 0.3s; }
+.diffBtn:hover, .diffBtn.active { background: #4a9; color: #fff; }
+#waveInfo { position: absolute; top: 60px; left: 10px; color: #fa0; font-size: 16px; text-shadow: 0 0 10px #fa0; }
+</style>
+</head>
+<body>
+<div id="gameContainer">
+<canvas id="gameCanvas"></canvas>
+<div id="uiOverlay">
+<div id="scoreBoard">
+<div>🎯 分数: <span id="score">0</span></div>
+<div>🔥 连击: <span id="combo">0</span></div>
+<div>💀 击杀: <span id="kills">0</span></div>
+</div>
+<div id="waveInfo">🌊 第 <span id="waveNum">1</span> 波</div>
+<div id="healthBar">
+<div class="label">🏠 基地生命值</div>
+<div class="bar"><div class="fill" id="healthFill"></div></div>
+</div>
+<div id="comboDisplay"></div>
+<div id="questionPanel">
+<div id="questionText">准备开始...</div>
+<div id="answerOptions"></div>
+</div>
+</div>
+<div id="startScreen">
+<h1>🧟 编程僵尸答题大战 🧟</h1>
+<p>僵尸正在入侵！用你的编程知识打退它们！</p>
+<p>回答正确 = 消灭僵尸 | 回答错误 = 僵尸前进</p>
+<div id="difficultySelect">
+<button class="diffBtn active" data-diff="easy">简单</button>
+<button class="diffBtn" data-diff="normal">普通</button>
+<button class="diffBtn" data-diff="hard">困难</button>
+</div>
+<button class="startBtn" onclick="startGame()">⚔️ 开始战斗</button>
+</div>
+<div id="gameOverScreen" style="display:none;">
+<h1>💀 基地沦陷 💀</h1>
+<div class="finalScore">最终分数: <span id="finalScore">0</span></div>
+<p>击杀僵尸: <span id="finalKills">0</span></p>
+<p>最大连击: <span id="finalCombo">0</span></p>
+<p>到达波数: <span id="finalWave">1</span></p>
+<button class="startBtn" onclick="restartGame()">🔄 再来一局</button>
+</div>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+let W, H;
+function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+resize();
+window.addEventListener('resize', resize);
+
+// Questions database（改为考察 C++ 基础知识）
+const questions = [
+  { q: "C++ 中表示整数的基本类型是？", options: ["int", "integer", "number", "longint"], answer: 0 },
+  { q: "C++ 中表示单精度浮点数的关键字是？", options: ["double", "float", "real", "decimal"], answer: 1 },
+  { q: "C++ 中表示字符的类型是？", options: ["char", "string", "wchar", "text"], answer: 0 },
+  { q: "C++ 中表示布尔值的类型是？", options: ["boolean", "bool", "bit", "flag"], answer: 1 },
+  { q: "在 C++ 中，标准输出通常使用哪一个对象？", options: ["cout", "printf", "print", "System.out"], answer: 0 },
+  { q: "要使用 cout，需要包含哪个头文件？", options: ["<stdio.h>", "<iostream>", "<string>", "<cstdlib>"], answer: 1 },
+  { q: "在 C++ 中，命名空间 std 的常用写法是？", options: ["use std;", "using namespace std;", "import std;", "include std;"], answer: 1 },
+  { q: "下列哪一行是 C++ 的单行注释？", options: ["/* 注释 */", "// 注释", "<!-- 注释 -->", "# 注释"], answer: 1 },
+  { q: "下列哪一种是合法的 C++ main 函数定义？", options: ["void main()", "int main()", "main()", "function main()"], answer: 1 },
+  { q: "C++ 结束一条语句通常使用的符号是？", options: [".", ":", ";", ","], answer: 2 },
+  { q: "C++ 中用于定义常量的关键字是？", options: ["constant", "let", "const", "define"], answer: 2 },
+  { q: "C++ 中 if 语句的条件应该放在？", options: ["大括号 {}", "中括号 []", "小括号 ()", "尖括号 <>"], answer: 2 },
+  { q: "C++ 中逻辑与运算符是？", options: ["&", "&&", "and", "||"], answer: 1 },
+  { q: "C++ 中逻辑或运算符是？", options: ["||", "or", "&&", "|"], answer: 0 },
+  { q: "C++ 中取余(取模)运算符是？", options: ["/", "%", "*", "&"], answer: 1 },
+  { q: "表达式 ++i 的作用是？", options: ["先返回 i 再加一", "先给 i 加一再返回", "乘以 2", "减一"], answer: 1 },
+  { q: "在 C++ 中，下列哪个不是合法的标识符？", options: ["_count", "2sum", "total", "value_1"], answer: 1 },
+  { q: "C++ 中数组下标通常从几开始？", options: ["0", "1", "-1", "任意"], answer: 0 },
+  { q: "要定义一个包含 10 个 int 的数组，正确写法是？", options: ["int a(10);", "int a[10];", "array<int> a(10);", "int[10] a;"], answer: 1 },
+  { q: "在 C++ 中，函数返回值使用哪个关键字？", options: ["result", "back", "return", "output"], answer: 2 },
+  { q: "下列哪个是 C++ 中合法的函数声明？", options: ["func add(int a,b);", "int add(a,b);", "int add(int a, int b);", "function add(int a,int b);"], answer: 2 },
+  { q: "C++ 中 new 运算符的作用是？", options: ["声明变量", "分配动态内存", "释放内存", "结束程序"], answer: 1 },
+  { q: "C++ 中释放 new 分配的内存应使用？", options: ["free", "delete", "release", "dispose"], answer: 1 },
+  { q: "C++ 指针类型的声明符号是？", options: ["&", "*", "@", "#"], answer: 1 },
+  { q: "C++ 中 & 符号在变量声明中通常表示？", options: ["按位与", "引用类型", "取模", "逻辑与"], answer: 1 },
+  { q: "假设 int x = 10; int* p = &x; *p 的值是？", options: ["地址", "10", "随机值", "类型"], answer: 1 },
+  { q: "C++ 中类的定义关键字是？", options: ["object", "class", "struct", "type"], answer: 1 },
+  { q: "在类中，构造函数的名字应该？", options: ["任意", "与类名相同", "必须是 init", "必须是 new"], answer: 1 },
+  { q: "在 C++ 中，下面哪个访问修饰符表示“对外可见”？", options: ["public", "private", "protected", "static"], answer: 0 },
+  { q: "C++ 中 this 指针的作用是？", options: ["指向父类", "指向当前对象", "指向全局变量", "指向 main"], answer: 1 },
+  { q: "C++ 中重载函数是指？", options: ["同名不同参数", "同名同参数", "不同名同参数", "返回值不同"], answer: 0 },
+  { q: "C++ 中用来表示“无返回值”的关键字是？", options: ["none", "null", "void", "empty"], answer: 2 },
+  { q: "在 C++ 中，哪个关键字用来继承基类？", options: ["using", "extends", "inherits", "public/protected/private Base"], answer: 3 },
+  { q: "C++ 中 std::string 类型需要包含哪个头文件？", options: ["<string>", "<cstring>", "<stdlib.h>", "<vector>"], answer: 0 },
+  { q: "下列哪一个是 C++ 中的标准容器？", options: ["list<int>", "array<int>", "vector<int>", "table<int>"], answer: 2 },
+  { q: "在 C++ 中，预处理指令以什么开头？", options: ["@", "#", "$", "%"], answer: 1 },
+  { q: "下面哪一行是正确的头文件包含写法？", options: ["include <iostream>;", "#include <iostream>;", "#include iostream;", "import <iostream>;"], answer: 1 },
+  { q: "C++ 中 for 循环的三个部分依次是？", options: ["条件;初始化;更新", "初始化;条件;更新", "更新;条件;初始化", "初始化;更新;条件"], answer: 1 },
+  { q: "在 C++ 中，std::endl 的作用是？", options: ["输出空格", "输出换行并刷新缓冲", "结束程序", "清屏"], answer: 1 },
+  { q: "C++ 中 try-catch 主要用来处理？", options: ["循环", "条件判断", "异常", "多态"], answer: 2 },
+  { q: "C++ 标准中，哪个库与输入输出最相关？", options: ["<iostream>", "<math.h>", "<time.h>", "<thread>"], answer: 0 },
+];
+
+// Game state
+let gameState = {
+  score: 0, combo: 0, maxCombo: 0, kills: 0, health: 100,
+  zombies: [], bullets: [], explosions: [], particles: [],
+  wave: 1, zombiesInWave: 0, zombiesSpawned: 0,
+  currentQuestion: null, answered: false, difficulty: 'easy',
+  running: false, gameOver: false, lastSpawnTime: 0, spawnInterval: 3000,
+  stars: [], shakeAmount: 0, baseX: 0
+};
+
+// Difficulty settings
+const diffSettings = {
+  easy: { spawnInterval: 3500, zombieSpeed: 0.4, healthLoss: 8 },
+  normal: { spawnInterval: 2500, zombieSpeed: 0.6, healthLoss: 12 },
+  hard: { spawnInterval: 1800, zombieSpeed: 0.85, healthLoss: 18 }
+};
+
+// Difficulty buttons
+document.querySelectorAll('.diffBtn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.diffBtn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    gameState.difficulty = btn.dataset.diff;
+  });
+});
+
+// Initialize stars
+function initStars() {
+  gameState.stars = [];
+  for (let i = 0; i < 100; i++) {
+    gameState.stars.push({
+      x: Math.random() * W, y: Math.random() * H * 0.6,
+      size: Math.random() * 2 + 0.5, twinkle: Math.random() * Math.PI * 2
+    });
+  }
+}
+initStars();
+
+// Zombie class
+class Zombie {
+  constructor(wave) {
+    this.x = -60;
+    this.y = H * 0.55 + Math.random() * (H * 0.15);
+    this.baseY = this.y;
+    this.width = 40;
+    this.height = 60;
+    const diff = diffSettings[gameState.difficulty];
+    this.speed = diff.zombieSpeed * (0.8 + Math.random() * 0.4) * (1 + wave * 0.05);
+    this.health = 1;
+    this.maxHealth = 1;
+    this.frame = 0;
+    this.frameTimer = 0;
+    this.dead = false;
+    this.dying = false;
+    this.dyingTimer = 0;
+    this.type = Math.random() < 0.2 + wave * 0.02 ? 'fast' : (Math.random() < 0.1 + wave * 0.01 ? 'big' : 'normal');
+    if (this.type === 'fast') { this.speed *= 1.5; this.color = '#8f8'; }
+    else if (this.type === 'big') { this.speed *= 0.6; this.health = 2; this.maxHealth = 2; this.width = 50; this.height = 70; this.color = '#f88'; }
+    else { this.color = '#8d8'; }
+    this.bobOffset = Math.random() * Math.PI * 2;
+  }
+
+  update(dt) {
+    if (this.dying) {
+      this.dyingTimer += dt;
+      if (this.dyingTimer > 500) this.dead = true;
+      return;
+    }
+    this.x += this.speed * dt * 0.06;
+    this.y = this.baseY + Math.sin(Date.now() * 0.003 + this.bobOffset) * 3;
+    this.frameTimer += dt;
+    if (this.frameTimer > 200) { this.frame = (this.frame + 1) % 4; this.frameTimer = 0; }
+    if (this.x > W - 100) {
+      const diff = diffSettings[gameState.difficulty];
+      gameState.health -= diff.healthLoss;
+      gameState.shakeAmount = 10;
+      this.dead = true;
+      createExplosion(W - 80, this.y, '#f00');
+      if (gameState.health <= 0) { gameState.health = 0; endGame(); }
+      updateHealthBar();
+    }
+  }
+
+  draw() {
+    ctx.save();
+    let alpha = this.dying ? 1 - this.dyingTimer / 500 : 1;
+    ctx.globalAlpha = alpha;
+    let dx = this.x, dy = this.y;
+    if (this.dying) { dy -= this.dyingTimer * 0.02; }
+    // Body
+    let bodyColor = this.type === 'big' ? '#664444' : (this.type === 'fast' ? '#446644' : '#445544');
+    ctx.fillStyle = bodyColor;
+    ctx.fillRect(dx - this.width/2 + 5, dy - this.height/2, this.width - 10, this.height * 0.6);
+    // Head
+    let headSize = this.type === 'big' ? 18 : 14;
+    ctx.fillStyle = '#7a9a6a';
+    ctx.beginPath();
+    ctx.arc(dx, dy - this.height/2 - headSize + 5, headSize, 0, Math.PI * 2);
+    ctx.fill();
+    // Eyes
+    ctx.fillStyle = '#ff0';
+    ctx.beginPath();
+    ctx.arc(dx - 5, dy - this.height/2 - headSize + 3, 3, 0, Math.PI * 2);
+    ctx.arc(dx + 5, dy - this.height/2 - headSize + 3, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#f00';
+    ctx.beginPath();
+    ctx.arc(dx - 5, dy - this.height/2 - headSize + 3, 1.5, 0, Math.PI * 2);
+    ctx.arc(dx + 5, dy - this.height/2 - headSize + 3, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    // Arms
+    let armSwing = Math.sin(this.frame * Math.PI / 2) * 10;
+    ctx.strokeStyle = '#7a9a6a';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(dx - this.width/2 + 5, dy - this.height/4);
+    ctx.lineTo(dx + this.width/2 + 10 + armSwing, dy - this.height/4 - 5);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(dx - this.width/2 + 5, dy - this.height/4 + 8);
+    ctx.lineTo(dx + this.width/2 + 8 - armSwing, dy - this.height/4 + 3);
+    ctx.stroke();
+    // Legs
+    let legSwing = Math.sin(this.frame * Math.PI / 2) * 8;
+    ctx.strokeStyle = '#556655';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(dx - 5, dy + this.height * 0.1);
+    ctx.lineTo(dx - 8 + legSwing, dy + this.height/2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(dx + 5, dy + this.height * 0.1);
+    ctx.lineTo(dx + 8 - legSwing, dy + this.height/2);
+    ctx.stroke();
+    // Health bar for big zombies
+    if (this.maxHealth > 1) {
+      ctx.fillStyle = '#600';
+      ctx.fillRect(dx - 15, dy - this.height/2 - headSize - 15, 30, 4);
+      ctx.fillStyle = '#f00';
+      ctx.fillRect(dx - 15, dy - this.height/2 - headSize - 15, 30 * (this.health / this.maxHealth), 4);
+    }
+    ctx.restore();
+  }
+}
+
+// Bullet
+class Bullet {
+  constructor(targetZombie) {
+    this.x = W - 100;
+    this.y = H * 0.5;
+    this.target = targetZombie;
+    this.speed = 8;
+    this.dead = false;
+    this.trail = [];
+    this.color = `hsl(${Math.random() * 60 + 30}, 100%, 60%)`;
+  }
+  update(dt) {
+    if (!this.target || this.target.dead) { this.dead = true; return; }
+    let dx = this.target.x - this.x;
+    let dy = this.target.y - this.y;
+    let dist = Math.sqrt(dx*dx + dy*dy);
+    if (dist < 15) {
+      this.target.health--;
+      if (this.target.health <= 0) {
+        this.target.dying = true;
+        gameState.kills++;
+        gameState.score += 10 * (1 + gameState.combo * 0.5);
+        createExplosion(this.target.x, this.target.y, '#4f8');
+        spawnParticles(this.target.x, this.target.y, 15, '#7a9a6a');
+      } else {
+        createExplosion(this.target.x, this.target.y, '#ff0');
+      }
+      this.dead = true;
+      return;
+    }
+    this.trail.push({x: this.x, y: this.y, life: 10});
+    this.x += (dx / dist) * this.speed * dt * 0.1;
+    this.y += (dy / dist) * this.speed * dt * 0.1;
+    this.trail = this.trail.filter(t => { t.life--; return t.life > 0; });
+  }
+  draw() {
+    // Trail
+    for (let t of this.trail) {
+      ctx.fillStyle = `rgba(255,200,50,${t.life/10})`;
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, 3 * t.life/10, 0, Math.PI*2);
+      ctx.fill();
+    }
+    // Bullet
+    ctx.fillStyle = this.color;
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 15;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, 6, 0, Math.PI*2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+}
+
+// Explosion
+function createExplosion(x, y, color) {
+  gameState.explosions.push({ x, y, color, radius: 5, maxRadius: 40, life: 1 });
+}
+
+function spawnParticles(x, y, count, color) {
+  for (let i = 0; i < count; i++) {
+    let angle = Math.random() * Math.PI * 2;
+    let speed = Math.random() * 3 + 1;
+    gameState.particles.push({
+      x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 2,
+      life: 1, color, size: Math.random() * 4 + 2
+    });
+  }
+}
+
+// Get next question
+function getNextQuestion() {
+  let q = questions[Math.floor(Math.random() * questions.length)];
+  // Shuffle options but track correct answer
+  let indices = [0,1,2,3];
+  for (let i = indices.length - 1; i > 0; i--) {
+    let j = Math.floor(Math.random() * (i+1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  let shuffled = {
+    q: q.q,
+    options: indices.map(i => q.options[i]),
+    answer: indices.indexOf(q.answer)
+  };
+  return shuffled;
+}
+
+function showQuestion() {
+  gameState.currentQuestion = getNextQuestion();
+  gameState.answered = false;
+  let qPanel = document.getElementById('questionText');
+  qPanel.textContent = '❓ ' + gameState.currentQuestion.q;
+  let optDiv = document.getElementById('answerOptions');
+  optDiv.innerHTML = '';
+  gameState.currentQuestion.options.forEach((opt, i) => {
+    let btn = document.createElement('button');
+    btn.className = 'optionBtn';
+    btn.textContent = opt;
+    btn.addEventListener('click', () => handleAnswer(i, btn));
+    optDiv.appendChild(btn);
+  });
+}
+
+function handleAnswer(index, btn) {
+  if (gameState.answered || gameState.gameOver) return;
+  gameState.answered = true;
+  let correct = index === gameState.currentQuestion.answer;
+
+  if (correct) {
+    btn.classList.add('correct');
+    gameState.combo++;
+    if (gameState.combo > gameState.maxCombo) gameState.maxCombo = gameState.combo;
+    // Shoot the frontmost zombie
+    let frontZombie = null;
+    let maxX = -1;
+    for (let z of gameState.zombies) {
+      if (!z.dying && !z.dead && z.x > maxX) { maxX = z.x; frontZombie = z; }
+    }
+    if (frontZombie) {
+      gameState.bullets.push(new Bullet(frontZombie));
+    }
+    // Combo display
+    if (gameState.combo >= 3) {
+      let cd = document.getElementById('comboDisplay');
+      cd.textContent = `🔥 ${gameState.combo}连击！`;
+      cd.style.opacity = 1;
+      setTimeout(() => cd.style.opacity = 0, 1000);
+    }
+    // Bonus health on combos
+    if (gameState.combo % 5 === 0) {
+      gameState.health = Math.min(100, gameState.health + 5);
+      updateHealthBar();
+    }
+  } else {
+    btn.classList.add('wrong');
+    gameState.combo = 0;
+    // Highlight correct answer
+    let btns = document.querySelectorAll('.optionBtn');
+    btns[gameState.currentQuestion.answer].classList.add('correct');
+    // All zombies advance
+    for (let z of gameState.zombies) {
+      if (!z.dying && !z.dead) z.x += 40;
+    }
+    gameState.shakeAmount = 5;
+  }
+
+  updateUI();
+  setTimeout(() => { if (gameState.running) showQuestion(); }, 1200);
+}
+
+function updateUI() {
+  document.getElementById('score').textContent = Math.floor(gameState.score);
+  document.getElementById('combo').textContent = gameState.combo;
+  document.getElementById('kills').textContent = gameState.kills;
+  document.getElementById('waveNum').textContent = gameState.wave;
+}
+
+function updateHealthBar() {
+  document.getElementById('healthFill').style.width = gameState.health + '%';
+}
+
+function spawnZombie() {
+  if (gameState.zombiesSpawned < gameState.zombiesInWave) {
+    gameState.zombies.push(new Zombie(gameState.wave));
+    gameState.zombiesSpawned++;
+  }
+}
+
+function checkWave() {
+  if (gameState.zombiesSpawned >= gameState.zombiesInWave &&
+      gameState.zombies.every(z => z.dead)) {
+    gameState.wave++;
+    gameState.zombiesInWave = 3 + gameState.wave * 2;
+    gameState.zombiesSpawned = 0;
+    let diff = diffSettings[gameState.difficulty];
+    gameState.spawnInterval = Math.max(800, diff.spawnInterval - gameState.wave * 100);
+    gameState.score += gameState.wave * 50;
+    updateUI();
+  }
+}
+
+// Draw background
+function drawBackground() {
+  // Sky gradient
+  let grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#0a0a1a');
+  grad.addColorStop(0.4, '#1a1a3a');
+  grad.addColorStop(0.6, '#2a1a2a');
+  grad.addColorStop(1, '#1a0a0a');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Stars
+  for (let s of gameState.stars) {
+    s.twinkle += 0.02;
+    let alpha = 0.3 + Math.sin(s.twinkle) * 0.3;
+    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Moon
+  ctx.fillStyle = '#dde';
+  ctx.shadowColor = '#aaf';
+  ctx.shadowBlur = 40;
+  ctx.beginPath();
+  ctx.arc(W * 0.8, H * 0.15, 40, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#0a0a1a';
+  ctx.beginPath();
+  ctx.arc(W * 0.8 + 12, H * 0.15 - 8, 35, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Ground
+  let groundY = H * 0.72;
+  let gGrad = ctx.createLinearGradient(0, groundY, 0, H);
+  gGrad.addColorStop(0, '#2a3a2a');
+  gGrad.addColorStop(0.3, '#1a2a1a');
+  gGrad.addColorStop(1, '#0a1a0a');
+  ctx.fillStyle = gGrad;
+  ctx.fillRect(0, groundY, W, H - groundY);
+
+  // Ground line
+  ctx.strokeStyle = '#3a5a3a';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, groundY);
+  ctx.lineTo(W, groundY);
+  ctx.stroke();
+
+  // Dead trees
+  drawTree(W * 0.1, groundY, 0.8);
+  drawTree(W * 0.3, groundY, 0.6);
+  drawTree(W * 0.5, groundY, 1.0);
+  drawTree(W * 0.7, groundY, 0.5);
+
+  // Base/House on right
+  drawBase(W - 80, groundY);
+
+  // Fog
+  ctx.fillStyle = 'rgba(100,150,100,0.03)';
+  for (let i = 0; i < 5; i++) {
+    let fogX = (Date.now() * 0.01 + i * 300) % (W + 200) - 100;
+    ctx.beginPath();
+    ctx.ellipse(fogX, groundY + 10, 150, 20, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawTree(x, groundY, scale) {
+  ctx.save();
+  ctx.translate(x, groundY);
+  ctx.scale(scale, scale);
+  ctx.strokeStyle = '#2a1a1a';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(0, -80);
+  ctx.lineTo(-20, -100);
+  ctx.moveTo(0, -60);
+  ctx.lineTo(15, -90);
+  ctx.moveTo(0, -40);
+  ctx.lineTo(-12, -65);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawBase(x, groundY) {
+  // House
+  ctx.fillStyle = '#554433';
+  ctx.fillRect(x - 30, groundY - 60, 60, 60);
+  // Roof
+  ctx.fillStyle = '#773333';
+  ctx.beginPath();
+  ctx.moveTo(x - 40, groundY - 60);
+  ctx.lineTo(x, groundY - 90);
+  ctx.lineTo(x + 40, groundY - 60);
+  ctx.closePath();
+  ctx.fill();
+  // Window (glowing)
+  ctx.fillStyle = '#ff8';
+  ctx.shadowColor = '#ff8';
+  ctx.shadowBlur = 15;
+  ctx.fillRect(x - 10, groundY - 50, 20, 15);
+  ctx.shadowBlur = 0;
+  // Door
+  ctx.fillStyle = '#332211';
+  ctx.fillRect(x - 8, groundY - 25, 16, 25);
+  // Shield effect
+  let shieldAlpha = 0.1 + Math.sin(Date.now() * 0.003) * 0.05;
+  ctx.strokeStyle = `rgba(100,200,255,${shieldAlpha})`;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(x, groundY - 40, 55, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+// Main game loop
+let lastTime = 0;
+function gameLoop(timestamp) {
+  if (!gameState.running) return;
+  let dt = timestamp - lastTime;
+  if (dt > 100) dt = 100;
+  lastTime = timestamp;
+
+  // Screen shake
+  ctx.save();
+  if (gameState.shakeAmount > 0) {
+    ctx.translate(
+      (Math.random() - 0.5) * gameState.shakeAmount,
+      (Math.random() - 0.5) * gameState.shakeAmount
+    );
+    gameState.shakeAmount *= 0.9;
+    if (gameState.shakeAmount < 0.5) gameState.shakeAmount = 0;
+  }
+
+  // Draw background
+  drawBackground();
+
+  // Spawn zombies
+  if (timestamp - gameState.lastSpawnTime > gameState.spawnInterval) {
+    if (gameState.zombiesSpawned < gameState.zombiesInWave) {
+      spawnZombie();
+      gameState.lastSpawnTime = timestamp;
+    }
+  }
+
+  // Update & draw zombies
+  for (let z of gameState.zombies) {
+    z.update(dt);
+    z.draw();
+  }
+  gameState.zombies = gameState.zombies.filter(z => !z.dead);
+
+  // Update & draw bullets
+  for (let b of gameState.bullets) {
+    b.update(dt);
+    b.draw();
+  }
+  gameState.bullets = gameState.bullets.filter(b => !b.dead);
+
+  // Update & draw explosions
+  for (let e of gameState.explosions) {
+    e.radius += 2;
+    e.life -= 0.05;
+    ctx.strokeStyle = e.color;
+    ctx.globalAlpha = e.life;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    // Inner glow
+    ctx.fillStyle = e.color;
+    ctx.globalAlpha = e.life * 0.3;
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, e.radius * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+  gameState.explosions = gameState.explosions.filter(e => e.life > 0);
+
+  // Update & draw particles
+  for (let p of gameState.particles) {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.1;
+    p.life -= 0.02;
+    ctx.fillStyle = p.color;
+    ctx.globalAlpha = p.life;
+    ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+    ctx.globalAlpha = 1;
+  }
+  gameState.particles = gameState.particles.filter(p => p.life > 0);
+
+  // Damage flash on screen edges when health is low
+  if (gameState.health < 30) {
+    let flashAlpha = (0.1 + Math.sin(Date.now() * 0.005) * 0.05) * (1 - gameState.health / 30);
+    ctx.fillStyle = `rgba(255,0,0,${flashAlpha})`;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // Draw zombie count indicator
+  let remaining = gameState.zombiesInWave - gameState.zombiesSpawned;
+  if (remaining > 0) {
+    ctx.fillStyle = 'rgba(255,100,100,0.7)';
+    ctx.font = '14px Microsoft YaHei';
+    ctx.textAlign = 'left';
+    ctx.fillText(`⏳ 剩余: ${remaining} 只僵尸即将到来`, 10, H * 0.72 - 10);
+  }
+
+  ctx.restore();
+
+  // Check wave completion
+  checkWave();
+
+  requestAnimationFrame(gameLoop);
+}
+
+function startGame() {
+  document.getElementById('startScreen').style.display = 'none';
+  document.getElementById('gameOverScreen').style.display = 'none';
+  let diff = diffSettings[gameState.difficulty];
+  gameState = {
+    score: 0, combo: 0, maxCombo: 0, kills: 0, health: 100,
+    zombies: [], bullets: [], explosions: [], particles: [],
+    wave: 1, zombiesInWave: 5, zombiesSpawned: 0,
+    currentQuestion: null, answered: false, difficulty: gameState.difficulty,
+    running: true, gameOver: false, lastSpawnTime: 0,
+    spawnInterval: diff.spawnInterval,
+    stars: gameState.stars, shakeAmount: 0, baseX: W - 80
+  };
+  updateUI();
+  updateHealthBar();
+  showQuestion();
+  lastTime = performance.now();
+  requestAnimationFrame(gameLoop);
+}
+
+function restartGame() {
+  startGame();
+}
+
+function endGame() {
+  gameState.running = false;
+  gameState.gameOver = true;
+  document.getElementById('finalScore').textContent = Math.floor(gameState.score);
+  document.getElementById('finalKills').textContent = gameState.kills;
+  document.getElementById('finalCombo').textContent = gameState.maxCombo;
+  document.getElementById('finalWave').textContent = gameState.wave;
+  setTimeout(() => {
+    document.getElementById('gameOverScreen').style.display = 'flex';
+  }, 500);
+}
+
+// Floating damage numbers
+function showDamageNumber(x, y, text, color) {
+  let el = document.createElement('div');
+  el.style.cssText = `position:absolute;left:${x}px;top:${y}px;color:${color};font-size:24px;font-weight:bold;pointer-events:none;z-index:50;text-shadow:0 0 10px ${color};transition:all 1s;opacity:1;`;
+  el.textContent = text;
+  document.getElementById('uiOverlay').appendChild(el);
+  requestAnimationFrame(() => {
+    el.style.top = (y - 60) + 'px';
+    el.style.opacity = '0';
+  });
+  setTimeout(() => el.remove(), 1000);
+}
+
+// Add keyboard support (1-4 keys for answers)
+document.addEventListener('keydown', (e) => {
+  if (gameState.gameOver || !gameState.running) return;
+  let key = parseInt(e.key);
+  if (key >= 1 && key <= 4) {
+    let btns = document.querySelectorAll('.optionBtn');
+    if (btns[key - 1] && !gameState.answered) {
+      btns[key - 1].click();
+    }
+  }
+});
+
+// Responsive question panel
+function adjustLayout() {
+  let panel = document.getElementById('questionPanel');
+  if (W < 600) {
+    panel.style.minWidth = '90%';
+    panel.style.padding = '10px 15px';
+    document.getElementById('questionText').style.fontSize = '16px';
+  } else {
+    panel.style.minWidth = '500px';
+    panel.style.padding = '20px 30px';
+    document.getElementById('questionText').style.fontSize = '20px';
+  }
+}
+window.addEventListener('resize', () => { resize(); adjustLayout(); initStars(); });
+adjustLayout();
+</script>
+</body>
+</html>
+

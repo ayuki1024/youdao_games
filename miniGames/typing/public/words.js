@@ -77,4 +77,4 @@ window.GAME_CONFIG = {
 };
 
 
-```*** End Patch```"}어요assistantจีเอ็มเอ็มassistantибир to=functions.ApplyPatchมนตรี 작성 to=functions.ApplyPatchовольствоваться to=functions.ApplyPatch പോക to=functions.ApplyPatch렇게 to=functions.ApplyPatch】!【assistant to=functions.ApplyPatchენილიствастаўкі_FACTUAL 오류 발생: The Patch content is not valid. (patch is invalid) (Request ID: ae820e90-4203-4552-97a1-d72a9a0422bc)assistant_hresultntegreassistantൈവassistant_RGCTXassistantួលassistant to=functions.ApplyPatch ***!
+``
