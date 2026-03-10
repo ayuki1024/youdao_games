@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>编程僵尸答题大战</title>
+<title>大战老师</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { overflow: hidden; background: #04040f; font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif; }
+body { overflow: hidden; background: #87ceeb; font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif; }
 canvas { display: block; }
 #gameContainer { position: relative; width: 100vw; height: 100vh; }
 
@@ -15,51 +15,48 @@ canvas { display: block; }
 
 #scoreBoard {
   position: absolute; top: 14px; left: 14px;
-  background: rgba(0,0,0,0.55);
-  border: 1px solid rgba(0,255,100,0.22);
+  background: rgba(255,255,255,0.82);
+  border: 1px solid rgba(255,160,40,0.4);
   border-radius: 12px; padding: 10px 16px;
-  color: #0f0; font-size: 15px;
-  text-shadow: 0 0 8px #0f0;
-  backdrop-filter: blur(4px);
+  color: #c05000; font-size: 15px;
+  text-shadow: 0 1px 0 rgba(255,200,100,0.3);
   line-height: 2;
 }
 #waveInfo {
   position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
-  background: rgba(0,0,0,0.55);
-  border: 1px solid rgba(250,160,0,0.28);
+  background: rgba(255,255,255,0.82);
+  border: 1px solid rgba(255,140,30,0.4);
   border-radius: 20px; padding: 6px 22px;
-  color: #fa0; font-size: 15px; font-weight: bold;
-  text-shadow: 0 0 10px #fa0; backdrop-filter: blur(4px);
+  color: #c05000; font-size: 15px; font-weight: bold;
 }
 #healthBar {
   position: absolute; top: 14px; right: 14px; width: 185px;
-  background: rgba(0,0,0,0.55);
-  border: 1px solid rgba(255,80,80,0.28);
+  background: rgba(255,255,255,0.82);
+  border: 1px solid rgba(255,100,100,0.3);
   border-radius: 12px; padding: 9px 13px;
-  backdrop-filter: blur(4px);
 }
-#healthBar .label { color: #f66; font-size: 12px; margin-bottom: 4px; }
+#healthBar .label { color: #d04040; font-size: 12px; margin-bottom: 4px; }
 #healthBar .bar {
-  width: 100%; height: 14px; background: rgba(60,0,0,0.8);
-  border-radius: 7px; overflow: hidden; border: 1px solid #500;
+  width: 100%; height: 14px; background: rgba(255,220,220,0.8);
+  border-radius: 7px; overflow: hidden; border: 1px solid #faa;
 }
 #healthBar .fill {
   height: 100%;
-  background: linear-gradient(90deg, #b00, #f44, #ff8);
+  background: linear-gradient(90deg, #f55, #f88, #ffb);
   border-radius: 7px; transition: width 0.4s ease;
 }
 #healthBar .fill.low { animation: hpPulse 0.55s infinite alternate; }
 @keyframes hpPulse {
-  from { box-shadow: 0 0 4px #f00; }
-  to   { box-shadow: 0 0 18px #f00, 0 0 32px #f00; }
+  from { box-shadow: 0 0 4px #f44; }
+  to   { box-shadow: 0 0 18px #f44, 0 0 32px #f00; }
 }
 
 /* ── Combo ── */
 #comboDisplay {
   position: absolute; top: 36%; left: 50%;
   transform: translate(-50%, -50%) scale(0);
-  color: #ff0; font-size: 54px; font-weight: 900;
-  text-shadow: 0 0 20px #f80, 0 0 40px #f60;
+  color: #ff5500; font-size: 54px; font-weight: 900;
+  text-shadow: 0 0 20px #ff8800, 0 0 40px #ff6600;
   opacity: 0; pointer-events: none; white-space: nowrap; letter-spacing: 2px;
 }
 #comboDisplay.show { animation: comboPop 1.3s forwards; }
@@ -75,27 +72,25 @@ canvas { display: block; }
 /* ── Question Panel ── */
 #questionPanel {
   position: absolute; bottom: -240px; left: 50%; transform: translateX(-50%);
-  background: rgba(4,8,22,0.93);
-  border: 1.5px solid rgba(55,200,140,0.45);
+  background: rgba(255,255,255,0.95);
+  border: 1.5px solid rgba(255,160,40,0.55);
   border-radius: 18px; padding: 18px 28px 20px;
   min-width: 600px; max-width: 860px; width: 62vw;
   pointer-events: auto;
-  box-shadow: 0 0 32px rgba(40,180,120,0.18), 0 8px 36px rgba(0,0,0,0.65);
-  backdrop-filter: blur(12px);
+  box-shadow: 0 0 28px rgba(255,160,40,0.18), 0 8px 32px rgba(0,0,0,0.12);
   transition: bottom 0.52s cubic-bezier(0.22,1,0.36,1);
 }
 #questionPanel.visible { bottom: 100px; }
 #questionText {
-  color: #d8e8ff; font-size: 17px; margin-bottom: 12px;
+  color: #2c2c3a; font-size: 17px; margin-bottom: 12px;
   text-align: left; line-height: 1.6;
-  text-shadow: 0 0 6px rgba(160,200,255,0.35);
   white-space: pre-wrap;
 }
 #answerOptions { display: grid; grid-template-columns: 1fr; gap: 8px; }
 
 .optionBtn {
-  background: linear-gradient(145deg,#0c1828,#141e30);
-  color: #aae8ff; border: 1.5px solid rgba(55,160,200,0.38);
+  background: linear-gradient(145deg,#fffbf2,#fff4e0);
+  color: #5c3200; border: 1.5px solid rgba(255,160,40,0.4);
   border-radius: 10px; padding: 10px 18px;
   font-size: 15px; cursor: pointer; text-align: left;
   transition: background .2s, border-color .2s, transform .15s, box-shadow .2s;
@@ -103,36 +98,36 @@ canvas { display: block; }
 }
 .optionBtn::before {
   content: ''; position: absolute; inset: 0;
-  background: linear-gradient(135deg,rgba(255,255,255,0.06) 0%,transparent 55%);
+  background: linear-gradient(135deg,rgba(255,255,255,0.55) 0%,transparent 55%);
   pointer-events: none;
 }
 .optionBtn:hover:not(:disabled) {
-  background: linear-gradient(145deg,#182d48,#203040);
-  border-color: rgba(80,200,255,0.72);
-  transform: translateY(-2px); box-shadow: 0 4px 20px rgba(60,180,255,0.22);
+  background: linear-gradient(145deg,#fff0cc,#ffe8a0);
+  border-color: #ffa030;
+  transform: translateY(-2px); box-shadow: 0 4px 18px rgba(255,160,40,0.28);
 }
 .optionBtn.correct {
-  background: linear-gradient(145deg,#0c3318,#092810);
-  border-color: #2f8; box-shadow: 0 0 22px rgba(40,255,100,0.3);
-  animation: correctPulse .5s; color: #6ff;
+  background: linear-gradient(145deg,#d4edda,#c3e6cb);
+  border-color: #28a745; box-shadow: 0 0 18px rgba(40,167,69,0.3);
+  animation: correctPulse .5s; color: #155724;
 }
 .optionBtn.wrong {
-  background: linear-gradient(145deg,#380a0a,#280808);
-  border-color: #f44; box-shadow: 0 0 22px rgba(255,60,60,0.3);
-  animation: wrongShake .5s; color: #f88;
+  background: linear-gradient(145deg,#f8d7da,#f5c6cb);
+  border-color: #dc3545; box-shadow: 0 0 18px rgba(220,53,69,0.3);
+  animation: wrongShake .5s; color: #721c24;
 }
 @keyframes correctPulse { 0%,100%{transform:scale(1)} 40%{transform:scale(1.07)} }
 @keyframes wrongShake   { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 60%{transform:translateX(8px)} }
 .keyHint {
-  display:inline-block; background:rgba(255,255,255,0.1);
-  border:1px solid rgba(255,255,255,0.18); border-radius:4px;
-  padding:1px 5px; font-size:11px; margin-right:6px; color:#8ab; vertical-align:middle;
+  display:inline-block; background:rgba(0,0,0,0.07);
+  border:1px solid rgba(0,0,0,0.14); border-radius:4px;
+  padding:1px 5px; font-size:11px; margin-right:6px; color:#999; vertical-align:middle;
 }
 
 /* ── Wave Overlay ── */
 #waveOverlay {
   position: absolute; inset: 0;
-  background: rgba(0,0,0,0.87);
+  background: rgba(255,240,200,0.88);
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   z-index: 80; pointer-events: none; opacity: 0;
@@ -142,8 +137,8 @@ canvas { display: block; }
   0%  {opacity:0} 14%{opacity:1} 72%{opacity:1} 100%{opacity:0}
 }
 #waveBig {
-  font-size: 86px; font-weight: 900; color: #fa0;
-  text-shadow: 0 0 40px #fa0, 0 0 80px #f60;
+  font-size: 86px; font-weight: 900; color: #e65c00;
+  text-shadow: 0 0 40px #ff8800, 0 0 80px #ffaa00;
   letter-spacing: 8px;
   animation: waveBigAnim 2.5s forwards;
 }
@@ -154,12 +149,12 @@ canvas { display: block; }
   80% {transform:scale(1);opacity:1}
   100%{transform:scale(1.18);opacity:0}
 }
-#waveSub { font-size: 22px; color: #ccc; margin-top: 10px; letter-spacing: 4px; opacity:.85; }
+#waveSub { font-size: 22px; color: #555; margin-top: 10px; letter-spacing: 4px; opacity:.9; }
 
 /* ── Start Screen ── */
 #startScreen {
   position: absolute; inset: 0;
-  background: linear-gradient(180deg,#04040e 0%,#08081e 45%,#120810 100%);
+  background: linear-gradient(180deg,#87ceeb 0%,#b8e8f8 45%,#c8f0a0 100%);
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   pointer-events: auto; z-index: 100;
@@ -168,51 +163,72 @@ canvas { display: block; }
 .gameTitle {
   font-size: 52px; font-weight: 900;
   color: transparent;
-  background: linear-gradient(90deg, #4f8, #0cf 50%, #f84);
+  background: linear-gradient(90deg, #ff6b6b, #ffa500 50%, #ff6b6b);
   -webkit-background-clip: text; background-clip: text;
-  filter: drop-shadow(0 0 22px rgba(80,255,120,0.5));
+  filter: drop-shadow(0 2px 8px rgba(255,120,0,0.45));
   margin-bottom: 8px; letter-spacing: 2px;
   animation: titlePulse 3s ease-in-out infinite;
 }
 @keyframes titlePulse {
-  0%,100%{filter:drop-shadow(0 0 22px rgba(80,255,120,0.5))}
-  50%    {filter:drop-shadow(0 0 38px rgba(80,255,120,0.9))}
+  0%,100%{filter:drop-shadow(0 2px 8px rgba(255,120,0,0.45))}
+  50%    {filter:drop-shadow(0 2px 22px rgba(255,150,0,0.9))}
 }
-.subLine { color: #667; font-size: 15px; margin: 5px 0 3px; letter-spacing: 1px; }
-.ruleLine { color: #445; font-size: 13px; margin: 3px 0 14px; }
+.subLine { color: #555; font-size: 15px; margin: 5px 0 3px; letter-spacing: 1px; }
+.ruleLine { color: #777; font-size: 13px; margin: 3px 0 14px; }
 #difficultySelect { display: flex; gap: 10px; margin: 12px 0; }
 .diffBtn {
-  background: rgba(14,24,44,0.85); color: #aef;
-  border: 1.5px solid rgba(55,160,200,0.32);
+  background: rgba(255,255,255,0.75); color: #c05000;
+  border: 1.5px solid rgba(255,150,40,0.38);
   border-radius: 8px; padding: 8px 22px; cursor: pointer;
   font-size: 15px; transition: all .2s;
 }
 .diffBtn:hover,.diffBtn.active {
-  background: linear-gradient(145deg,#184a38,#0d3025);
-  border-color: #4a9; color: #fff;
-  box-shadow: 0 0 14px rgba(60,180,140,0.3);
+  background: linear-gradient(145deg,#fff0cc,#ffe0a0);
+  border-color: #ffa030; color: #a03000;
+  box-shadow: 0 0 14px rgba(255,160,40,0.35);
 }
 .startBtn {
-  background: linear-gradient(145deg,#186a4a,#0d5030);
-  color: #fff; border: 1.5px solid #4a9;
+  background: linear-gradient(145deg,#ff8c00,#ff6000);
+  color: #fff; border: 1.5px solid #ffaa30;
   border-radius: 14px; padding: 14px 52px;
   font-size: 22px; cursor: pointer; transition: all .25s;
   margin-top: 18px; letter-spacing: 2px;
-  box-shadow: 0 0 22px rgba(40,180,120,0.32);
+  box-shadow: 0 0 22px rgba(255,150,0,0.42);
 }
-.startBtn:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 0 38px rgba(60,220,150,0.55); }
+.startBtn:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 0 38px rgba(255,160,0,0.7); }
+
+/* ── Avatar Upload ── */
+.avatarUpload {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  margin: 14px 0 8px; padding: 12px 20px;
+  background: rgba(255,255,255,0.45); border-radius: 12px;
+  border: 1px dashed rgba(255,150,40,0.5);
+}
+.avatarLabel { cursor: pointer; color: #c05000; font-size: 14px; font-weight: bold; }
+.avatarLabel:hover { color: #e03000; }
+.avatarPreview {
+  width: 56px; height: 56px; border-radius: 50%;
+  overflow: hidden; background: rgba(255,220,150,0.4);
+  border: 2.5px solid rgba(255,150,40,0.6);
+}
+.avatarPreview img { width: 100%; height: 100%; object-fit: cover; }
+.avatarClear {
+  background: transparent; color: #aaa; border: 1px solid rgba(200,100,50,0.3);
+  border-radius: 6px; padding: 4px 12px; font-size: 12px; cursor: pointer;
+}
+.avatarClear:hover { color: #c44; border-color: rgba(220,80,50,0.5); }
 
 /* ── Game Over ── */
 #gameOverScreen {
   position: absolute; inset: 0;
-  background: linear-gradient(180deg,#080000,#0e000e 55%,#00080a 100%);
+  background: linear-gradient(180deg,#fff5e0 0%,#ffe0b2 55%,#fff0cc 100%);
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   pointer-events: auto; z-index: 100;
 }
 .goTitle {
-  font-size: 58px; font-weight: 900; color: #f44;
-  text-shadow: 0 0 32px #f00, 0 0 64px #800;
+  font-size: 58px; font-weight: 900; color: #e65c00;
+  text-shadow: 0 0 28px #ff8800, 0 2px 0 rgba(0,0,0,0.1);
   animation: goAppear .55s ease .25s both; letter-spacing: 3px;
 }
 @keyframes goAppear {
@@ -224,8 +240,8 @@ canvas { display: block; }
 .statsGrid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 14px 32px;
   margin: 22px 0 10px; padding: 20px 36px;
-  background: rgba(0,0,0,0.4);
-  border: 1px solid rgba(200,80,80,0.18);
+  background: rgba(255,255,255,0.55);
+  border: 1px solid rgba(255,160,40,0.25);
   border-radius: 16px;
   animation: statsFade .5s ease .6s both;
 }
@@ -233,18 +249,18 @@ canvas { display: block; }
   from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:none}
 }
 .statItem { text-align: center; }
-.statLabel { color: #667; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; }
-.statVal { color: #ff8; font-size: 34px; font-weight: 900; text-shadow: 0 0 14px #f80; }
+.statLabel { color: #999; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; }
+.statVal { color: #e65c00; font-size: 34px; font-weight: 900; text-shadow: 0 0 12px rgba(255,150,0,0.4); }
 
 /* ── Overlays ── */
 #vignette {
   position: absolute; inset: 0;
-  background: radial-gradient(ellipse at center, transparent 58%, rgba(0,0,0,0.65) 100%);
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.12) 100%);
   pointer-events: none; z-index: 5;
 }
 #damageFlash {
   position: absolute; inset: 0; pointer-events: none; z-index: 10; opacity: 0;
-  background: radial-gradient(ellipse at center, transparent 38%, rgba(255,0,0,0.45) 100%);
+  background: radial-gradient(ellipse at center, transparent 38%, rgba(255,100,0,0.35) 100%);
 }
 </style>
 </head>
@@ -257,11 +273,11 @@ canvas { display: block; }
     <div id="scoreBoard">
       <div>🎯 分数 &nbsp;<span id="score">0</span></div>
       <div>🔥 连击 &nbsp;<span id="combo">0</span></div>
-      <div>💀 击杀 &nbsp;<span id="kills">0</span></div>
+      <div>📚 击退 &nbsp;<span id="kills">0</span></div>
     </div>
-    <div id="waveInfo">🌊 第 <span id="waveNum">1</span> 波</div>
+    <div id="waveInfo">📖 第 <span id="waveNum">1</span> 节课</div>
     <div id="healthBar">
-      <div class="label">🏠 基地生命值</div>
+      <div class="label">🏫 教室生命值</div>
       <div class="bar"><div class="fill" id="healthFill"></div></div>
     </div>
     <div id="comboDisplay"></div>
@@ -280,13 +296,21 @@ canvas { display: block; }
   <div id="startScreen">
     <canvas id="bgCanvas" style="position:absolute;inset:0;width:100%;height:100%;z-index:0;opacity:.3;pointer-events:none;"></canvas>
     <div style="position:relative;z-index:1;text-align:center;">
-      <div class="gameTitle">🧟 编程僵尸答题大战 🧟</div>
-      <div class="subLine">僵尸正在入侵！用你的 C++ 知识打退它们！</div>
-      <div class="ruleLine">✅ 答对 → 消灭僵尸 &nbsp;|&nbsp; ❌ 答错 → 僵尸前进 &nbsp;|&nbsp; 键盘 1-4 快速作答</div>
+      <div class="gameTitle">👨‍🏫 大战老师 👨‍🏫</div>
+      <div class="subLine">老师们来袭！用你的 C++ 知识打退他们！</div>
+      <div class="ruleLine">✅ 答对 → 击退老师 &nbsp;|&nbsp; ❌ 答错 → 老师前进 &nbsp;|&nbsp; 键盘 1-4 快速作答</div>
       <div id="difficultySelect">
         <button class="diffBtn active" data-diff="easy">🌿 简单</button>
         <button class="diffBtn"        data-diff="normal">⚔️ 普通</button>
         <button class="diffBtn"        data-diff="hard">💀 困难</button>
+      </div>
+      <div class="avatarUpload">
+        <label class="avatarLabel">
+          <span>📷 上传老师头像（作为敌人面孔）</span>
+          <input type="file" id="avatarInput" accept="image/*" hidden>
+        </label>
+        <div class="avatarPreview" id="avatarPreview"></div>
+        <button type="button" class="avatarClear" id="avatarClear">清除头像</button>
       </div>
       <button class="startBtn" onclick="startGame()">⚔️ 开始战斗</button>
     </div>
@@ -294,12 +318,12 @@ canvas { display: block; }
 
   <!-- Game Over Screen -->
   <div id="gameOverScreen" style="display:none;">
-    <div class="goTitle">💀 基地沦陷 💀</div>
+    <div class="goTitle">😭 教室被占领啦 😭</div>
     <div class="statsGrid">
       <div class="statItem"><div class="statLabel">最终分数</div><div class="statVal" id="finalScore">0</div></div>
-      <div class="statItem"><div class="statLabel">僵尸击杀</div><div class="statVal" id="finalKills">0</div></div>
+      <div class="statItem"><div class="statLabel">击退老师</div><div class="statVal" id="finalKills">0</div></div>
       <div class="statItem"><div class="statLabel">最大连击</div><div class="statVal" id="finalCombo">0</div></div>
-      <div class="statItem"><div class="statLabel">到达波数</div><div class="statVal" id="finalWave">1</div></div>
+      <div class="statItem"><div class="statLabel">到达节数</div><div class="statVal" id="finalWave">1</div></div>
     </div>
     <button class="startBtn" onclick="restartGame()">🔄 再来一局</button>
   </div>
@@ -381,44 +405,54 @@ resize();
 window.addEventListener('resize', () => { resize(); adjustLayout(); initEnv(); });
 
 // ═══════════════════════════════════════════
+//  AVATAR (僵尸头顶显示)
+// ═══════════════════════════════════════════
+let avatarImage = null;
+let avatarObjectURL = null;
+document.getElementById('avatarInput').addEventListener('change', e => {
+  const f = e.target.files?.[0];
+  if (!f || !f.type.startsWith('image/')) return;
+  if (avatarObjectURL) URL.revokeObjectURL(avatarObjectURL);
+  avatarObjectURL = URL.createObjectURL(f);
+  const img = new Image();
+  img.onload = () => {
+    avatarImage = img;
+    const prev = document.getElementById('avatarPreview');
+    prev.innerHTML = ''; const im = document.createElement('img'); im.src = img.src; prev.appendChild(im);
+  };
+  img.src = avatarObjectURL;
+});
+document.getElementById('avatarClear').addEventListener('click', () => {
+  avatarImage = null;
+  if (avatarObjectURL) { URL.revokeObjectURL(avatarObjectURL); avatarObjectURL = null; }
+  document.getElementById('avatarInput').value = '';
+  document.getElementById('avatarPreview').innerHTML = '';
+});
+
+// ═══════════════════════════════════════════
 //  QUESTIONS
 // ═══════════════════════════════════════════
 const questions = [
-  { q:"C++ 中表示双精度浮点数类型的是？",options:["float","double","decimal","real"],answer:1 },
-  { q:"C++ 中表示单精度浮点数类型的是？",options:["float","double","decimal","real"],answer:0 },
-  { q:"C++ 中表示字符数类型的是？",options:["char","string","character","bool"],answer:0 },
-  { q:"C++ 中表示整数类型的是？",options:["float","double","decimal","real"],answer:1 },
-  { q:"下列哪个不是 C++ 的基本数据类型？",options:["int","char","vector","bool"],answer:2 },
-  { q:"C++ 中跳出当前循环的关键字是？",options:["break","continue","exit","stop"],answer:0 },
-  { q:"C++ 中跳过本次循环的关键字是？",options:["break","continue","skip","pass"],answer:1 },
-  { q:"C++ 中表示常量的关键字是？",options:["static","const","skip","pass"],answer:1 },
-  { q:"C++ 中赋值运算符是？",options:["=","==","=>","::"],answer:0 },
-  { q:"C++ 中比较运算符是？",options:["=","==","===","&="],answer:1 },
-  { q:"下列哪个是 C++ 中的自减运算符？",options:["i--","i-","i\\","i<<"],answer:0 },
-  { q:"C++ 中全局变量的作用域是？",options:["当前函数","当前文件","当前语句块","任意程序"],answer:1 },
-  { q:"C++ 中标准输入通常使用哪个对象？",options:["cin","cout"],answer:0 },
-  { q:"C++ 中多行注释的正确写法是？",options:["// 注释 //","/* 注释 */","<* 注释 *>","# 注释 #"],answer:1 },
-  { q:"main 函数的返回值类型通常是？",options:["void","int","char","bool"],answer:1 },
-  { q:"下列哪个是合法的 C++ 变量名？",options:["3var","var-name","_var123","var*123"],answer:2 },
-  { q:"C++ 中 const 定义的常量，其值？",options:["可以修改","不能修改","运行时确定","编译后确定"],answer:1 },
-  { q:"已知 int a=5, b=2;  表达式 a/b 的结果是？",options:["2","2.5","3","0"],answer:0 },
-  { q:"已知 int a=3;执行 a+=5 后， a 的值是？",options:["3","5","8","15"],answer:2 },
-  { q:"已知 int a[5] = {1,2,3};则 a[3] 的值是？",options:["3","4","0","随机值"],answer:2 },
-  { q:"预处理指令 #define PI 3.14 的作用是？",options:["定义常量","定义函数","包含文件","命名空间"],answer:0 },
-  { q:"已知 string s = \"hello\";\n,那么s.size() 的结果是？",options:["5","6","4","不确定"],answer:0 },
-  { q:"C++ 中 for 循环的三个表达式都可以省略吗？",options:["都不可以","仅初始化可以","仅条件可以","都可以（需保留分号）"],answer:3 },
-  { q:"for(int i=1; i<=5; i+=2) {cout<<i;} 的输出结果是？",options:["12345","135","24","123"],answer:1 },
-  { q:"下列哪个 for 循环的条件写法是正确的？",options:["for(i=0; i<10)","for(int i=0 i<10 i++)","for(int i=0; i<10; )","for(int i=0; i<10; i++)"],answer:3 },
-  { q:"for 循环中 continue 语句的作用是？",options:["跳出整个循环","跳过本次循环剩余语句，进入下一次循环","终止程序","暂停循环"],answer:1 },
-  { q:"要遍历 1 到 100 的所有整数，正确的 for 循环初始化和条件是？",options:["for(int i=1; i<100; i++)","for(int i=0; i<=100; i++)","for(int i=1; i<=100; i++)","for(int i=0; i<100; i++)"],answer:2 },
-  { q:"for 循环中，初始化表达式可以定义多个变量吗？",options:["不可以","可以，用逗号分隔","可以，用分号分隔","只能定义2个"],answer:1 },
-  { q:"用 for 循环计算 1*2*3*...*10（10的阶乘），核心累乘语句是？",options:["sum+=i;","sum*=i;","sum=i+sum;","sum=i*sum;"],answer:1 },
-  { q:"已知 int a[]={1,2,3,4,5};\n要遍历数组所有元素，正确的 for 循环条件是？",options:["for(int i=0; i<4; i++)","for(int i=0; i<5; i++)","for(int i=1; i<=5; i++)","for(int i=0; i<=4; i++)"],answer:1 },  
-  { q:"要输出 10 到 1 的倒序数字（空格分隔），正确的 for 循环是？",options:["for(int i=10; i>=1; i--) cout<<i<<' ';","for(int i=1; i<=10; i++) cout<<i<<' ';","for(int i=10; i>1; i--) cout<<i<<' ';","for(int i=1; i<10; i++) cout<<i<<' ';"],answer:0 },
-  { q:"for(int i=0; i<5; i++)的执行次数是？",options:["0次","4次","5次","死循环"],answer:2 },
-  { q:"for(int i=0; i<5; )的执行次数是？",options:["0次","4次","5次","死循环"],answer:3 },
-  { q:"for(char i='a'; i<='c'; i++)的执行次数是？",options:["2","3","4","报错"],answer:1 },
-  { q:"for 循环中，break 语句会跳出？",options:["整个程序","所有循环","本次循环","当前所在的循环"],answer:3 },
+  {
+    q: '在下列代码的横线处填写（），可以使得输出是 "1248"：\n\n#include <iostream>\nusing namespace std;\n\nint main() {\n    for (int i = 1; i <= 8; __) // 在此处填入代码\n        cout << i;\n    return 0;\n}',
+    options: ['i++', 'i *= 2', 'i += 2', 'i * 2'],
+    answer: 1,
+  },
+  {
+    q: 'for(int i = 1; i < 10; i += 3); 表示从 1 开始到 10 结束间隔为 3，相当于 1、4、7、10。',
+    options: ['正确', '错误'],
+    answer: 1,
+  },
+  {
+    q: 'C++ 的循环语句 for (int i = 0; i < 10; i += 2) 表示 i 从 0 开始到 10 结束但不包含 10，间隔为 2。',
+    options: ['正确', '错误'],
+    answer: 0,
+  },
+  {
+    q: 'for 语句的循环体至少会执行一次。',
+    options: ['正确', '错误'],
+    answer: 1,
+  },
 ];
 
 // ═══════════════════════════════════════════
@@ -436,7 +470,7 @@ let gs = {
   wave:1, zombiesInWave:0, zombiesSpawned:0,
   currentQuestion:null, answered:false, difficulty:'easy',
   running:false, gameOver:false, lastSpawnTime:0, spawnInterval:3000,
-  stars:[], fireflies:[], lightning:null, lightningTimer:0,
+  stars:[], clouds:[], fireflies:[], lightning:null, lightningTimer:0,
   shakeAmount:0, waveTransition:false,
 };
 
@@ -449,13 +483,14 @@ document.querySelectorAll('.diffBtn').forEach(btn => {
 });
 
 function initEnv() {
-  gs.stars = Array.from({ length: 130 }, () => ({
-    x: Math.random() * W, y: Math.random() * H * 0.55,
-    r: Math.random() * 1.6 + 0.3, phase: Math.random() * Math.PI * 2,
+  gs.stars = [];
+  gs.clouds = Array.from({ length: 7 }, () => ({
+    x: Math.random() * W, y: H * 0.05 + Math.random() * H * 0.28,
+    r: 28 + Math.random() * 22, speed: 0.12 + Math.random() * 0.18,
   }));
-  gs.fireflies = Array.from({ length: 20 }, () => ({
-    x: Math.random() * W, y: H * 0.57 + Math.random() * H * 0.18,
-    vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.3,
+  gs.fireflies = Array.from({ length: 14 }, () => ({
+    x: Math.random() * W, y: H * 0.56 + Math.random() * H * 0.13,
+    vx: (Math.random() - 0.5) * 0.8, vy: (Math.random() - 0.5) * 0.5,
     phase: Math.random() * Math.PI * 2,
   }));
 }
@@ -522,6 +557,7 @@ class Zombie {
       this.dead = true;
       createExplosion(W - 82, this.y, '#f44', 52);
       spawnParticles(W - 82, this.y, 18, '#f44');
+      spawnParticles(W - 82, this.y, 10, '#ff8');
       if (gs.health <= 0) { gs.health = 0; endGame(); }
       updateHealthBar();
     }
@@ -534,104 +570,122 @@ class Zombie {
     const dx = this.x;
     const dy = this.y - (this.dying ? this.dyingT * 0.045 : 0);
     const hw = this.w / 2, hh = this.h / 2;
-
-    const SKINS = [
-      { body:'#334a33', head:'#527a50', arm:'#527a50' },
-      { body:'#4a4522', head:'#7a7a44', arm:'#7a7a44' },
-      { body:'#3a2a40', head:'#665570', arm:'#665570' },
-    ];
-    const sc = SKINS[this.skinVar];
     const big = this.type === 'big', fast = this.type === 'fast';
 
+    // Outfit colors: fast=sporty red, big=严肃深蓝, normal=white shirt
+    const OUTFITS = [
+      { shirt:'#f0f0f0', tie:'#e85555', pants:'#2a3a6a', shoe:'#2a2040' },
+      { shirt:'#fff8e0', tie:'#3a8fdd', pants:'#1a2a50', shoe:'#1a1830' },
+      { shirt:'#f0fff0', tie:'#44bb44', pants:'#2a4a2a', shoe:'#1a3020' },
+    ];
+    const oc = fast
+      ? { shirt:'#ffe0e0', tie:'#ff4444', pants:'#8b0000', shoe:'#500000' }
+      : big
+      ? { shirt:'#dde8ff', tie:'#1155cc', pants:'#0d1b4a', shoe:'#080f2a' }
+      : OUTFITS[this.skinVar];
+
     // Shadow
-    ctx.save(); ctx.globalAlpha = alpha * 0.22;
+    ctx.save(); ctx.globalAlpha = alpha * 0.18;
     ctx.fillStyle = '#000';
     ctx.beginPath(); ctx.ellipse(dx, this.baseY + hh * 0.5, hw * 1.1, 5, 0, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
 
-    // Torso
-    ctx.fillStyle = fast ? '#1a4828' : (big ? '#4a1c1c' : sc.body);
-    rrect(dx - hw + 6, dy - hh + 14, this.w - 12, this.h * 0.55, 4); ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(dx - hw + 9, dy - hh + 22); ctx.lineTo(dx - hw + 9, dy - hh + 14 + this.h * 0.55); ctx.stroke();
-
-    // Legs
+    // Legs (pants)
     const legS = Math.sin(this.frame * Math.PI / 2) * 9;
-    ctx.strokeStyle = big ? '#2e1010' : '#2a3a28'; ctx.lineWidth = fast ? 4 : 6; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(dx - 6, dy + hh * 0.14); ctx.lineTo(dx - 8 + legS, dy + hh * 0.75); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(dx + 6, dy + hh * 0.14); ctx.lineTo(dx + 8 - legS, dy + hh * 0.75); ctx.stroke();
-    ctx.fillStyle = '#1e1e10';
-    ctx.beginPath(); ctx.ellipse(dx - 8 + legS, dy + hh * 0.75, 5, 3, 0.2, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(dx + 8 - legS, dy + hh * 0.75, 5, 3, -0.2, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = oc.pants; ctx.lineWidth = fast ? 5 : 7; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(dx - 7, dy + hh * 0.1); ctx.lineTo(dx - 9 + legS, dy + hh * 0.75); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(dx + 7, dy + hh * 0.1); ctx.lineTo(dx + 9 - legS, dy + hh * 0.75); ctx.stroke();
+    // Shoes
+    ctx.fillStyle = oc.shoe;
+    ctx.beginPath(); ctx.ellipse(dx - 9 + legS, dy + hh * 0.76, 6, 3, 0.2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(dx + 9 - legS, dy + hh * 0.76, 6, 3, -0.2, 0, Math.PI * 2); ctx.fill();
 
-    // Arms (reaching forward)
+    // Shirt/Torso
+    ctx.fillStyle = oc.shirt;
+    rrect(dx - hw + 5, dy - hh + 13, this.w - 10, this.h * 0.52, 5); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1;
+    rrect(dx - hw + 5, dy - hh + 13, this.w - 10, this.h * 0.52, 5); ctx.stroke();
+
+    // Jacket/collar outline
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(dx - 4, dy - hh + 13); ctx.lineTo(dx, dy - hh + 22); ctx.lineTo(dx + 4, dy - hh + 13);
+    ctx.stroke();
+
+    // Tie
+    ctx.fillStyle = oc.tie;
+    ctx.beginPath();
+    ctx.moveTo(dx - 3, dy - hh + 15); ctx.lineTo(dx + 3, dy - hh + 15);
+    ctx.lineTo(dx + 5, dy - hh + 28); ctx.lineTo(dx, dy - hh + 33); ctx.lineTo(dx - 5, dy - hh + 28);
+    ctx.closePath(); ctx.fill();
+
+    // Arms (reaching forward with book)
     const armS = Math.sin(this.frame * Math.PI / 2) * 13;
-    ctx.strokeStyle = sc.arm; ctx.lineWidth = fast ? 3 : 5; ctx.lineCap = 'round';
+    ctx.strokeStyle = oc.shirt; ctx.lineWidth = fast ? 4 : 6; ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(dx - hw + 5, dy - hh + 20);
-    ctx.quadraticCurveTo(dx + hw + 6, dy - hh + 10 + armS, dx + hw + 18, dy - hh + 5 + armS);
+    ctx.quadraticCurveTo(dx + hw + 4, dy - hh + 10 + armS, dx + hw + 16, dy - hh + 5 + armS);
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(dx - hw + 5, dy - hh + 28);
-    ctx.quadraticCurveTo(dx + hw + 5, dy - hh + 26 - armS, dx + hw + 17, dy - hh + 22 - armS);
+    ctx.quadraticCurveTo(dx + hw + 3, dy - hh + 26 - armS, dx + hw + 15, dy - hh + 22 - armS);
     ctx.stroke();
+    // Book in hand
+    const bkX = dx + hw + 16, bkY = dy - hh + 13 + armS;
+    ctx.fillStyle = '#ff8c00'; rrect(bkX, bkY, 10, 13, 2); ctx.fill();
+    ctx.strokeStyle = '#c04000'; ctx.lineWidth = 1; rrect(bkX, bkY, 10, 13, 2); ctx.stroke();
+    ctx.strokeStyle = '#fff3'; ctx.lineWidth = 0.5;
+    ctx.beginPath(); ctx.moveTo(bkX + 5, bkY + 2); ctx.lineTo(bkX + 5, bkY + 11); ctx.stroke();
 
-    // Clawed fingers
-    ctx.strokeStyle = '#ccc'; ctx.lineWidth = 1.2;
-    for (let c = 0; c < 3; c++) {
-      const cx = dx + hw + 18 + c * 3.5;
-      const cy = dy - hh + 3 + armS + c * 1.5;
-      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + 4, cy - 4); ctx.stroke();
-    }
-
-    // Head
+    // Head radius
     const hR = big ? 18 : (fast ? 12 : 15);
-    ctx.fillStyle = sc.head;
-    ctx.beginPath(); ctx.arc(dx, dy - hh + 8, hR, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 1; ctx.stroke();
+    const hcx = dx, hcy = dy - hh + 8;
 
-    // Scalp shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.28)';
-    ctx.beginPath(); ctx.arc(dx, dy - hh + 8 - hR * 0.38, hR * 0.86, Math.PI, Math.PI * 2); ctx.fill();
-
-    // Wound/scar
-    ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(dx - hR * 0.5, dy - hh + 6); ctx.lineTo(dx - hR * 0.1, dy - hh + 10); ctx.stroke();
-
-    // Eyes
-    const eyeY = dy - hh + 7;
-    ctx.fillStyle = '#eef';
-    ctx.beginPath(); ctx.ellipse(dx - hR * 0.36, eyeY, 3.8, 3.2, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(dx + hR * 0.36, eyeY, 3.8, 3.2, 0, 0, Math.PI * 2); ctx.fill();
-    const pupilC = fast ? '#0f0' : (big ? '#f44' : '#ff0');
-    ctx.fillStyle = pupilC; ctx.shadowColor = pupilC; ctx.shadowBlur = 10;
-    ctx.beginPath(); ctx.arc(dx - hR * 0.36, eyeY, 1.9, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(dx + hR * 0.36, eyeY, 1.9, 0, Math.PI * 2); ctx.fill();
-    ctx.shadowBlur = 0;
-
-    // Mouth
-    ctx.strokeStyle = '#0a1808'; ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(dx - 7, dy - hh + 14); ctx.lineTo(dx - 3, dy - hh + 17);
-    ctx.lineTo(dx, dy - hh + 14); ctx.lineTo(dx + 4, dy - hh + 17);
-    ctx.lineTo(dx + 7, dy - hh + 14); ctx.stroke();
-
-    // Type label
-    if (big || fast) {
-      const lbl = big ? 'B' : 'F';
-      const lc = big ? '#f44' : '#0f0';
-      ctx.fillStyle = lc; ctx.shadowColor = lc; ctx.shadowBlur = 12;
-      ctx.font = `bold ${hR * 0.85}px Arial`; ctx.textAlign = 'center';
-      ctx.fillText(lbl, dx, dy - hh + 8 + hR * 0.35); ctx.shadowBlur = 0;
+    // Draw head: avatar if available, else cartoon teacher face
+    if (avatarImage && avatarImage.complete && avatarImage.naturalWidth) {
+      const aR = (hR + 1) * 2;
+      ctx.save();
+      ctx.beginPath(); ctx.arc(hcx, hcy, aR, 0, Math.PI * 2); ctx.clip();
+      ctx.drawImage(avatarImage, hcx - aR, hcy - aR, aR * 2, aR * 2);
+      ctx.restore();
+      // Border ring
+      ctx.strokeStyle = 'rgba(255,200,60,0.9)'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(hcx, hcy, aR, 0, Math.PI * 2); ctx.stroke();
+    } else {
+      // Default cartoon teacher face
+      ctx.fillStyle = '#f5c5a0';
+      ctx.beginPath(); ctx.arc(hcx, hcy, hR, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.12)'; ctx.lineWidth = 1; ctx.stroke();
+      // Hair
+      ctx.fillStyle = '#5a3a1a';
+      ctx.beginPath(); ctx.ellipse(hcx, hcy - hR * 0.7, hR * 0.9, hR * 0.45, 0, Math.PI, Math.PI * 2); ctx.fill();
+      // Glasses
+      ctx.strokeStyle = '#333'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.arc(hcx - hR * 0.35, hcy, hR * 0.28, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(hcx + hR * 0.35, hcy, hR * 0.28, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(hcx - hR * 0.07, hcy); ctx.lineTo(hcx + hR * 0.07, hcy); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(hcx - hR * 0.63, hcy); ctx.lineTo(hcx - hR * 0.8, hcy - 2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(hcx + hR * 0.63, hcy); ctx.lineTo(hcx + hR * 0.8, hcy - 2); ctx.stroke();
+      // Smile
+      ctx.strokeStyle = '#a06040'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.arc(hcx, hcy + hR * 0.2, hR * 0.3, 0.15, Math.PI - 0.15); ctx.stroke();
     }
 
-    // HP bar (big zombie)
+    // HP bar (big type)
     if (this.maxHp > 1) {
-      const bw = 42, bx = dx - bw / 2, by = dy - hh - hR - 12;
-      ctx.fillStyle = '#3a0000'; rrect(bx, by, bw, 5, 2); ctx.fill();
-      ctx.fillStyle = this.hp > this.maxHp / 2 ? '#f84' : '#f33';
-      rrect(bx, by, bw * (this.hp / this.maxHp), 5, 2); ctx.fill();
-      ctx.strokeStyle = '#600'; ctx.lineWidth = 1; rrect(bx, by, bw, 5, 2); ctx.stroke();
+      const bw = 44, bx = dx - bw / 2, by = dy - hh - hR - 12;
+      ctx.fillStyle = 'rgba(255,220,220,0.8)'; rrect(bx, by, bw, 6, 3); ctx.fill();
+      ctx.fillStyle = this.hp > this.maxHp / 2 ? '#f97316' : '#ef4444';
+      rrect(bx, by, bw * (this.hp / this.maxHp), 6, 3); ctx.fill();
+      ctx.strokeStyle = 'rgba(200,100,0,0.4)'; ctx.lineWidth = 1; rrect(bx, by, bw, 6, 3); ctx.stroke();
+    }
+
+    // Type badge
+    if (big || fast) {
+      const lbl = big ? '严' : '快';
+      const lc = big ? '#1155cc' : '#dc2626';
+      ctx.fillStyle = lc; ctx.font = `bold ${hR * 0.75}px Microsoft YaHei`; ctx.textAlign = 'center';
+      ctx.fillText(lbl, hcx, hcy + hR * 0.35);
     }
 
     ctx.restore();
@@ -709,63 +763,51 @@ function flashDamage() { damageFlashT = 320; }
 // ═══════════════════════════════════════════
 function drawBg(ts) {
   const groundY = H * 0.72;
-  // Sky
+
+  // Sky (bright blue)
   const sky = ctx.createLinearGradient(0, 0, 0, groundY);
-  sky.addColorStop(0, '#030310'); sky.addColorStop(0.5, '#0b0b22'); sky.addColorStop(1, '#160a14');
+  sky.addColorStop(0, '#4db8f0'); sky.addColorStop(0.55, '#87ceeb'); sky.addColorStop(1, '#c8e8ff');
   ctx.fillStyle = sky; ctx.fillRect(0, 0, W, groundY);
 
-  // Stars
-  for (const s of gs.stars) {
-    s.phase += 0.014;
-    const a = 0.3 + Math.sin(s.phase) * 0.3;
-    ctx.fillStyle = `rgba(200,220,255,${a})`;
-    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
-  }
-
-  // Moon
+  // Sun
   ctx.save();
-  ctx.shadowColor = '#aae'; ctx.shadowBlur = 55;
-  ctx.fillStyle = '#dde8f0';
-  ctx.beginPath(); ctx.arc(W * 0.82, H * 0.13, 38, 0, Math.PI * 2); ctx.fill();
+  ctx.shadowColor = '#ffe040'; ctx.shadowBlur = 55;
+  ctx.fillStyle = '#ffe040';
+  ctx.beginPath(); ctx.arc(W * 0.12, H * 0.12, 36, 0, Math.PI * 2); ctx.fill();
   ctx.shadowBlur = 0;
-  ctx.fillStyle = '#050512';
-  ctx.beginPath(); ctx.arc(W * 0.82 + 14, H * 0.13 - 10, 33, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,220,60,0.45)'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2 + ts * 0.0004;
+    ctx.beginPath();
+    ctx.moveTo(W * 0.12 + Math.cos(a) * 44, H * 0.12 + Math.sin(a) * 44);
+    ctx.lineTo(W * 0.12 + Math.cos(a) * 60, H * 0.12 + Math.sin(a) * 60);
+    ctx.stroke();
+  }
   ctx.restore();
 
-  // Lightning
-  if (gs.lightning) {
-    gs.lightningTimer -= 16;
-    if (gs.lightningTimer > 0) {
-      ctx.save(); ctx.globalAlpha = (gs.lightningTimer / 200) * 0.32;
-      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, groundY); ctx.restore();
-      drawLightning(gs.lightning.x, 0, gs.lightning.x + 18, groundY * 0.62, 5);
-    } else gs.lightning = null;
-  }
-  if (!gs.lightning && Math.random() < 0.0008) {
-    gs.lightning = { x: Math.random() * W * 0.72 };
-    gs.lightningTimer = 200;
-    if (gs.running) tone(60, 'sawtooth', 0.1, 0.05, 0.18);
+  // Clouds
+  for (const c of gs.clouds) {
+    c.x += c.speed; if (c.x > W + 200) c.x = -200;
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(c.x + c.r * 0.75, c.y + 6, c.r * 0.72, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(c.x - c.r * 0.72, c.y + 7, c.r * 0.65, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
   }
 
-  // Fog
-  for (let i = 0; i < 7; i++) {
-    const fx = ((ts * 0.016 + i * 220) % (W + 320)) - 160;
-    const fa = 0.055 + Math.sin(ts * 0.0009 + i) * 0.022;
-    ctx.fillStyle = `rgba(75,130,75,${fa})`;
-    ctx.beginPath(); ctx.ellipse(fx, groundY + 6, 170 + i * 18, 19, 0, 0, Math.PI * 2); ctx.fill();
-  }
-
-  // Ground
+  // Ground (bright green)
   const gGrd = ctx.createLinearGradient(0, groundY, 0, H);
-  gGrd.addColorStop(0, '#233820'); gGrd.addColorStop(0.25, '#182a16'); gGrd.addColorStop(1, '#091208');
+  gGrd.addColorStop(0, '#5cb85c'); gGrd.addColorStop(0.3, '#4cae4c'); gGrd.addColorStop(1, '#357a35');
   ctx.fillStyle = gGrd; ctx.fillRect(0, groundY, W, H - groundY);
-  ctx.strokeStyle = 'rgba(48,118,48,0.6)'; ctx.lineWidth = 2;
+  ctx.strokeStyle = 'rgba(80,180,60,0.8)'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(0, groundY); ctx.lineTo(W, groundY); ctx.stroke();
 
   // Grass tufts
-  ctx.strokeStyle = '#2a5428'; ctx.lineWidth = 1.4; ctx.lineCap = 'round';
+  ctx.lineWidth = 1.4; ctx.lineCap = 'round';
   for (let gx = 18; gx < W; gx += 26 + Math.abs(Math.sin(gx * 0.5)) * 12) {
     const gh = 5 + Math.abs(Math.sin(gx * 0.28)) * 6;
+    ctx.strokeStyle = Math.sin(gx * 1.3) > 0 ? '#6ac96a' : '#4cae4c';
     ctx.beginPath(); ctx.moveTo(gx, groundY); ctx.quadraticCurveTo(gx - 4, groundY - gh, gx - 1, groundY - gh - 2); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(gx + 5, groundY); ctx.quadraticCurveTo(gx + 9, groundY - gh * 0.75, gx + 8, groundY - gh - 1); ctx.stroke();
   }
@@ -775,19 +817,25 @@ function drawBg(ts) {
   drawTree(W * 0.28, groundY, 0.62);
   drawTree(W * 0.48, groundY, 1.02);
   drawTree(W * 0.66, groundY, 0.56);
-  drawTomb(W * 0.17, groundY, 0.72, 'R.I.P');
-  drawTomb(W * 0.38, groundY, 0.55, '');
-  drawTomb(W * 0.57, groundY, 0.88, '???');
+  drawFlower(W * 0.17, groundY, 0.9);
+  drawFlower(W * 0.38, groundY, 0.7);
+  drawFlower(W * 0.57, groundY, 1.1);
   drawBase(W - 88, groundY);
 
-  // Fireflies
+  // Butterflies
   for (const f of gs.fireflies) {
-    f.x += f.vx; f.y += f.vy; f.phase += 0.058;
+    f.x += f.vx; f.y += f.vy; f.phase += 0.09;
     if (f.x < 0) f.x = W; if (f.x > W) f.x = 0;
-    if (f.y < groundY) f.vy += 0.05; if (f.y > groundY + H * 0.22) f.vy -= 0.05;
-    const fa = 0.35 + Math.sin(f.phase) * 0.38;
-    ctx.fillStyle = `rgba(190,255,90,${fa})`; ctx.shadowColor = '#bfff5a'; ctx.shadowBlur = 7;
-    ctx.beginPath(); ctx.arc(f.x, f.y, 2, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+    if (f.y < groundY - 70) f.vy += 0.06; if (f.y > groundY - 8) f.vy -= 0.06;
+    const fa = 0.7 + Math.sin(f.phase) * 0.25;
+    const wing = Math.abs(Math.sin(f.phase * 3.5)) * 9;
+    const colors = ['rgba(255,180,50,', 'rgba(255,100,180,', 'rgba(100,180,255,'];
+    const bc = colors[Math.floor(f.phase * 0.3) % colors.length];
+    ctx.fillStyle = `${bc}${fa})`;
+    ctx.beginPath(); ctx.ellipse(f.x - wing, f.y, 5, 3, -0.3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(f.x + wing, f.y, 5, 3, 0.3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = `rgba(80,40,10,${fa * 0.8})`;
+    ctx.beginPath(); ctx.arc(f.x, f.y, 1.5, 0, Math.PI * 2); ctx.fill();
   }
 }
 
@@ -806,74 +854,100 @@ function drawLightning(x1, y1, x2, y2, n) {
 
 function drawTree(x, groundY, scale) {
   ctx.save(); ctx.translate(x, groundY); ctx.scale(scale, scale);
-  const sw = Math.sin(Date.now() * 0.0006 + x) * 3;
-  ctx.strokeStyle = '#161008'; ctx.lineWidth = 5; ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(sw, -72); ctx.lineTo(sw - 18, -93); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(sw * 0.6, -56); ctx.lineTo(sw + 17, -84); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(sw * 0.38, -38); ctx.lineTo(sw - 13, -62); ctx.stroke();
+  const sw = Math.sin(Date.now() * 0.0006 + x) * 2;
+  // Trunk
+  ctx.strokeStyle = '#7a5530'; ctx.lineWidth = 7; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(sw, -55); ctx.stroke();
+  ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(sw, -38); ctx.lineTo(sw + 15, -58); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(sw, -28); ctx.lineTo(sw - 12, -50); ctx.stroke();
+  // Foliage
+  ctx.shadowColor = 'rgba(60,140,60,0.4)'; ctx.shadowBlur = 8;
+  ctx.fillStyle = '#4cae4c';
+  ctx.beginPath(); ctx.arc(sw, -70, 26, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#5cb85c';
+  ctx.beginPath(); ctx.arc(sw + 16, -57, 19, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(sw - 14, -60, 18, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#6ac96a';
+  ctx.beginPath(); ctx.arc(sw + 4, -80, 15, 0, Math.PI * 2); ctx.fill();
+  ctx.shadowBlur = 0;
   ctx.restore();
 }
 
-function drawTomb(x, groundY, scale, text) {
+function drawFlower(x, groundY, scale) {
   ctx.save(); ctx.translate(x, groundY); ctx.scale(scale, scale);
-  ctx.fillStyle = '#38404e'; ctx.strokeStyle = '#28303c'; ctx.lineWidth = 1.5;
-  rrect(-12, -44, 24, 37, 6); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.arc(0, -43, 12, Math.PI, Math.PI * 2);
-  ctx.fillStyle = '#38404e'; ctx.fill(); ctx.stroke();
-  if (text) { ctx.fillStyle = '#6888a0'; ctx.font = 'bold 7px serif'; ctx.textAlign = 'center'; ctx.fillText(text, 0, -27); }
-  ctx.fillStyle = '#253525'; ctx.fillRect(-14, -8, 28, 6); ctx.restore();
+  const sway = Math.sin(Date.now() * 0.0008 + x) * 2;
+  // Stem
+  ctx.strokeStyle = '#3d9140'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(0, 0); ctx.bezierCurveTo(sway - 3, -14, sway + 3, -26, sway, -40); ctx.stroke();
+  // Leaves
+  ctx.fillStyle = '#4cae4c';
+  ctx.beginPath(); ctx.ellipse(sway - 9, -20, 9, 4, -0.7, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(sway + 9, -28, 9, 4, 0.7, 0, Math.PI * 2); ctx.fill();
+  // Petals
+  const PETAL_COLORS = [['#ff6b9d','#ff8fb0'],['#ffb347','#ffc870'],['#ff6b6b','#ff9090'],['#c084fc','#d8b4fe'],['#34d399','#6ee7b7']];
+  const pc = PETAL_COLORS[Math.floor(Math.abs(Math.sin(x * 0.31)) * PETAL_COLORS.length)];
+  for (let p = 0; p < 5; p++) {
+    const a = (p / 5) * Math.PI * 2;
+    ctx.fillStyle = pc[0];
+    ctx.beginPath(); ctx.ellipse(sway + Math.cos(a) * 8, -40 + Math.sin(a) * 8, 6, 3.5, a, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.fillStyle = '#ffe040';
+  ctx.beginPath(); ctx.arc(sway, -40, 5.5, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
 }
 
 function drawBase(x, groundY) {
-  // Walls
-  ctx.fillStyle = '#493828'; ctx.strokeStyle = '#28200e'; ctx.lineWidth = 1.5;
-  rrect(x - 36, groundY - 70, 72, 70, 4); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = 'rgba(0,0,0,0.18)'; ctx.lineWidth = 1;
-  for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.moveTo(x - 36, groundY - 70 + i * 14); ctx.lineTo(x + 36, groundY - 70 + i * 14); ctx.stroke(); }
+  // Walls (bright cream/yellow school building)
+  ctx.fillStyle = '#fef9c3'; ctx.strokeStyle = '#e6d040'; ctx.lineWidth = 1.5;
+  rrect(x - 40, groundY - 74, 80, 74, 4); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = 'rgba(200,180,40,0.2)'; ctx.lineWidth = 1;
+  for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.moveTo(x - 40, groundY - 74 + i * 15); ctx.lineTo(x + 40, groundY - 74 + i * 15); ctx.stroke(); }
 
-  // Roof
-  const rf = ctx.createLinearGradient(x - 52, groundY - 70, x, groundY - 106);
-  rf.addColorStop(0, '#681c1c'); rf.addColorStop(1, '#8a2e2e');
+  // Roof (warm orange)
+  const rf = ctx.createLinearGradient(x - 52, groundY - 74, x, groundY - 112);
+  rf.addColorStop(0, '#e65c00'); rf.addColorStop(1, '#ff8c00');
   ctx.fillStyle = rf;
-  ctx.beginPath(); ctx.moveTo(x - 52, groundY - 70); ctx.lineTo(x, groundY - 108); ctx.lineTo(x + 52, groundY - 70); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = '#481010'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x - 54, groundY - 74); ctx.lineTo(x, groundY - 114); ctx.lineTo(x + 54, groundY - 74); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#c04000'; ctx.lineWidth = 2; ctx.stroke();
 
-  // Chimney + smoke
-  ctx.fillStyle = '#382618'; ctx.fillRect(x + 14, groundY - 120, 12, 30);
-  for (let s = 0; s < 3; s++) {
-    const sp = (Date.now() * 0.00085 + s * 0.8) % 1;
-    const sx = x + 20 + Math.sin(sp * Math.PI * 2) * 5, sy = groundY - 120 - sp * 32;
-    ctx.fillStyle = `rgba(75,75,75,${(1 - sp) * 0.28})`;
-    ctx.beginPath(); ctx.arc(sx, sy, 5 + sp * 9, 0, Math.PI * 2); ctx.fill();
-  }
+  // Flag pole + flag
+  ctx.strokeStyle = '#aaa'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(x, groundY - 114); ctx.lineTo(x, groundY - 140); ctx.stroke();
+  ctx.fillStyle = '#ff4444';
+  ctx.beginPath(); ctx.moveTo(x, groundY - 140); ctx.lineTo(x + 18, groundY - 133); ctx.lineTo(x, groundY - 126); ctx.closePath(); ctx.fill();
 
-  // Windows
-  const wg = 0.68 + Math.sin(Date.now() * 0.003) * 0.1;
-  ctx.fillStyle = `rgba(255,215,75,${wg})`; ctx.shadowColor = '#ffd040'; ctx.shadowBlur = 22;
-  rrect(x - 24, groundY - 58, 18, 16, 3); ctx.fill();
-  rrect(x + 6,  groundY - 58, 18, 16, 3); ctx.fill();
+  // Windows (bright blue sky-reflected)
+  const wg = 0.55 + Math.sin(Date.now() * 0.002) * 0.08;
+  ctx.fillStyle = `rgba(100,200,255,${wg})`; ctx.shadowColor = '#88eeff'; ctx.shadowBlur = 14;
+  rrect(x - 28, groundY - 62, 20, 17, 3); ctx.fill();
+  rrect(x + 8,  groundY - 62, 20, 17, 3); ctx.fill();
   ctx.shadowBlur = 0;
-  ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 1;
+  ctx.strokeStyle = 'rgba(0,80,160,0.4)'; ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(x - 24 + 9, groundY - 58); ctx.lineTo(x - 24 + 9, groundY - 42);
-  ctx.moveTo(x - 24, groundY - 50);     ctx.lineTo(x - 24 + 18, groundY - 50);
-  ctx.moveTo(x + 6 + 9, groundY - 58); ctx.lineTo(x + 6 + 9, groundY - 42);
-  ctx.moveTo(x + 6, groundY - 50);     ctx.lineTo(x + 6 + 18, groundY - 50);
+  ctx.moveTo(x - 18, groundY - 62); ctx.lineTo(x - 18, groundY - 45);
+  ctx.moveTo(x - 28, groundY - 53); ctx.lineTo(x - 8, groundY - 53);
+  ctx.moveTo(x + 18, groundY - 62); ctx.lineTo(x + 18, groundY - 45);
+  ctx.moveTo(x + 8, groundY - 53);  ctx.lineTo(x + 28, groundY - 53);
   ctx.stroke();
 
-  // Door
-  ctx.fillStyle = '#1e1008'; rrect(x - 10, groundY - 30, 20, 30, 3); ctx.fill();
-  ctx.fillStyle = '#6a4020'; ctx.beginPath(); ctx.arc(x + 7, groundY - 14, 2, 0, Math.PI * 2); ctx.fill();
+  // Door (bright)
+  ctx.fillStyle = '#7c3aed'; rrect(x - 11, groundY - 34, 22, 34, 3); ctx.fill();
+  ctx.fillStyle = '#c4b5fd'; ctx.beginPath(); ctx.arc(x + 8, groundY - 17, 2, 0, Math.PI * 2); ctx.fill();
 
-  // Shield aura
+  // "教室" sign above door
+  ctx.fillStyle = '#ff8c00'; ctx.font = 'bold 9px Microsoft YaHei'; ctx.textAlign = 'center';
+  ctx.fillText('教室', x, groundY - 38);
+
+  // Shield aura (warm golden)
   const sa = 0.07 + Math.sin(Date.now() * 0.004) * 0.04;
-  const sg = ctx.createRadialGradient(x, groundY - 42, 10, x, groundY - 42, 62);
-  sg.addColorStop(0, 'rgba(90,190,255,0)');
-  sg.addColorStop(0.7, `rgba(90,190,255,${sa})`);
-  sg.addColorStop(1, 'rgba(90,190,255,0)');
-  ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(x, groundY - 42, 62, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = `rgba(90,190,255,${sa * 2})`; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.arc(x, groundY - 42, 64, 0, Math.PI * 2); ctx.stroke();
+  const sg = ctx.createRadialGradient(x, groundY - 42, 10, x, groundY - 42, 66);
+  sg.addColorStop(0, 'rgba(255,200,50,0)');
+  sg.addColorStop(0.7, `rgba(255,200,50,${sa})`);
+  sg.addColorStop(1, 'rgba(255,200,50,0)');
+  ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(x, groundY - 42, 66, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = `rgba(255,200,50,${sa * 2.5})`; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(x, groundY - 42, 68, 0, Math.PI * 2); ctx.stroke();
 }
 
 // ═══════════════════════════════════════════
@@ -881,6 +955,12 @@ function drawBase(x, groundY) {
 // ═══════════════════════════════════════════
 function getNextQuestion() {
   const q = questions[Math.floor(Math.random() * questions.length)];
+  // 判断题（只有2个选项且为正确/错误）不打乱顺序
+  const isTrueFalse = q.options.length === 2 &&
+    q.options[0] === '正确' && q.options[1] === '错误';
+  if (isTrueFalse) {
+    return { q: q.q, options: ['正确', '错误'], answer: q.answer };
+  }
   const idx = [0, 1, 2, 3];
   for (let i = 3; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]]; }
   return { q: q.q, options: idx.map(i => q.options[i]), answer: idx.indexOf(q.answer) };
@@ -967,7 +1047,7 @@ function showWaveTransition(num) {
   const ov = document.getElementById('waveOverlay');
   document.getElementById('waveBig').textContent = `WAVE ${num}`;
   document.getElementById('waveSub').textContent =
-    num === 1 ? '准备好了吗？' : num <= 3 ? '加油！继续坚守！' : num <= 6 ? '大波僵尸来袭！' : '你能撑住吗？！';
+    num === 1 ? '老师来啦，准备好了吗？' : num <= 3 ? '加油！继续答题！' : num <= 6 ? '资深教师来袭！' : '主任老师出动了！！';
   ov.classList.remove('show'); void ov.offsetWidth; ov.classList.add('show');
   SFX.wave();
   setTimeout(() => { gs.waveTransition = false; }, 2500);
@@ -1007,8 +1087,8 @@ function gameLoop(ts) {
   // Remaining count
   const rem = gs.zombiesInWave - gs.zombiesSpawned;
   if (rem > 0 && !gs.waveTransition) {
-    ctx.fillStyle = 'rgba(255,120,80,0.65)'; ctx.font = '13px Microsoft YaHei'; ctx.textAlign = 'left';
-    ctx.fillText(`⌛ 还有 ${rem} 只僵尸将要到来`, 12, H * 0.72 - 14);
+    ctx.fillStyle = 'rgba(180,60,0,0.75)'; ctx.font = '13px Microsoft YaHei'; ctx.textAlign = 'left';
+    ctx.fillText(`⌛ 还有 ${rem} 位老师将要到来`, 12, H * 0.72 - 14);
   }
 
   // Spawn
@@ -1085,7 +1165,7 @@ function startGame() {
   document.getElementById('startScreen').style.display = 'none';
   document.getElementById('gameOverScreen').style.display = 'none';
   const diff = diffSettings[gs.difficulty];
-  const prevStars = gs.stars, prevFF = gs.fireflies, prevDiff = gs.difficulty;
+  const prevClouds = gs.clouds, prevFF = gs.fireflies, prevDiff = gs.difficulty;
   gs = {
     score:0, combo:0, maxCombo:0, kills:0, health:50,
     zombies:[], bullets:[], explosions:[], particles:[], floatTexts:[],
@@ -1093,7 +1173,7 @@ function startGame() {
     currentQuestion:null, answered:false, difficulty:prevDiff,
     running:true, gameOver:false, lastSpawnTime:0,
     spawnInterval:diff.spawnInterval,
-    stars:prevStars, fireflies:prevFF, lightning:null, lightningTimer:0,
+    stars:[], clouds:prevClouds, fireflies:prevFF, lightning:null, lightningTimer:0,
     shakeAmount:0, waveTransition:false,
   };
   updateUI(); updateHealthBar();
@@ -1154,21 +1234,42 @@ adjustLayout();
   if (!bgC) return;
   const bc = bgC.getContext('2d');
   bgC.width = window.innerWidth; bgC.height = window.innerHeight;
-  const dummies = Array.from({ length: 6 }, () => ({
-    x: Math.random() * bgC.width, y: bgC.height * 0.75 + Math.random() * 35,
-    speed: 0.28 + Math.random() * 0.38, frame: 0, ft: 0,
+  const SHIRT_COLORS = ['rgba(240,240,240,', 'rgba(255,248,224,', 'rgba(224,240,255,'];
+  const TIE_COLORS   = ['rgba(232,85,85,',   'rgba(58,143,221,',  'rgba(68,187,68,'];
+  const dummies = Array.from({ length: 7 }, () => ({
+    x: Math.random() * bgC.width, y: bgC.height * 0.74 + Math.random() * 28,
+    speed: 0.3 + Math.random() * 0.4, frame: 0, ft: 0,
+    si: Math.floor(Math.random() * 3),
   }));
   function anim() {
     bc.clearRect(0, 0, bgC.width, bgC.height);
     for (const d of dummies) {
-      d.x += d.speed; if (d.x > bgC.width + 65) d.x = -65;
-      d.ft += 16; if (d.ft > 210) { d.frame = (d.frame + 1) % 4; d.ft = 0; }
+      d.x += d.speed; if (d.x > bgC.width + 70) d.x = -70;
+      d.ft += 16; if (d.ft > 220) { d.frame = (d.frame + 1) % 4; d.ft = 0; }
       const ls = Math.sin(d.frame * Math.PI / 2) * 5;
-      bc.fillStyle = 'rgba(55,110,55,0.65)';
-      bc.beginPath(); bc.arc(d.x, d.y - 38, 12, 0, Math.PI * 2); bc.fill();
-      bc.fillRect(d.x - 8, d.y - 26, 16, 26);
-      bc.fillRect(d.x - 6 + ls, d.y, 6, 15);
-      bc.fillRect(d.x + ls, d.y, 6, 15);
+      const sc = SHIRT_COLORS[d.si], tc = TIE_COLORS[d.si];
+      // Legs
+      bc.strokeStyle = 'rgba(30,50,120,0.6)'; bc.lineWidth = 5; bc.lineCap = 'round';
+      bc.beginPath(); bc.moveTo(d.x - 5, d.y - 12); bc.lineTo(d.x - 6 + ls, d.y + 5); bc.stroke();
+      bc.beginPath(); bc.moveTo(d.x + 5, d.y - 12); bc.lineTo(d.x + 6 - ls, d.y + 5); bc.stroke();
+      // Body/shirt
+      bc.fillStyle = `${sc}0.72)`;
+      bc.fillRect(d.x - 10, d.y - 38, 20, 27);
+      // Tie
+      bc.fillStyle = `${tc}0.8)`;
+      bc.beginPath(); bc.moveTo(d.x - 2, d.y - 37); bc.lineTo(d.x + 2, d.y - 37);
+      bc.lineTo(d.x + 4, d.y - 26); bc.lineTo(d.x, d.y - 21); bc.lineTo(d.x - 4, d.y - 26); bc.closePath(); bc.fill();
+      // Head
+      bc.fillStyle = 'rgba(245,197,160,0.75)';
+      bc.beginPath(); bc.arc(d.x, d.y - 50, 12, 0, Math.PI * 2); bc.fill();
+      // Glasses
+      bc.strokeStyle = 'rgba(50,50,50,0.5)'; bc.lineWidth = 1;
+      bc.beginPath(); bc.arc(d.x - 4, d.y - 51, 3.5, 0, Math.PI * 2); bc.stroke();
+      bc.beginPath(); bc.arc(d.x + 4, d.y - 51, 3.5, 0, Math.PI * 2); bc.stroke();
+      bc.beginPath(); bc.moveTo(d.x - 0.5, d.y - 51); bc.lineTo(d.x + 0.5, d.y - 51); bc.stroke();
+      // Book
+      bc.fillStyle = 'rgba(255,140,0,0.75)';
+      bc.fillRect(d.x + 10, d.y - 35, 8, 11);
     }
     if (document.getElementById('startScreen').style.display !== 'none') requestAnimationFrame(anim);
   }
@@ -1177,3 +1278,4 @@ adjustLayout();
 </script>
 </body>
 </html>
+
