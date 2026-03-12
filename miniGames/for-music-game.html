@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>FOR BEAT RUSH · for 循环音乐闯关</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: linear-gradient(135deg, #fff7ed 0%, #fef9c3 30%, #ecfdf5 65%, #eff6ff 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      color: #1f2937;
+      overflow: hidden;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    /* ── Floating bubbles ── */
+    .bg-stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .star {
+      position: absolute; border-radius: 50%;
+      animation: tw linear infinite;
+    }
+    @keyframes tw {
+      0%   { transform: translateY(0)    scale(1);    opacity: .55; }
+      50%  { transform: translateY(-28px) scale(1.12); opacity: .85; }
+      100% { transform: translateY(0)    scale(1);    opacity: .55; }
+    }
+
+    /* ── Main card ── */
+    .game-wrap {
+      position: relative; z-index: 1;
+      width: min(680px, 98vw);
+      padding: 12px;
+      border-radius: 26px;
+      background: rgba(255,255,255,.96);
+      box-shadow: 0 28px 70px rgba(148,163,184,.35);
+    }
+    /* Rainbow border ring */
+    .game-wrap::before {
+      content: '';
+      position: absolute; inset: -3px;
+      border-radius: 29px;
+      background: linear-gradient(135deg,#fb7185,#f97316,#facc15,#4ade80,#38bdf8,#a78bfa,#fb7185);
+      background-size: 300% 300%;
+      z-index: -1;
+      animation: borderSpin 6s linear infinite;
+    }
+    @keyframes borderSpin {
+      0%   { background-position: 0%   50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0%   50%; }
+    }
+
+    /* ── Screens ── */
+    .screen { display: none; flex-direction: column; align-items: center; gap: 14px; }
+    .screen.active { display: flex; }
+
+    /* ══════════════════════════════════════
+       TITLE SCREEN
+    ══════════════════════════════════════ */
+    .title-icon {
+      width: 82px;
+      height: 82px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 20%, #fefce8, #facc15, #f97316);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 18px 36px rgba(248,171,30,.6);
+      position: relative;
+      margin-bottom: 10px;
+    }
+    .title-icon::before {
+      content: '♪';
+      font-size: 46px;
+      color: #7c2d12;
+      text-shadow: 0 4px 0 rgba(180,83,9,.8), 0 0 26px rgba(248,171,30,.9);
+      transform: translateY(-2px);
+    }
+    .title-logo {
+      font-size: clamp(34px, 7vw, 58px);
+      font-weight: 900;
+      letter-spacing: 5px;
+      text-align: center;
+      background: linear-gradient(90deg, #f97316, #facc15, #4ade80, #38bdf8, #a78bfa, #fb7185, #f97316);
+      background-size: 250% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: logoRainbow 4s linear infinite;
+    }
+    @keyframes logoRainbow {
+      0%   { background-position:   0% center; }
+      100% { background-position: 250% center; }
+    }
+    .title-tag {
+      font-size: 13px;
+      color: #6b7280;
+      letter-spacing: 2px;
+      text-align: center;
+    }
+    .instructions {
+      background: linear-gradient(135deg, #fffbeb, #fef3c7);
+      border: 2px solid #fde68a;
+      border-radius: 18px;
+      padding: 16px 22px;
+      font-size: 13px;
+      line-height: 2.1;
+      color: #6b7280;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 12px 28px rgba(251,191,36,.28), inset 0 1px 0 rgba(255,255,255,.8);
+    }
+    .instructions li { list-style: none; }
+    .hl  { color: #0ea5e9; font-weight: 700; }
+    .hlg { color: #16a34a; font-weight: 700; }
+    .hly { color: #d97706; font-weight: 700; }
+    .big-btn {
+      padding: 14px 58px;
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: 4px;
+      background: linear-gradient(135deg, #fb7185, #f97316, #facc15);
+      background-size: 200% auto;
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 7px 0 #b45309, 0 14px 30px rgba(249,115,22,.4);
+      transition: transform .1s, box-shadow .1s;
+      text-shadow: 0 1px 2px rgba(0,0,0,.2);
+      animation: btnShimmer 3s linear infinite;
+    }
+    @keyframes btnShimmer {
+      0%   { background-position:   0% center; }
+      100% { background-position: 200% center; }
+    }
+    .big-btn:hover  { transform: translateY(-3px); box-shadow: 0 10px 0 #b45309, 0 20px 38px rgba(249,115,22,.55); }
+    .big-btn:active { transform: translateY(4px);  box-shadow: 0 2px  0 #b45309, 0 4px  12px rgba(249,115,22,.3);  }
+    .hi-row { font-size: 12px; color: #9ca3af; }
+    .hi-row span { color: #f59e0b; font-weight: 700; }
+
+    /* ══════════════════════════════════════
+       ROUND TRANSITION SPLASH
+    ══════════════════════════════════════ */
+    #splashOverlay {
+      position: fixed; inset: 0; z-index: 80;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 8px;
+      background: radial-gradient(circle at 50% 40%, rgba(254,240,138,.98), rgba(251,191,36,.92), rgba(249,115,22,.7));
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s;
+    }
+    #splashOverlay.show { opacity: 1; pointer-events: all; }
+    .splash-title {
+      font-size: clamp(42px, 9vw, 74px);
+      font-weight: 900;
+      letter-spacing: 8px;
+      color: #7c2d12;
+      text-shadow: 0 5px 0 rgba(251,191,36,.5), 0 0 40px rgba(250,204,21,.9);
+      animation: splashPop .5s cubic-bezier(.2,1.5,.5,1);
+    }
+    .splash-sub { font-size: 16px; color: #7c2d12; letter-spacing: 2px; font-weight: 700; }
+    @keyframes splashPop {
+      0%  { transform: scale(2.5); opacity: 0; }
+      100%{ transform: scale(1);   opacity: 1; }
+    }
+
+    /* ══════════════════════════════════════
+       GAME SCREEN
+    ══════════════════════════════════════ */
+
+    /* HUD */
+    .hud {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      background: linear-gradient(135deg, #fffbeb, #fef9c3);
+      border-radius: 18px;
+      border: 2px solid #fde68a;
+      box-shadow: 0 8px 22px rgba(251,191,36,.28);
+    }
+    .hud-chip {
+      display: flex; flex-direction: column; align-items: center; min-width: 56px;
+      background: rgba(255,255,255,.72);
+      border-radius: 12px;
+      padding: 4px 8px;
+      border: 1.5px solid rgba(251,191,36,.5);
+    }
+    .hud-lbl { font-size: 9px; letter-spacing: 2px; color: #92400e; font-weight: 700; }
+    .hud-val { font-size: 22px; font-weight: 900; color: #ea580c; }
+    .hud-val.gold { color: #d97706; }
+
+    .timer-wrap { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .timer-track {
+      height: 12px;
+      background: rgba(255,255,255,.65);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1.5px solid rgba(251,191,36,.4);
+    }
+    .timer-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4ade80, #22d3ee);
+      border-radius: 8px;
+      transition: width .1s linear, background .4s ease;
+    }
+    .timer-fill.warn   { background: linear-gradient(90deg, #fbbf24, #f97316); }
+    .timer-fill.danger { background: linear-gradient(90deg, #f87171, #ef4444); }
+    .timer-txt { font-size: 11px; text-align: right; color: #92400e; font-weight: 600; }
+
+    /* Round banner */
+    .round-banner {
+      width: 100%;
+      padding: 10px 18px;
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      border-radius: 18px;
+      border: 2px solid #93c5fd;
+      text-align: center;
+      box-shadow: 0 8px 22px rgba(59,130,246,.2);
+    }
+    .round-name { font-size: 18px; font-weight: 800; color: #1d4ed8; letter-spacing: 3px; }
+    .round-tip  { font-size: 12px; color: #3b82f6; margin-top: 3px; font-weight: 600; }
+
+    /* Piano */
+    .piano-section {
+      width: 100%;
+      background: linear-gradient(180deg, #f0fdf4, #dcfce7);
+      border-radius: 22px;
+      border: 2px solid #86efac;
+      padding: 14px 14px 12px;
+      box-shadow: 0 12px 30px rgba(34,197,94,.2);
+    }
+    .piano-info {
+      font-size: 11px; color: #15803d; margin-bottom: 10px;
+      text-align: center; font-weight: 700; letter-spacing: 1px;
+    }
+    .piano { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+
+    /* Single-color piano keys */
+
+    .key {
+      position: relative;
+      height: 84px;
+      border-radius: 14px;
+      background: linear-gradient(to bottom, #fff 0%, var(--kc, #f1f5f9) 100%);
+      border: 2.5px solid var(--kb, #94a3b8);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-end;
+      padding-bottom: 8px;
+      overflow: hidden;
+      box-shadow: 0 6px 0 var(--kb, #64748b), 0 10px 18px rgba(0,0,0,.1), inset 0 1px 0 rgba(255,255,255,.9);
+      transition: transform .08s ease, box-shadow .08s ease, background .08s, border-color .08s;
+      cursor: pointer;
+    }
+    .key:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 9px 0 var(--kb, #64748b), 0 14px 26px rgba(0,0,0,.15), inset 0 1px 0 rgba(255,255,255,.9);
+    }
+    .key-num { font-size: 19px; font-weight: 900; color: var(--ks, #1e293b); line-height: 1; }
+    .key-sol { font-size: 9px;  font-weight: 700; color: var(--ks, #64748b); margin-top: 2px; opacity: .7; }
+    .key-badge {
+      position: absolute; inset: 0;
+      border-radius: 12px;
+      background: rgba(124,58,237,.2);
+      box-shadow: inset 0 0 0 3px rgba(124,58,237,.7), 0 0 20px rgba(124,58,237,.6);
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .key.target .key-badge { opacity: 1; }
+
+    /* key states */
+    .key.preview {
+      transform: translateY(5px);
+      background: linear-gradient(to bottom, #fef9c3, #fbbf24);
+      border-color: #f59e0b;
+      box-shadow: 0 1px 0 #78350f, 0 0 30px rgba(251,191,36,.9), inset 0 1px 0 rgba(255,255,255,.4);
+    }
+    .key.playing {
+      transform: translateY(5px);
+      background: linear-gradient(to bottom, #dbeafe, #60a5fa);
+      border-color: #2563eb;
+      box-shadow: 0 1px 0 #1e3a8a, 0 0 30px rgba(96,165,250,.9), inset 0 1px 0 rgba(255,255,255,.4);
+    }
+    .key.flash-ok {
+      background: linear-gradient(to bottom, #dcfce7, #4ade80);
+      border-color: #16a34a;
+      box-shadow: 0 2px 0 #14532d, 0 0 32px rgba(74,222,128,.95);
+    }
+    .key.flash-bad {
+      background: linear-gradient(to bottom, #fee2e2, #f87171);
+      border-color: #dc2626;
+      box-shadow: 0 2px 0 #7f1d1d, 0 0 24px rgba(248,113,113,.85);
+    }
+
+    /* Status */
+    .status-msg {
+      width: 100%; text-align: center;
+      font-size: 13px; font-weight: 600;
+      padding: 9px 18px;
+      border-radius: 999px;
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      color: #6b7280;
+      transition: color .2s, border-color .2s, background .2s;
+      min-height: 38px;
+      box-shadow: 0 4px 12px rgba(148,163,184,.18);
+    }
+    .status-msg.ok  { color: #15803d; border-color: #86efac; background: #f0fdf4; }
+    .status-msg.bad { color: #b91c1c; border-color: #fca5a5; background: #fff1f2; }
+    .status-msg.pre { color: #92400e; border-color: #fde68a; background: #fffbeb; }
+
+    /* Score pop */
+    .score-pop {
+      position: fixed;
+      font-size: 28px; font-weight: 900;
+      pointer-events: none; z-index: 99;
+      animation: sPop .9s ease-out forwards;
+    }
+    @keyframes sPop {
+      0%   { transform: translateY(0)    scale(.5);  opacity: 1; }
+      100% { transform: translateY(-90px) scale(1.4); opacity: 0; }
+    }
+
+    /* Editor */
+    .editor-section {
+      width: 100%;
+      background: linear-gradient(135deg, #fafaf9, #fef9c3);
+      border-radius: 18px;
+      border: 2px solid #fde68a;
+      padding: 14px 18px 16px;
+      box-shadow: 0 8px 22px rgba(251,191,36,.2);
+    }
+    .editor-lbl {
+      font-size: 10px; letter-spacing: 2px; color: #92400e;
+      margin-bottom: 10px; font-weight: 700;
+    }
+    .code-line {
+      display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+      font-size: clamp(13px, 2.2vw, 16px);
+      background: rgba(255,255,255,.75);
+      border-radius: 12px;
+      padding: 10px 14px;
+      border: 1.5px solid rgba(251,191,36,.45);
+    }
+    .ck  { color: #7c3aed; font-weight: 700; }
+    .cv  { color: #d97706; font-weight: 700; }
+    .ci  { color: #16a34a; font-weight: 700; }
+    .cop { color: #dc2626; font-weight: 700; }
+    .cg  { color: #9ca3af; }
+
+    .loop-input {
+      width: 56px; text-align: center;
+      padding: 5px 2px;
+      background: #fff;
+      border: 2px solid #93c5fd;
+      border-radius: 8px;
+      color: #1d4ed8;
+      font-family: inherit; font-size: clamp(13px, 2.2vw, 15px); font-weight: 800;
+      outline: none;
+      box-shadow: 0 2px 0 #3b82f6;
+    }
+    .loop-input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 2px 0 #1d4ed8, 0 0 0 3px rgba(59,130,246,.2);
+    }
+
+    .loop-select {
+      width: 58px; text-align: center;
+      padding: 5px 2px;
+      background: #fff;
+      border: 2px solid #fb923c;
+      border-radius: 8px;
+      color: #ea580c;
+      font-family: inherit; font-size: clamp(13px, 2.2vw, 15px); font-weight: 800;
+      outline: none;
+      box-shadow: 0 2px 0 #f97316;
+    }
+    .loop-select:focus {
+      border-color: #f97316;
+      box-shadow: 0 2px 0 #c2410c, 0 0 0 3px rgba(249,115,22,.2);
+    }
+
+    .seq-row {
+      margin-top: 10px; font-size: 12px; color: #6b7280; font-weight: 600;
+      display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    }
+    .seq-val { color: #2563eb; font-weight: 800; }
+
+    /* Action row */
+    .action-row { width: 100%; display: flex; gap: 10px; }
+    .play-btn {
+      flex: 1;
+      padding: 14px 12px;
+      font-size: clamp(14px, 2.6vw, 17px);
+      font-weight: 800; letter-spacing: 2px;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #fff; border: none; border-radius: 16px;
+      cursor: pointer; font-family: inherit;
+      box-shadow: 0 5px 0 #15803d, 0 10px 24px rgba(34,197,94,.35);
+      transition: transform .1s, box-shadow .1s;
+      text-shadow: 0 1px 2px rgba(0,0,0,.18);
+    }
+    .play-btn:hover  { transform: translateY(-2px); box-shadow: 0 7px 0 #15803d, 0 14px 30px rgba(34,197,94,.5); }
+    .play-btn:active { transform: translateY(4px);  box-shadow: 0 1px 0 #15803d, 0 4px 10px rgba(34,197,94,.3); }
+    .play-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .re-btn {
+      padding: 14px 16px;
+      font-size: 13px; font-weight: 700; letter-spacing: 1px;
+      white-space: nowrap;
+      background: #fff;
+      color: #6b7280;
+      border: 2px solid #e2e8f0;
+      border-radius: 16px;
+      cursor: pointer; font-family: inherit;
+      box-shadow: 0 4px 0 #e2e8f0;
+      transition: color .1s, border-color .1s, box-shadow .1s, transform .1s;
+    }
+    .re-btn:hover  { color: #d97706; border-color: #fde68a; box-shadow: 0 4px 0 #fde68a; transform: translateY(-1px); }
+    .re-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #fde68a; }
+    .re-btn:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+
+    /* ══════════════════════════════════════
+       END SCREEN
+    ══════════════════════════════════════ */
+    .end-grade {
+      font-size: clamp(56px, 12vw, 88px);
+      font-weight: 900;
+      animation: gradeIn .7s cubic-bezier(.2,1.4,.5,1);
+    }
+    @keyframes gradeIn {
+      0%  { transform: scale(2.5) rotate(-12deg); opacity: 0; }
+      60% { transform: scale(.95) rotate(2deg);   opacity: 1; }
+      100%{ transform: scale(1)   rotate(0deg); }
+    }
+    .gS { color: #f59e0b; text-shadow: 0 5px 0 #d97706,  0 0 40px rgba(251,191,36,.8); }
+    .gA { color: #22c55e; text-shadow: 0 4px 0 #15803d,  0 0 28px rgba(74,222,128,.8); }
+    .gB { color: #3b82f6; text-shadow: 0 4px 0 #1d4ed8,  0 0 24px rgba(96,165,250,.8); }
+    .gC { color: #94a3b8; text-shadow: 0 3px 0 #64748b; }
+
+    .end-lbl   { font-size: 11px; letter-spacing: 3px; color: #9ca3af; font-weight: 700; }
+    .end-total { font-size: 32px; font-weight: 900; color: #d97706; text-shadow: 0 4px 0 #b45309; }
+
+    .round-list { width: 100%; display: flex; flex-direction: column; gap: 6px; }
+    .round-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px;
+      background: linear-gradient(135deg, #fffbeb, #fef3c7);
+      border-radius: 14px;
+      border: 1.5px solid #fde68a;
+      font-size: 13px;
+      box-shadow: 0 3px 10px rgba(251,191,36,.2);
+    }
+    .round-row .rn { color: #6b7280; font-weight: 600; }
+    .round-row .rp { color: #d97706; font-weight: 800; font-size: 15px; }
+  </style>
+</head>
+<body>
+
+<div class="bg-stars" id="bgStars"></div>
+
+<!-- Round splash overlay -->
+<div id="splashOverlay">
+  <div class="splash-title" id="splashTitle">ROUND 1</div>
+  <div class="splash-sub"   id="splashSub">上行音阶</div>
+</div>
+
+<div class="game-wrap">
+
+  <!-- ── TITLE ── -->
+  <div class="screen active" id="titleScreen">
+    <div class="title-icon"></div>
+    <div class="title-logo">FOR BEAT RUSH</div>
+    <div class="title-tag">用 for 循环演奏旋律 · 抢时间拿高分！</div>
+    <div class="instructions">
+      <ul>
+        <li>🎵 每关开始自动播放<span class="hl">目标旋律</span>，注意<span class="hl">金色琴键</span>的顺序</li>
+        <li>🔧 调整 <span class="hlg">for 循环</span>三个数字，让它生成相同的音符顺序</li>
+        <li>⚡ 答对得 <span class="hly">100 分 + 时间奖励</span>，一次过再得 <span class="hly">先手分</span>！</li>
+        <li>⌨️ 按 <span class="hly">空格</span> 快速播放</li>
+      </ul>
+    </div>
+    <button class="big-btn" id="startBtn">▶ START</button>
+    <div class="hi-row">最高分：<span id="hiScore">—</span></div>
+  </div>
+
+  <!-- ── GAME ── -->
+  <div class="screen" id="gameScreen">
+
+    <div class="hud">
+      <div class="hud-chip">
+        <div class="hud-lbl">ROUND</div>
+        <div class="hud-val" id="hudRound">1 / 5</div>
+      </div>
+      <div class="timer-wrap">
+        <div class="timer-track">
+          <div class="timer-fill" id="timerFill" style="width:100%"></div>
+        </div>
+        <div class="timer-txt" id="timerTxt">15.0 s</div>
+      </div>
+      <div class="hud-chip">
+        <div class="hud-lbl">SCORE</div>
+        <div class="hud-val gold" id="hudScore">0</div>
+      </div>
+    </div>
+
+    <div class="round-banner">
+      <div class="round-name" id="rndName">上行音阶</div>
+      <div class="round-tip"  id="rndTip">让 i 从 0 依次加 1，直到 4</div>
+    </div>
+
+    <div class="piano-section">
+      <div class="piano-info" id="pianoInfo">🎵 目标旋律（紫色数字 = 播放顺序）</div>
+      <div class="piano" id="piano"></div>
+    </div>
+
+    <div class="status-msg" id="statusMsg">目标旋律正在播放……</div>
+
+    <div class="editor-section">
+      <div class="editor-lbl">// 编辑 FOR 循环 — 让 i 的序列与目标一致</div>
+      <div class="code-line">
+        <span class="ck">for</span><span class="cg">(</span>
+        <span class="ck">int</span>
+        <span class="ci">i</span><span class="cg">=</span>
+        <input class="loop-input" id="inStart" type="number" value="0">
+        <span class="cg">;</span>
+        <span class="ci">i</span>
+        <select class="loop-select" id="inOp">
+          <option value="<=">&lt;=</option>
+          <option value=">=">&gt;=</option>
+        </select>
+        <input class="loop-input" id="inEnd" type="number" value="4">
+        <span class="cg">;</span>
+        <span class="ci">i</span><span class="cop">+=</span>
+        <input class="loop-input" id="inStep" type="number" value="1">
+        <span class="cg">)</span>
+      </div>
+      <div class="seq-row">
+        当前 i 序列：<span class="seq-val" id="seqPrev">[0, 1, 2, 3]</span>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <button class="play-btn" id="playBtn" disabled>▶ 播放  /  空格</button>
+      <button class="re-btn"   id="reBtn"   disabled>🔁 重听 −2s</button>
+    </div>
+
+  </div>
+
+  <!-- ── END ── -->
+  <div class="screen" id="endScreen">
+    <div class="end-grade" id="endGrade">S</div>
+    <div class="end-lbl">TOTAL SCORE</div>
+    <div class="end-total" id="endTotal">0 分</div>
+    <div class="round-list" id="roundList"></div>
+    <button class="big-btn" id="replayBtn">▶ 再来一局</button>
+    <div class="hi-row">最高分：<span id="hiScore2">—</span></div>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════
+   STAR BACKGROUND
+═══════════════════════════════════════════ */
+(function () {
+  const c = document.getElementById('bgStars');
+  const colors = ['#fca5a5','#fdba74','#fde68a','#86efac','#93c5fd','#c4b5fd','#f9a8d4','#6ee7b7','#fcd34d'];
+  for (let i = 0; i < 55; i++) {
+    const el = document.createElement('div');
+    el.className = 'star';
+    const sz = Math.random() * 22 + 6;
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    el.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;` +
+      `top:${Math.random()*100}%;animation-duration:${3+Math.random()*5}s;` +
+      `animation-delay:${Math.random()*6}s;background:${color};opacity:${.25+Math.random()*.3};`;
+    c.appendChild(el);
+  }
+})();
+
+/* ═══════════════════════════════════════════
+   AUDIO  (Web Audio API)
+═══════════════════════════════════════════ */
+let _ctx = null;
+function ac() {
+  if (!_ctx) { const C = window.AudioContext || window.webkitAudioContext; if (C) _ctx = new C(); }
+  if (_ctx && _ctx.state === 'suspended') _ctx.resume();
+  return _ctx;
+}
+
+const FREQS = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88];
+
+function playTone(fi, when, dur) {
+  const c = ac(); if (!c) return;
+  const idx = ((fi % 7) + 7) % 7;
+  const o = c.createOscillator(), g = c.createGain();
+  o.type = 'sine'; o.frequency.value = FREQS[idx];
+  const t0 = Math.max(when, c.currentTime + 0.001);
+  g.gain.setValueAtTime(0.001, t0);
+  g.gain.exponentialRampToValueAtTime(0.24, t0 + 0.015);
+  g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+  o.connect(g); g.connect(c.destination);
+  o.start(t0); o.stop(t0 + dur + 0.05);
+}
+
+function sfxOK() {
+  [523, 659, 784, 1047].forEach((f, i) => {
+    const c = ac(); if (!c) return;
+    const t = c.currentTime + i * 0.07;
+    const o = c.createOscillator(), g = c.createGain();
+    o.frequency.value = f; g.gain.setValueAtTime(0.16, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + 0.38);
+  });
+}
+function sfxBad() {
+  const c = ac(); if (!c) return;
+  const o = c.createOscillator(), g = c.createGain();
+  o.type = 'sawtooth'; o.frequency.value = 160;
+  g.gain.setValueAtTime(0.18, c.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.22);
+  o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime + 0.24);
+}
+function sfxTimeUp() {
+  const c = ac(); if (!c) return;
+  const o = c.createOscillator(), g = c.createGain();
+  o.frequency.setValueAtTime(440, c.currentTime);
+  o.frequency.linearRampToValueAtTime(200, c.currentTime + 0.35);
+  g.gain.setValueAtTime(0.18, c.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.45);
+  o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime + 0.5);
+}
+function sfxWin() {
+  [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => {
+    const c = ac(); if (!c) return;
+    const t = c.currentTime + i * 0.1;
+    const o = c.createOscillator(), g = c.createGain();
+    o.frequency.value = f; g.gain.setValueAtTime(0.18, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + 0.6);
+  });
+}
+
+/* ═══════════════════════════════════════════
+   ROUNDS  (5 levels)
+═══════════════════════════════════════════ */
+const ROUNDS = [
+  {
+    name: '上行音阶', tip: '让 i 从 1 开始，每次 +1，直到 i <= 4',
+    target: [1, 2, 3, 4],
+    answer: { start: 1, op: '<=', end: 4, step: 1 },
+    preset: { start: 1, op: '<=', end: 7, step: 1 }   // intentionally wrong: too many notes
+  },
+  {
+    name: '跳跃节奏', tip: '让 i 每次 +2，跳过偶数，直到 i <= 7',
+    target: [1, 3, 5, 7],
+    answer: { start: 1, op: '<=', end: 7, step: 2 },
+    preset: { start: 1, op: '<=', end: 7, step: 1 }   // wrong step
+  },
+  {
+    name: '下降旋律', tip: '从高往低走，用 >= 替代 <=，step 改为 −1',
+    target: [5, 4, 3, 2],
+    answer: { start: 5, op: '>=', end: 2, step: -1 },
+    preset: { start: 1, op: '<=', end: 4, step: 1 }   // wrong direction
+  },
+  {
+    name: '偶数跳跃', tip: '从键 2 开始，每次 +2，直到 i <= 6',
+    target: [2, 4, 6],
+    answer: { start: 2, op: '<=', end: 6, step: 2 },
+    preset: { start: 1, op: '<=', end: 6, step: 2 }   // wrong start
+  },
+  {
+    name: '逆向疾驰', tip: '从键 7 倒数，每次 −2，直到 i >= 1',
+    target: [7, 5, 3, 1],
+    answer: { start: 7, op: '>=', end: 1, step: -2 },
+    preset: { start: 1, op: '<=', end: 7, step: 2 }   // wrong everything
+  }
+];
+
+const TIMER_MAX  = 60;    // seconds
+const BEAT_S     = 0.33;  // seconds per note
+const NOTE_NAMES = ['1','2','3','4','5','6','7'];
+const SOLFEGE    = ['do','re','mi','fa','sol','la','xi'];
+
+/* ═══════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════ */
+let roundIdx   = 0;
+let totalScore = 0;
+let roundLog   = [];  // { name, pts, correct }
+let timeLeft   = TIMER_MAX;
+let timerIval  = null;
+let phase      = 'idle';  // idle | preview | input | playing | transitioning
+let firstTry   = true;
+let _seqGen    = 0;   // cancel stale key-highlight timeouts
+
+/* ═══════════════════════════════════════════
+   DOM
+═══════════════════════════════════════════ */
+const titleScreen = document.getElementById('titleScreen');
+const gameScreen  = document.getElementById('gameScreen');
+const endScreen   = document.getElementById('endScreen');
+const hudRound    = document.getElementById('hudRound');
+const hudScore    = document.getElementById('hudScore');
+const timerFill   = document.getElementById('timerFill');
+const timerTxt    = document.getElementById('timerTxt');
+const rndName     = document.getElementById('rndName');
+const rndTip      = document.getElementById('rndTip');
+const pianoEl     = document.getElementById('piano');
+const pianoInfo   = document.getElementById('pianoInfo');
+const statusMsg   = document.getElementById('statusMsg');
+const inStart     = document.getElementById('inStart');
+const inOp        = document.getElementById('inOp');
+const inEnd       = document.getElementById('inEnd');
+const inStep      = document.getElementById('inStep');
+const seqPrev     = document.getElementById('seqPrev');
+const playBtn     = document.getElementById('playBtn');
+const reBtn       = document.getElementById('reBtn');
+const startBtn    = document.getElementById('startBtn');
+const replayBtn   = document.getElementById('replayBtn');
+const endGradeEl  = document.getElementById('endGrade');
+const endTotalEl  = document.getElementById('endTotal');
+const roundListEl = document.getElementById('roundList');
+const splashOvl   = document.getElementById('splashOverlay');
+const splashTitle = document.getElementById('splashTitle');
+const splashSub   = document.getElementById('splashSub');
+
+/* ═══════════════════════════════════════════
+   BUILD PIANO KEYS
+═══════════════════════════════════════════ */
+const keyEls = [];
+for (let i = 0; i < 7; i++) {
+  const k = document.createElement('div');
+  k.className = 'key';
+  k.innerHTML =
+    `<div class="key-badge" id="kb${i}"></div>` +
+    `<div class="key-num">${NOTE_NAMES[i]}</div>` +
+    `<div class="key-sol">${SOLFEGE[i]}</div>`;
+  pianoEl.appendChild(k);
+  keyEls.push(k);
+}
+
+/* ═══════════════════════════════════════════
+   SCREEN SWITCH
+═══════════════════════════════════════════ */
+function showScreen(id) {
+  [titleScreen, gameScreen, endScreen].forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ═══════════════════════════════════════════
+   HIGH SCORE
+═══════════════════════════════════════════ */
+function hiGet() { return parseInt(localStorage.getItem('fbr_hi') || '0'); }
+function hiSet(s) { if (s > hiGet()) localStorage.setItem('fbr_hi', String(s)); }
+function hiRender() {
+  const h = hiGet();
+  const t = h > 0 ? `${h} 分` : '—';
+  document.getElementById('hiScore').textContent  = t;
+  document.getElementById('hiScore2').textContent = t;
+}
+
+/* ═══════════════════════════════════════════
+   FOR LOOP SIMULATION
+═══════════════════════════════════════════ */
+function simLoop() {
+  let start = Number(inStart.value);
+  let end   = Number(inEnd.value);
+  let step  = Number(inStep.value);
+  const op  = inOp.value;
+  if (!Number.isFinite(start)) start = 0;
+  if (!Number.isFinite(end))   end   = 0;
+  if (!Number.isFinite(step) || step === 0) step = 1;
+  const seq = [];
+  for (let i = start; (op === '<=' ? i <= end : i >= end); i += step) {
+    seq.push(i);
+    if (seq.length > 24) break;
+  }
+  return seq;
+}
+
+function refreshSeqPreview() {
+  const s = simLoop();
+  seqPrev.textContent = s.length === 0 ? '（循环不执行）' : `[${s.join(', ')}]`;
+}
+
+/* ═══════════════════════════════════════════
+   KEY STATE HELPERS
+═══════════════════════════════════════════ */
+const KEY_CLASSES = ['preview', 'playing', 'flash-ok', 'flash-bad'];
+
+function clearKeys() {
+  keyEls.forEach(k => { KEY_CLASSES.forEach(c => k.classList.remove(c)); });
+}
+
+function showTargetBadges(seq) {
+  for (let ki = 0; ki < keyEls.length; ki++) {
+    keyEls[ki].classList.remove('target');
+  }
+  seq.forEach((keyI, pos) => {
+    const idx = keyI - 1;  // 1-based → 0-based array index
+    if (idx >= 0 && idx < 7) {
+      keyEls[idx].classList.add('target');
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════
+   PLAY SEQUENCE  (with generation guard)
+═══════════════════════════════════════════ */
+function playSeq(seq, cls, onDone) {
+  const c = ac();
+  const gen = ++_seqGen;
+  if (c) {
+    const t0 = c.currentTime + 0.08;
+    seq.forEach((ki, pos) => {
+      const idx = ki - 1;  // 1-based → 0-based
+      const fi  = ((idx % 7) + 7) % 7;
+      playTone(fi, t0 + pos * BEAT_S, BEAT_S * 0.88);
+      const onMs  = (t0 - c.currentTime + pos * BEAT_S) * 1000;
+      const offMs = onMs + BEAT_S * 0.82 * 1000;
+      setTimeout(() => {
+        if (_seqGen !== gen) return;
+        if (idx >= 0 && idx < 7) keyEls[idx].classList.add(cls);
+      }, onMs);
+      setTimeout(() => {
+        if (_seqGen !== gen) return;
+        if (idx >= 0 && idx < 7) keyEls[idx].classList.remove(cls);
+      }, offMs);
+    });
+    const totalMs = (t0 - c.currentTime + seq.length * BEAT_S) * 1000 + 120;
+    setTimeout(() => { if (_seqGen === gen && onDone) onDone(); }, totalMs);
+  } else {
+    if (onDone) setTimeout(onDone, seq.length * BEAT_S * 1000 + 120);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   TIMER
+═══════════════════════════════════════════ */
+function startTimer() {
+  clearInterval(timerIval);
+  timeLeft = TIMER_MAX;
+  timerIval = setInterval(() => {
+    timeLeft = Math.max(0, timeLeft - 0.1);
+    const pct = (timeLeft / TIMER_MAX) * 100;
+    timerFill.style.width = pct + '%';
+    timerTxt.textContent  = timeLeft.toFixed(1) + ' s';
+    timerFill.className   = 'timer-fill' +
+      (pct < 25 ? ' danger' : pct < 50 ? ' warn' : '');
+    if (timeLeft <= 0) onTimeUp();
+  }, 100);
+}
+function stopTimer() { clearInterval(timerIval); timerIval = null; }
+
+/* ═══════════════════════════════════════════
+   SCORE POP
+═══════════════════════════════════════════ */
+function scorePop(pts, good) {
+  const el = document.createElement('div');
+  el.className = 'score-pop';
+  el.textContent = (good ? '+' : '') + pts;
+  el.style.color = good ? '#fbbf24' : '#f87171';
+  el.style.textShadow = good
+    ? '0 0 20px rgba(251,191,36,.8)'
+    : '0 0 16px rgba(248,113,113,.6)';
+  const r = pianoEl.getBoundingClientRect();
+  el.style.left = (r.left + r.width / 2 - 24) + 'px';
+  el.style.top  = (r.top - 4) + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 950);
+}
+
+/* ═══════════════════════════════════════════
+   ROUND SPLASH
+═══════════════════════════════════════════ */
+function showSplash(title, sub, cb) {
+  splashTitle.textContent = title;
+  splashSub.textContent   = sub;
+  // re-trigger animation
+  splashTitle.style.animation = 'none';
+  void splashTitle.offsetWidth;
+  splashTitle.style.animation = '';
+  splashOvl.classList.add('show');
+  setTimeout(() => {
+    splashOvl.classList.remove('show');
+    setTimeout(cb, 300);
+  }, 900);
+}
+
+/* ═══════════════════════════════════════════
+   STATUS
+═══════════════════════════════════════════ */
+function setStatus(cls, msg) {
+  statusMsg.className = 'status-msg' + (cls ? ' ' + cls : '');
+  statusMsg.textContent = msg;
+}
+
+/* ═══════════════════════════════════════════
+   INIT ROUND
+═══════════════════════════════════════════ */
+function initRound(idx) {
+  roundIdx  = idx;
+  firstTry  = true;
+  phase     = 'preview';
+  stopTimer();
+  clearKeys();
+  playBtn.disabled = true;
+  reBtn.disabled   = true;
+
+  const r = ROUNDS[idx];
+  hudRound.textContent = `${idx + 1} / 5`;
+  rndName.textContent  = r.name;
+  rndTip.textContent   = r.tip;
+
+  // Load intentionally-wrong preset
+  inStart.value = String(r.preset.start);
+  inOp.value    = r.preset.op;
+  inEnd.value   = String(r.preset.end);
+  inStep.value  = String(r.preset.step);
+  refreshSeqPreview();
+
+  showTargetBadges(r.target);
+  setStatus('pre', '🎵 听清楚旋律顺序！目标：' + r.target.join(' → '));
+  pianoInfo.textContent = '🎵 目标旋律（紫色数字 = 播放顺序）';
+
+  // Auto-play preview
+  playSeq(r.target, 'preview', () => {
+    phase = 'input';
+    playBtn.disabled = false;
+    reBtn.disabled   = false;
+    setStatus('', '调整 for 循环，让 i 序列 = 旋律顺序，然后按 ▶ 播放！');
+    startTimer();
+  });
+}
+
+/* ═══════════════════════════════════════════
+   PLAY BUTTON
+═══════════════════════════════════════════ */
+function onPlayPress() {
+  if (phase !== 'input') return;
+  ac(); // ensure context is running
+  phase = 'playing';
+  playBtn.disabled = true;
+  reBtn.disabled   = true;
+
+  const seq = simLoop();
+  const r   = ROUNDS[roundIdx];
+
+  if (seq.length === 0) {
+    sfxBad();
+    setStatus('bad', '❌ for 循环一次都没执行！检查条件和步长。');
+    phase = 'input';
+    playBtn.disabled = false;
+    reBtn.disabled   = false;
+    firstTry = false;
+    return;
+  }
+
+  setStatus('', '▶ 正在播放你的 for 循环……');
+  clearKeys();
+  playSeq(seq, 'playing', () => checkAnswer(seq, r));
+}
+
+/* ═══════════════════════════════════════════
+   CHECK ANSWER
+═══════════════════════════════════════════ */
+function checkAnswer(seq, r) {
+  const target = r.target;
+  let match = seq.length === target.length;
+  if (match) for (let i = 0; i < seq.length; i++) if (seq[i] !== target[i]) { match = false; break; }
+
+  if (match) {
+    stopTimer();
+    sfxOK();
+    const timeBonus  = Math.round(timeLeft * 1.5);
+    const firstBonus = firstTry ? Math.round(timeBonus * 0.5) : 0;
+    const pts        = 100 + timeBonus + firstBonus;
+    totalScore += pts;
+    roundLog.push({ name: r.name, pts, correct: true });
+    hudScore.textContent = totalScore;
+
+    // green flash
+    r.target.forEach(ki => { const idx=ki-1; if (idx>=0&&idx<7) keyEls[idx].classList.add('flash-ok'); });
+    const label = firstTry ? `✅ 一次过！+${pts} 分 (含先手奖励 +${firstBonus})` : `✅ 正确！+${pts} 分`;
+    setStatus('ok', label);
+    scorePop(pts, true);
+
+    phase = 'transitioning';
+    setTimeout(() => {
+      r.target.forEach(ki => { const idx=ki-1; if (idx>=0&&idx<7) keyEls[idx].classList.remove('flash-ok'); });
+      nextRound();
+    }, 1100);
+
+  } else {
+    sfxBad();
+    firstTry = false;
+    seq.forEach(ki => { const idx=ki-1; if (idx>=0&&idx<7) keyEls[idx].classList.add('flash-bad'); });
+    setTimeout(() => seq.forEach(ki => { const idx=ki-1; if (idx>=0&&idx<7) keyEls[idx].classList.remove('flash-bad'); }), 420);
+    const got  = `[${seq.join(', ')}]`;
+    const want = `[${target.join(', ')}]`;
+    setStatus('bad', `❌ 不对  你的：${got}   目标：${want}`);
+    scorePop(0, false);
+    phase = 'input';
+    playBtn.disabled = false;
+    reBtn.disabled   = false;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   REPLAY TARGET  (−2 s)
+═══════════════════════════════════════════ */
+function onReplay() {
+  if (phase !== 'input') return;
+  if (timeLeft <= 5) return;
+  timeLeft -= 2;
+  const r = ROUNDS[roundIdx];
+  phase = 'preview';
+  playBtn.disabled = true;
+  reBtn.disabled   = true;
+  setStatus('pre', '🔁 重听目标旋律……');
+  clearKeys();
+  playSeq(r.target, 'preview', () => {
+    phase = 'input';
+    playBtn.disabled = false;
+    reBtn.disabled   = false;
+    setStatus('', '调整 for 循环，然后按 ▶ 播放！');
+  });
+}
+
+/* ═══════════════════════════════════════════
+   TIME UP
+═══════════════════════════════════════════ */
+function onTimeUp() {
+  if (phase !== 'input') return;
+  stopTimer();
+  sfxTimeUp();
+  phase = 'transitioning';
+  playBtn.disabled = true;
+  reBtn.disabled   = true;
+  const r = ROUNDS[roundIdx];
+  roundLog.push({ name: r.name, pts: 0, correct: false });
+  const a = r.answer;
+  setStatus('bad', `⏰ 时间到！标准答案：i=${a.start}；i${a.op}${a.end}；i+=${a.step}`);
+  scorePop(0, false);
+  setTimeout(nextRound, 2000);
+}
+
+/* ═══════════════════════════════════════════
+   NEXT ROUND / END
+═══════════════════════════════════════════ */
+function nextRound() {
+  if (roundIdx + 1 < ROUNDS.length) {
+    const next = roundIdx + 1;
+    showSplash(`ROUND ${next + 1}`, ROUNDS[next].name, () => initRound(next));
+  } else {
+    endGame();
+  }
+}
+
+/* ═══════════════════════════════════════════
+   END GAME
+═══════════════════════════════════════════ */
+function endGame() {
+  stopTimer();
+  sfxWin();
+  hiSet(totalScore);
+  hiRender();
+
+  let grade, gc;
+  if      (totalScore >= 620) { grade = 'S'; gc = 'gS'; }
+  else if (totalScore >= 420) { grade = 'A'; gc = 'gA'; }
+  else if (totalScore >= 220) { grade = 'B'; gc = 'gB'; }
+  else                        { grade = 'C'; gc = 'gC'; }
+
+  endGradeEl.textContent = grade;
+  endGradeEl.className   = 'end-grade ' + gc;
+  endTotalEl.textContent = totalScore + ' 分';
+
+  roundListEl.innerHTML = roundLog.map((r, i) => `
+    <div class="round-row">
+      <span>${r.correct ? '✅' : '❌'}</span>
+      <span class="rn">第 ${i+1} 关 · ${r.name}</span>
+      <span class="rp">+${r.pts}</span>
+    </div>`).join('');
+
+  showScreen('endScreen');
+}
+
+/* ═══════════════════════════════════════════
+   START GAME
+═══════════════════════════════════════════ */
+function startGame() {
+  totalScore = 0; roundLog = [];
+  hudScore.textContent = '0';
+  showScreen('gameScreen');
+  showSplash('ROUND 1', ROUNDS[0].name, () => initRound(0));
+}
+
+/* ═══════════════════════════════════════════
+   EVENTS
+═══════════════════════════════════════════ */
+[inStart, inOp, inEnd, inStep].forEach(el =>
+  el.addEventListener('input', refreshSeqPreview)
+);
+
+playBtn.addEventListener('click', onPlayPress);
+reBtn.addEventListener('click', onReplay);
+startBtn.addEventListener('click', startGame);
+replayBtn.addEventListener('click', startGame);
+
+window.addEventListener('keydown', e => {
+  if (e.code === 'Space' && phase === 'input') {
+    e.preventDefault();
+    onPlayPress();
+  }
+});
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+hiRender();
+</script>
+</body>
+</html>
