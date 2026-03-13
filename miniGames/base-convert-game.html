@@ -110,51 +110,46 @@
     .heart { font-size:20px; filter:drop-shadow(0 0 6px var(--red)); transition:all .3s; }
     .heart.lost { filter:grayscale(1) brightness(.35); transform:scale(.8); }
 
-    /* Game area */
+    /* Game area - reuse global background / Matrix rain */
     #gameArea {
       position:fixed; top:52px; left:0; right:0; bottom:234px;
       z-index:10; overflow:hidden;
-      background:linear-gradient(to top,#020617 0%,#0f172a 38%,#1e293b 100%);
-    }
-    /* danger zone */
-    #gameArea::after {
-      content:''; position:absolute; bottom:0; left:0; right:0; height:70px;
-      background:linear-gradient(to top, rgba(255,61,90,.12), transparent);
-      pointer-events:none; z-index:1;
-    }
-    #gameArea::before {
-      content:'⚠  DANGER ZONE  ⚠'; position:absolute; bottom:8px;
-      left:50%; transform:translateX(-50%);
-      font-size:9px; letter-spacing:4px; color:rgba(255,61,90,.35);
-      pointer-events:none; z-index:2; white-space:nowrap;
+      background:transparent;
     }
 
-    /* Mario-style hero & bullet */
+    /* Cannon hero & bullet */
     #hero {
-      position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
-      width:60px; height:42px; z-index:12;
+      position:absolute; bottom:0; left:50%; transform:translateX(-50%);
+      width:82px; height:44px; z-index:12;
       display:flex; align-items:flex-end; justify-content:center;
     }
     .cannon-base {
-      width:52px; height:16px;
-      background:linear-gradient(to top,#020617,#020617);
-      border-radius:10px;
-      box-shadow:0 0 10px rgba(15,23,42,.9);
+      width:76px; height:18px;
+      background:
+        radial-gradient(circle at 20% 0%, rgba(248,250,252,.16), transparent 55%),
+        radial-gradient(circle at 80% 0%, rgba(248,250,252,.12), transparent 55%),
+        linear-gradient(to top,#020617,#020617);
+      border-radius:11px;
+      box-shadow:0 0 12px rgba(15,23,42,.9);
     }
     .cannon-body {
-      position:absolute; bottom:16px;
-      width:44px; height:22px;
-      border-radius:14px;
-      background:radial-gradient(circle at 30% 30%,#e5e7eb,#6b7280,#020617);
+      position:absolute; bottom:15px;
+      width:58px; height:22px;
+      border-radius:13px;
+      background:
+        radial-gradient(circle at 20% 20%,#f9fafb,#e5e7eb 45%,transparent 70%),
+        radial-gradient(circle at 80% 80%,#9ca3af,#4b5563 55%,#020617 80%);
       border:2px solid #020617;
-      box-shadow:0 0 18px rgba(148,163,184,.9);
+      box-shadow:0 0 20px rgba(148,163,184,.95);
     }
     .cannon-barrel {
-      position:absolute; bottom:26px; left:50%; transform:translateX(-50%);
-      width:16px; height:26px;
-      border-radius:8px 8px 4px 4px;
-      background:linear-gradient(to top,#e5e7eb,#9ca3af);
-      box-shadow:0 0 10px rgba(209,213,219,.8);
+      position:absolute; bottom:25px; left:50%; transform:translateX(-50%);
+      width:20px; height:26px;
+      border-radius:11px 11px 7px 7px;
+      background:
+        linear-gradient(135deg,#f9fafb 0%,#e5e7eb 40%,#9ca3af 70%,#6b7280 100%);
+      box-shadow:0 0 14px rgba(209,213,219,.95);
+      border:1.4px solid rgba(15,23,42,.9);
     }
     .bullet {
       position:fixed;
@@ -264,10 +259,10 @@
     }
     #noTargetMsg { font-size:12px; letter-spacing:3px; color:var(--dim); text-align:center; }
 
-    #targetUi { width:100%; display:none; flex-direction:column; align-items:center; gap:10px; }
+    #targetUi { width:100%; display:none; flex-direction:column; align-items:center; gap:4px; }
 
     #targetInfo {
-      display:flex; align-items:center; gap:12px;
+      display:flex; align-items:flex-end; gap:12px;
       font-size:12px; letter-spacing:2px; color:var(--dim);
     }
     #tHex { font-size:38px; font-weight:900; color:var(--yellow); text-shadow:0 0 22px var(--yellow); }
