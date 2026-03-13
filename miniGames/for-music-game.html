@@ -671,17 +671,18 @@ const ROUNDS = [
     preset: { start: 1, op: '<=', end: 7, step: 1 }   // wrong step
   },
   {
-    name: '下降旋律', tip: '从高往低走，用 >= 替代 <=，step 改为 −1',
-    target: [5, 4, 3, 2],
-    answer: { start: 5, op: '>=', end: 2, step: -1 },
-    preset: { start: 1, op: '<=', end: 4, step: 1 }   // wrong direction
-  },
-  {
     name: '偶数跳跃', tip: '从键 2 开始，每次 +2，直到 i <= 6',
     target: [2, 4, 6],
     answer: { start: 2, op: '<=', end: 6, step: 2 },
     preset: { start: 1, op: '<=', end: 6, step: 2 }   // wrong start
   },
+  {
+    name: '下降旋律', tip: '从高往低走，用 >= 替代 <=，step 改为 −1',
+    target: [5, 4, 3, 2],
+    answer: { start: 5, op: '>=', end: 2, step: -1 },
+    preset: { start: 1, op: '<=', end: 4, step: 1 }   // wrong direction
+  },
+  
   {
     name: '逆向疾驰', tip: '从键 7 倒数，每次 −2，直到 i >= 1',
     target: [7, 5, 3, 1],

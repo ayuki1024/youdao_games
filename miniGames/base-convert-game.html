@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>HEX炸弹 · 拆弹解码</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg:     #060a10;
+      --sf:     #0d1520;
+      --sf2:    #111c2e;
+      --bd:     #1a3050;
+      --cyan:   #00f0ff;
+      --green:  #00ff88;
+      --purple: #b24fff;
+      --orange: #ff6b35;
+      --yellow: #ffd700;
+      --red:    #ff3d5a;
+      --text:   #c8e6ff;
+      --dim:    #3a6080;
+      --mono:   'Courier New','Consolas',monospace;
+    }
+    html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); font-family:var(--mono); color:var(--text); user-select:none; }
+
+    /* ── Background canvas ── */
+    #bgCanvas { position:fixed; inset:0; z-index:0; opacity:.4; }
+
+    /* CRT scanlines */
+    body::after {
+      content:''; position:fixed; inset:0; z-index:900; pointer-events:none;
+      background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);
+    }
+
+    /* ════════════════════════════════
+       SCREENS
+    ════════════════════════════════ */
+    .screen {
+      position:fixed; inset:0; z-index:10;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      padding:16px; opacity:0; pointer-events:none; transition:opacity .4s;
+    }
+    .screen.active { opacity:1; pointer-events:all; }
+
+    /* ── card (start / end) ── */
+    .card {
+      background:rgba(13,21,32,.97); border:1px solid var(--bd); border-radius:20px;
+      padding:26px; width:min(580px,95vw);
+      box-shadow:0 0 60px rgba(0,240,255,.06), inset 0 1px 0 rgba(255,255,255,.05);
+      position:relative; overflow:hidden;
+    }
+    .card::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:1px;
+      background:linear-gradient(90deg,transparent,var(--cyan),transparent); opacity:.6;
+    }
+
+    /* ════════════════════════════════
+       START SCREEN
+    ════════════════════════════════ */
+    .logo { text-align:center; margin-bottom:22px; }
+    .logo-title { font-size:clamp(38px,9vw,62px); font-weight:900; letter-spacing:2px; line-height:1.1; }
+    .lh { color:var(--cyan);   text-shadow:0 0 18px var(--cyan); }
+    .le { color:var(--purple); text-shadow:0 0 18px var(--purple); animation:gp 2s infinite alternate; }
+    .lx { color:var(--orange); text-shadow:0 0 18px var(--orange); }
+    .lb { font-size:.7em; vertical-align:middle; margin:0 8px; }
+    .lg { color:var(--green);  text-shadow:0 0 18px var(--green); animation:gp 2s .3s infinite alternate; }
+    .lo { color:var(--yellow); text-shadow:0 0 18px var(--yellow); }
+    @keyframes gp { from{filter:brightness(1)} to{filter:brightness(1.8)} }
+    .logo-sub { font-size:10px; letter-spacing:7px; color:var(--dim); margin-top:10px; }
+
+    .rules-box {
+      background:rgba(0,240,255,.04); border:1px solid rgba(0,240,255,.12);
+      border-radius:12px; padding:14px 18px; margin-bottom:18px;
+      font-size:12px; line-height:1.85; color:var(--dim);
+    }
+    .rules-box li { margin-left:1.2em; margin-bottom:2px; }
+    .hl { color:var(--cyan); font-weight:bold; }
+
+    .best-row { text-align:center; margin-bottom:14px; font-size:11px; color:var(--dim); letter-spacing:2px; }
+    .best-row .bv { color:var(--yellow); font-size:20px; font-weight:900; }
+
+    .btn-start {
+      display:block; width:100%; padding:14px; border:none; border-radius:12px;
+      background:linear-gradient(135deg,#00c6ff,#0072ff); color:#fff;
+      font-family:var(--mono); font-size:16px; font-weight:900; letter-spacing:6px;
+      cursor:pointer;
+      box-shadow:0 5px 0 #0050cc, 0 10px 30px rgba(0,114,255,.5), 0 0 50px rgba(0,198,255,.2);
+      transition:transform .1s, box-shadow .1s;
+    }
+    .btn-start:hover  { transform:translateY(-2px); box-shadow:0 7px 0 #0050cc, 0 14px 40px rgba(0,114,255,.6); }
+    .btn-start:active { transform:translateY(4px);  box-shadow:0 1px 0 #0050cc; }
+    .kb-hint { text-align:center; margin-top:10px; font-size:10px; color:var(--dim); letter-spacing:2px; }
+
+    /* ════════════════════════════════
+       GAME SCREEN
+    ════════════════════════════════ */
+    /* HUD top bar */
+    #hud {
+      position:fixed; top:0; left:0; right:0; z-index:30; height:52px;
+      background:rgba(6,10,16,.92); border-bottom:1px solid var(--bd);
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 18px; gap:12px; backdrop-filter:blur(8px);
+    }
+    .hc { display:flex; flex-direction:column; align-items:center; min-width:54px; }
+    .hc-l { font-size:8px; letter-spacing:3px; color:var(--dim); }
+    .hc-v { font-size:18px; font-weight:900; color:var(--cyan); text-shadow:0 0 10px var(--cyan); }
+    .hc-v.sc { color:var(--green);  text-shadow:0 0 10px var(--green); }
+    .hc-v.cb { color:var(--purple); text-shadow:0 0 10px var(--purple); }
+    .lives-row { display:flex; gap:5px; align-items:center; }
+    .heart { font-size:20px; filter:drop-shadow(0 0 6px var(--red)); transition:all .3s; }
+    .heart.lost { filter:grayscale(1) brightness(.35); transform:scale(.8); }
+
+    /* Game area */
+    #gameArea {
+      position:fixed; top:52px; left:0; right:0; bottom:234px;
+      z-index:10; overflow:hidden;
+      background:linear-gradient(to top,#020617 0%,#0f172a 38%,#1e293b 100%);
+    }
+    /* danger zone */
+    #gameArea::after {
+      content:''; position:absolute; bottom:0; left:0; right:0; height:70px;
+      background:linear-gradient(to top, rgba(255,61,90,.12), transparent);
+      pointer-events:none; z-index:1;
+    }
+    #gameArea::before {
+      content:'⚠  DANGER ZONE  ⚠'; position:absolute; bottom:8px;
+      left:50%; transform:translateX(-50%);
+      font-size:9px; letter-spacing:4px; color:rgba(255,61,90,.35);
+      pointer-events:none; z-index:2; white-space:nowrap;
+    }
+
+    /* Mario-style hero & bullet */
+    #hero {
+      position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+      width:60px; height:42px; z-index:12;
+      display:flex; align-items:flex-end; justify-content:center;
+    }
+    .cannon-base {
+      width:52px; height:16px;
+      background:linear-gradient(to top,#020617,#020617);
+      border-radius:10px;
+      box-shadow:0 0 10px rgba(15,23,42,.9);
+    }
+    .cannon-body {
+      position:absolute; bottom:16px;
+      width:44px; height:22px;
+      border-radius:14px;
+      background:radial-gradient(circle at 30% 30%,#e5e7eb,#6b7280,#020617);
+      border:2px solid #020617;
+      box-shadow:0 0 18px rgba(148,163,184,.9);
+    }
+    .cannon-barrel {
+      position:absolute; bottom:26px; left:50%; transform:translateX(-50%);
+      width:16px; height:26px;
+      border-radius:8px 8px 4px 4px;
+      background:linear-gradient(to top,#e5e7eb,#9ca3af);
+      box-shadow:0 0 10px rgba(209,213,219,.8);
+    }
+    .bullet {
+      position:fixed;
+      width:8px; height:18px; border-radius:4px;
+      background:linear-gradient(to top,#ffd700,#ffffff);
+      box-shadow:0 0 14px rgba(255,215,0,.9);
+      z-index:300;
+      transform:translate(-50%,-50%);
+      animation:bulletFly .25s linear forwards;
+    }
+    @keyframes bulletFly {
+      0%   { transform:translate(-50%,-50%) translate(0,0); opacity:1; }
+      100% { transform:translate(-50%,-50%) translate(var(--dx),var(--dy)); opacity:0; }
+    }
+
+    /* ════════════════════════════════
+       BOMB
+    ════════════════════════════════ */
+    .bomb {
+      position:absolute; width:72px;
+      display:flex; flex-direction:column; align-items:center;
+      cursor:pointer; transition:filter .2s;
+      z-index:15;
+    }
+    .bomb:hover { filter:brightness(1.35); }
+
+    .bomb-fuse {
+      width:3px; height:14px;
+      background:linear-gradient(to bottom,#ffd700,#ff9f43);
+      border-radius:2px; position:relative;
+    }
+    .bomb-spark {
+      position:absolute; top:-5px; left:50%; transform:translateX(-50%);
+      width:7px; height:7px; border-radius:50%;
+      background:#fff; box-shadow:0 0 8px #ffd700, 0 0 18px #ffd700;
+      animation:spark .18s infinite alternate;
+    }
+    @keyframes spark {
+      from { transform:translateX(-50%) scale(.6); opacity:.7; }
+      to   { transform:translateX(-50%) scale(1.5); opacity:1; }
+    }
+
+    .bomb-body {
+      width:66px; height:66px; border-radius:50%;
+      background:radial-gradient(circle at 35% 28%, #1e2d42, #0a1320);
+      border:2.5px solid; display:flex; align-items:center; justify-content:center;
+      font-size:24px; font-weight:900;
+      position:relative; overflow:hidden; transition:all .2s;
+    }
+    .bomb-body::after {
+      content:''; position:absolute; inset:0;
+      background:radial-gradient(circle at 30% 22%, rgba(255,255,255,.14), transparent 60%);
+      border-radius:50%;
+    }
+
+    /* Bomb color themes by hex value range */
+    .bc0 .bomb-body { border-color:var(--cyan);   color:var(--cyan);   box-shadow:0 0 16px rgba(0,240,255,.45); }
+    .bc1 .bomb-body { border-color:var(--green);  color:var(--green);  box-shadow:0 0 16px rgba(0,255,136,.45); }
+    .bc2 .bomb-body { border-color:var(--purple); color:var(--purple); box-shadow:0 0 16px rgba(178,79,255,.45); }
+    .bc3 .bomb-body { border-color:var(--orange); color:var(--orange); box-shadow:0 0 16px rgba(255,107,53,.45); }
+
+    /* Active (selected) bomb */
+    .bomb.is-active .bomb-body {
+      border-color:var(--yellow) !important; color:var(--yellow) !important;
+      box-shadow:0 0 28px rgba(255,215,0,.75), inset 0 0 18px rgba(255,215,0,.12) !important;
+      animation:a-pulse 1s infinite;
+    }
+    @keyframes a-pulse {
+      0%,100%{ box-shadow:0 0 28px rgba(255,215,0,.75), inset 0 0 18px rgba(255,215,0,.12); }
+      50%    { box-shadow:0 0 46px rgba(255,215,0,1),   inset 0 0 28px rgba(255,215,0,.22); }
+    }
+
+    /* Urgent (near bottom) */
+    .bomb.is-urgent:not(.is-active) .bomb-body {
+      border-color:var(--red) !important; color:var(--red) !important;
+      box-shadow:0 0 22px rgba(255,61,90,.7), inset 0 0 14px rgba(255,61,90,.12) !important;
+      animation:u-shake .25s infinite alternate;
+    }
+    @keyframes u-shake {
+      from { transform:rotate(-2deg) scale(1.03); }
+      to   { transform:rotate(2deg)  scale(1.03); }
+    }
+
+    /* Explode animation */
+    .bomb.exploding { animation:explode .38s ease-out forwards; pointer-events:none; }
+    @keyframes explode {
+      0%   { transform:scale(1);   opacity:1; }
+      50%  { transform:scale(2.6); opacity:.6; }
+      100% { transform:scale(0);   opacity:0; }
+    }
+    .bomb.fail-explode { animation:fail-exp .4s ease-out forwards; pointer-events:none; }
+    @keyframes fail-exp {
+      0%   { transform:scale(1);   opacity:1; }
+      40%  { transform:scale(2.2); opacity:.8; filter:hue-rotate(0deg); }
+      100% { transform:scale(0);   opacity:0; filter:hue-rotate(200deg); }
+    }
+
+    /* ════════════════════════════════
+       INPUT PANEL
+    ════════════════════════════════ */
+    #inputPanel {
+      position:fixed; bottom:20px; left:0; right:0; z-index:30; height:194px;
+      background:rgba(6,10,16,.95); border-top:1px solid var(--bd);
+      backdrop-filter:blur(10px);
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+      padding:8px 18px;
+    }
+    #noTargetMsg { font-size:12px; letter-spacing:3px; color:var(--dim); text-align:center; }
+
+    #targetUi { width:100%; display:none; flex-direction:column; align-items:center; gap:10px; }
+
+    #targetInfo {
+      display:flex; align-items:center; gap:12px;
+      font-size:12px; letter-spacing:2px; color:var(--dim);
+    }
+    #tHex { font-size:38px; font-weight:900; color:var(--yellow); text-shadow:0 0 22px var(--yellow); }
+    .hex-preview {
+      font-size:11px; color:var(--dim); letter-spacing:2px;
+      margin-top:2px; text-align:center;
+    }
+    .hex-preview span { color:var(--yellow); font-weight:700; }
+
+    .bit-slots { display:flex; gap:5px; }
+    .bsc {
+      width:42px; height:50px; border-radius:8px;
+      border:1px solid var(--bd); background:var(--sf2);
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+      font-size:19px; font-weight:900; color:var(--text);
+      position:relative; transition:all .12s;
+    }
+    .bsc-pw {
+      position:absolute; top:2px;
+      font-size:9px; font-weight:700;
+      color:var(--yellow); letter-spacing:1px;
+      text-shadow:0 0 6px rgba(255,215,0,.7);
+    }
+    .bsc.is-act {
+      border-color:var(--yellow);
+      box-shadow:0 0 14px rgba(255,215,0,.55), inset 0 0 8px rgba(255,215,0,.1);
+      background:rgba(255,215,0,.05); animation:bsc-p 1s infinite;
+    }
+    @keyframes bsc-p {
+      0%,100%{ box-shadow:0 0 14px rgba(255,215,0,.55); }
+      50%    { box-shadow:0 0 24px rgba(255,215,0,.85); }
+    }
+    .bsc.v1,
+    .bsc.v0 {
+      color:var(--cyan);
+      text-shadow:0 0 10px var(--cyan);
+      border-color:rgba(0,240,255,.5);
+      background:rgba(0,240,255,.06);
+    }
+    .bsc.fok  { animation:fok  .35s ease; }
+    .bsc.fbad { animation:fbad .45s ease; }
+    @keyframes fok  { 0%{transform:scale(1.28)} 100%{transform:scale(1)} }
+    @keyframes fbad { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+
+    .input-row { display:flex; gap:12px; align-items:center; }
+    .bin-btn {
+      flex:1; min-width:130px; max-width:180px; padding:11px;
+      border-radius:12px; border:2px solid; cursor:pointer;
+      font-family:var(--mono); font-size:24px; font-weight:900; letter-spacing:4px;
+      transition:all .1s; position:relative; overflow:hidden;
+    }
+    /* hide bottom 0/1 buttons, use键盘输入 */
+    .bin-btn { display:none; }
+    .bin-btn::after { content:''; position:absolute; inset:0; background:rgba(255,255,255,.1); opacity:0; transition:opacity .1s; }
+    .bin-btn:hover::after { opacity:1; }
+    .bin-btn:active { transform:scale(.94); }
+    .bzero { background:rgba(58,96,128,.12); border-color:var(--dim); color:var(--dim); }
+    .bzero:hover { border-color:var(--text); color:var(--text); transform:translateY(-2px); }
+    .bone  { background:rgba(0,255,136,.08); border-color:var(--green); color:var(--green); text-shadow:0 0 10px var(--green); box-shadow:0 0 18px rgba(0,255,136,.2); }
+    .bone:hover { background:rgba(0,255,136,.16); box-shadow:0 0 28px rgba(0,255,136,.4); transform:translateY(-2px); }
+    .bbs {
+      padding:11px 16px; border-radius:12px; border:1px solid var(--bd);
+      background:var(--sf2); color:var(--dim); font-size:18px; cursor:pointer; transition:all .1s;
+    }
+    .bbs:hover { border-color:var(--orange); color:var(--orange); box-shadow:0 0 14px rgba(255,107,53,.25); }
+    .bbs:active { transform:scale(.94); }
+
+    /* ════════════════════════════════
+       OVERLAY
+    ════════════════════════════════ */
+    #overlay {
+      position:fixed; inset:0; z-index:200;
+      display:flex; align-items:center; justify-content:center;
+      pointer-events:none; opacity:0; transition:opacity .3s;
+      background:rgba(6,10,16,.58); backdrop-filter:blur(5px);
+    }
+    #overlay.show { opacity:1; pointer-events:all; }
+    .ov-box {
+      text-align:center; padding:30px 50px;
+      background:rgba(6,10,16,.97); border:2px solid; border-radius:20px;
+    }
+    .ov-cyan   { border-color:var(--cyan);   box-shadow:0 0 60px rgba(0,240,255,.45); }
+    .ov-green  { border-color:var(--green);  box-shadow:0 0 60px rgba(0,255,136,.45); }
+    .ov-red    { border-color:var(--red);    box-shadow:0 0 60px rgba(255,61,90,.45); }
+    .ov-yellow { border-color:var(--yellow); box-shadow:0 0 60px rgba(255,215,0,.45); }
+    .ov-title {
+      font-size:clamp(30px,7vw,54px); font-weight:900; letter-spacing:8px;
+      animation:ov-pop .5s cubic-bezier(.2,1.8,.5,1);
+    }
+    .ov-cyan   .ov-title { color:var(--cyan);   text-shadow:0 0 40px var(--cyan); }
+    .ov-green  .ov-title { color:var(--green);  text-shadow:0 0 40px var(--green); }
+    .ov-red    .ov-title { color:var(--red);    text-shadow:0 0 40px var(--red); }
+    .ov-yellow .ov-title { color:var(--yellow); text-shadow:0 0 40px var(--yellow); }
+    .ov-sub { font-size:12px; letter-spacing:4px; color:var(--dim); margin-top:8px; }
+    @keyframes ov-pop {
+      0%  { transform:scale(.2) rotate(-12deg); opacity:0; }
+      65% { transform:scale(1.1) rotate(2deg); }
+      100%{ transform:scale(1) rotate(0); opacity:1; }
+    }
+
+    /* ════════════════════════════════
+       PARTICLES / EFFECTS
+    ════════════════════════════════ */
+    .ptcl {
+      position:fixed; border-radius:50%;
+      pointer-events:none; z-index:400;
+      animation:ptcl-fly 1s ease-out forwards;
+    }
+    @keyframes ptcl-fly {
+      0%  { transform:translate(0,0) scale(1); opacity:1; }
+      100%{ transform:translate(var(--dx),var(--dy)) scale(0); opacity:0; }
+    }
+    .exp-ring {
+      position:fixed; border-radius:50%; pointer-events:none; z-index:399;
+      animation:exp-ring .5s ease-out forwards;
+    }
+    @keyframes exp-ring {
+      0%  { transform:translate(-50%,-50%) scale(0); opacity:.85; }
+      100%{ transform:translate(-50%,-50%) scale(3.5); opacity:0; }
+    }
+    .life-flash {
+      position:fixed; inset:0; z-index:350;
+      background:rgba(255,61,90,.18); pointer-events:none;
+      animation:lf .45s ease;
+    }
+    @keyframes lf { 0%,100%{opacity:0} 30%{opacity:1} }
+
+    /* ════════════════════════════════
+       END SCREEN
+    ════════════════════════════════ */
+    .end-sc-wrap { text-align:center; margin-bottom:18px; }
+    .end-sc-lbl { font-size:10px; letter-spacing:5px; color:var(--dim); margin-bottom:6px; }
+    .end-sc-val {
+      font-size:clamp(50px,12vw,78px); font-weight:900; line-height:1;
+      color:var(--yellow); text-shadow:0 0 40px var(--yellow), 0 0 80px rgba(255,215,0,.3);
+      animation:ov-pop .7s cubic-bezier(.2,1.4,.5,1);
+    }
+    .end-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:16px; }
+    .end-stat { background:var(--sf2); border:1px solid var(--bd); border-radius:10px; padding:10px; text-align:center; }
+    .es-l { font-size:8px; letter-spacing:3px; color:var(--dim); margin-bottom:3px; }
+    .es-v { font-size:19px; font-weight:900; color:var(--cyan); text-shadow:0 0 10px var(--cyan); }
+    .end-rank { text-align:center; margin-bottom:16px; padding:10px; border:1px solid var(--bd); border-radius:8px; background:rgba(255,255,255,.02); font-size:11px; color:var(--dim); letter-spacing:2px; }
+    .rank-name { color:var(--purple); font-size:16px; font-weight:700; margin-top:4px; display:block; }
+    .btn-replay {
+      display:block; width:100%; padding:13px; border:none; border-radius:12px;
+      background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff;
+      font-family:var(--mono); font-size:14px; font-weight:900; letter-spacing:4px;
+      cursor:pointer; box-shadow:0 4px 0 #4c1d95, 0 8px 28px rgba(124,58,237,.5);
+      transition:transform .1s, box-shadow .1s;
+    }
+    .btn-replay:hover  { transform:translateY(-2px); }
+    .btn-replay:active { transform:translateY(3px); box-shadow:0 1px 0 #4c1d95; }
+  </style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+
+<!-- ── OVERLAY ── -->
+<div id="overlay">
+  <div id="ovBox" class="ov-box ov-cyan">
+    <div class="ov-title" id="ovTitle">READY</div>
+    <div class="ov-sub" id="ovSub">解码开始</div>
+  </div>
+</div>
+
+<!-- ════ START SCREEN ════ -->
+<div id="scrStart" class="screen active">
+  <div class="card">
+    <div class="logo">
+      <div class="logo-title">
+        <span class="lh">H</span><span class="le">E</span><span class="lx">X</span>
+        <span class="lb">💣</span>
+        <span class="lg">B</span><span class="lo">OOO</span>
+      </div>
+      <div class="logo-sub">十六进制炸弹 · 二进制拆弹</div>
+    </div>
+    <div class="rules-box">
+      <ul>
+        <li>带有 <span class="hl">十六进制数字</span> 的炸弹从上方不断落下，第一关只会出现 0~4，第二关 0~9，第三关及之后 0~F。</li>
+        <li><span class="hl">点击炸弹</span> 锁定目标，在下方根据权重 <span class="hl">8 4 2 1</span> 输入 4 位二进制。</li>
+        <li>输入可以出错，系统不会强制清空，你可以用键盘 <span class="hl">Backspace</span> 退格修改，直到 4 位都正确。</li>
+        <li>右侧 <span class="hl">DEC</span> 显示你输入的二进制对应的十进制值，帮助你心算对应的十六进制。</li>
+        <li>炸弹落入底部危险区会爆炸，损失 ❤ 一条命；拆弹越快、连击越高，得分越多，三条命用完游戏结束。</li>
+        <li>推荐操作：键盘 <span class="hl">0 / 1</span> 输入位，<span class="hl">Backspace</span> 退格，<span class="hl">Tab</span> 在多个炸弹间切换目标。</li>
+      </ul>
+    </div>
+    <div class="best-row">历史最高分：<span class="bv" id="bestDisplay">0</span></div>
+    <button class="btn-start" id="btnStart">▶ 开始拆弹</button>
+    <div class="kb-hint">键盘：<b>1</b>=输入1 &nbsp;|&nbsp; <b>0</b>=输入0 &nbsp;|&nbsp; <b>⌫</b>=退格 &nbsp;|&nbsp; <b>Tab</b>=切换目标</div>
+  </div>
+</div>
+
+<!-- ════ GAME SCREEN ════ -->
+<div id="scrGame" class="screen">
+  <div id="hud">
+    <div class="hc"><div class="hc-l">LEVEL</div><div class="hc-v" id="hudLv">1</div></div>
+    <div class="hc"><div class="hc-l">SCORE</div><div class="hc-v sc" id="hudSc">0</div></div>
+    <div class="lives-row" id="livesRow"></div>
+    <div class="hc"><div class="hc-l">COMBO</div><div class="hc-v cb" id="hudCb">×1</div></div>
+    <div class="hc"><div class="hc-l">DEFUSED</div><div class="hc-v" id="hudDf">0</div></div>
+  </div>
+
+  <div id="gameArea">
+    <div id="hero">
+      <div class="cannon-base"></div>
+      <div class="cannon-body"></div>
+      <div class="cannon-barrel"></div>
+    </div>
+  </div>
+
+  <div id="inputPanel">
+    <div id="noTargetMsg">← 点击一个炸弹来锁定它 →</div>
+    <div id="targetUi">
+      <div id="targetInfo">
+        <div class="bit-slots" id="bitSlots"></div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim);letter-spacing:1px;">
+          <span>DEC</span>
+          <span style="font-size:16px;font-weight:900;color:var(--yellow);text-shadow:0 0 10px var(--yellow);" id="curDec">0</span>
+        </div>
+      </div>
+      <div class="input-row">
+        <button class="bin-btn bzero" id="btn0">0</button>
+        <button class="bbs" id="btnBs">⌫</button>
+        <button class="bin-btn bone" id="btn1">1</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ END SCREEN ════ -->
+<div id="scrEnd" class="screen">
+  <div class="card">
+    <div class="end-sc-wrap">
+      <div class="end-sc-lbl">FINAL SCORE</div>
+      <div class="end-sc-val" id="endSc">0</div>
+    </div>
+    <div class="end-stats">
+      <div class="end-stat"><div class="es-l">关卡</div><div class="es-v" id="endLv">1</div></div>
+      <div class="end-stat"><div class="es-l">拆弹数</div><div class="es-v" id="endDf">0</div></div>
+      <div class="end-stat"><div class="es-l">最高连击</div><div class="es-v" id="endMx">0</div></div>
+    </div>
+    <div class="end-rank">评级：<span class="rank-name" id="endRank">新手拆弹员</span></div>
+    <button class="btn-replay" id="btnReplay">↺ 再玩一局</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ══════════════════════════════════════════
+   MATRIX RAIN BACKGROUND
+══════════════════════════════════════════ */
+const bgCanvas = document.getElementById('bgCanvas');
+const bgCtx = bgCanvas.getContext('2d');
+const RCHARS = '01ABCDEFabcdef0101110010';
+let rainCols = [];
+const RFS = 13;
+
+function resizeBg() {
+  bgCanvas.width = innerWidth; bgCanvas.height = innerHeight;
+  rainCols = [];
+  const n = Math.floor(innerWidth / RFS);
+  for (let i = 0; i < n; i++) rainCols.push({
+    y: Math.random() * -innerHeight,
+    spd: .4 + Math.random() * 1.3,
+    op: .07 + Math.random() * .2,
+    ch: RCHARS[Math.random() * RCHARS.length | 0]
+  });
+}
+resizeBg();
+window.addEventListener('resize', resizeBg);
+
+(function rain() {
+  bgCtx.fillStyle = 'rgba(6,10,16,.06)';
+  bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+  bgCtx.font = `${RFS}px monospace`;
+  rainCols.forEach((c, i) => {
+    const palettes = ['0,240,255', '0,255,136', '178,79,255'];
+    bgCtx.fillStyle = `rgba(${palettes[i % 3]},${c.op})`;
+    bgCtx.fillText(c.ch, i * RFS, c.y);
+    c.y += c.spd;
+    if (c.y > bgCanvas.height) c.y = -RFS;
+    if (Math.random() < .005) c.ch = RCHARS[Math.random() * RCHARS.length | 0];
+  });
+  requestAnimationFrame(rain);
+})();
+
+/* ══════════════════════════════════════════
+   AUDIO ENGINE
+══════════════════════════════════════════ */
+let audioCtx = null;
+function getAC() {
+  if (!audioCtx) { const C = window.AudioContext || window.webkitAudioContext; if (C) audioCtx = new C(); }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+function tone(freq, dur, type = 'sine', vol = .14, delay = 0) {
+  const ctx = getAC(); if (!ctx) return;
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  const t = ctx.currentTime + delay + .005;
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(.001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + .01);
+  g.gain.exponentialRampToValueAtTime(.001, t + dur);
+  o.connect(g); g.connect(ctx.destination);
+  o.start(t); o.stop(t + dur + .04);
+}
+function noiseBurst(dur, vol, delay = 0) {
+  const ctx = getAC(); if (!ctx) return;
+  const sr = ctx.sampleRate;
+  const buf = ctx.createBuffer(1, sr * dur, sr);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const g = ctx.createGain();
+  const t = ctx.currentTime + delay;
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(.001, t + dur);
+  src.connect(g); g.connect(ctx.destination);
+  src.start(t); src.stop(t + dur + .05);
+}
+
+function sfx(name) {
+  switch (name) {
+    case 'click1':  tone(900, .07, 'square', .09); break;
+    case 'click0':  tone(440, .07, 'square', .08); break;
+    case 'bitOk':   tone(660, .09, 'sine', .12); break;
+    case 'bitBad':  tone(260, .07, 'sawtooth', .1); tone(180, .14, 'sawtooth', .09, .06); break;
+    case 'defuse':
+      [523,659,784,1047].forEach((f,i) => tone(f, .2, 'triangle', .17, i*.08));
+      setTimeout(() => [1047,1319,1568].forEach((f,i) => tone(f,.2,'sine',.13,i*.07)), 420);
+      break;
+    case 'combo':   [440,554,659,880].forEach((f,i) => tone(f,.15,'triangle',.13,i*.055)); break;
+    case 'boom':
+      noiseBurst(.3, .45);
+      tone(80,  .3, 'sawtooth', .25);
+      tone(55,  .4, 'sine',     .2, .05);
+      break;
+    case 'levelUp': [392,494,587,784,988].forEach((f,i) => tone(f,.25,'square',.14,i*.1)); break;
+    case 'select':  tone(660, .08, 'sine', .1); break;
+    case 'bs':      tone(330, .06, 'sine', .08); break;
+    case 'gameover':[440,349,277,220].forEach((f,i) => tone(f,.3,'sawtooth',.14,i*.22)); break;
+  }
+}
+
+/* ══════════════════════════════════════════
+   PARTICLES & EFFECTS
+══════════════════════════════════════════ */
+function spawnParticles(x, y, color, n = 14) {
+  for (let i = 0; i < n; i++) {
+    const el = document.createElement('div');
+    el.className = 'ptcl';
+    const sz = 3 + Math.random() * 8;
+    const a = Math.random() * Math.PI * 2;
+    const d = 40 + Math.random() * 110;
+    el.style.cssText = `left:${x}px;top:${y}px;width:${sz}px;height:${sz}px;background:${color};box-shadow:0 0 ${sz}px ${color};--dx:${Math.cos(a)*d}px;--dy:${Math.sin(a)*d}px;animation-duration:${.5+Math.random()*.7}s;animation-delay:${Math.random()*.08}s;`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1400);
+  }
+}
+function spawnRing(x, y, color) {
+  const el = document.createElement('div');
+  el.className = 'exp-ring';
+  el.style.cssText = `left:${x}px;top:${y}px;width:70px;height:70px;border:3px solid ${color};`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 550);
+}
+function lifeFlash() {
+  const el = document.createElement('div');
+  el.className = 'life-flash';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 500);
+}
+function shootBulletTowards(bomb) {
+  if (!heroEl || !bomb || !bomb.el) return;
+  const hr = heroEl.getBoundingClientRect();
+  const br = bomb.el.getBoundingClientRect();
+  const bullet = document.createElement('div');
+  bullet.className = 'bullet';
+  const sx = hr.left + hr.width / 2;
+  const sy = hr.top + 5;
+  const tx = br.left + br.width / 2;
+  const ty = br.top + br.height / 2;
+  bullet.style.left = sx + 'px';
+  bullet.style.top  = sy + 'px';
+  bullet.style.setProperty('--dx', (tx - sx) + 'px');
+  bullet.style.setProperty('--dy', (ty - sy) + 'px');
+  document.body.appendChild(bullet);
+  setTimeout(() => bullet.remove(), 260);
+}
+
+/* ══════════════════════════════════════════
+   OVERLAY
+══════════════════════════════════════════ */
+const overlay = document.getElementById('overlay');
+const ovBox   = document.getElementById('ovBox');
+const ovTitle = document.getElementById('ovTitle');
+const ovSub   = document.getElementById('ovSub');
+
+function showOverlay(title, sub, theme, dur, cb) {
+  ovTitle.textContent = title;
+  ovBox.className = `ov-box ov-${theme}`;
+  ovSub.textContent = sub;
+  overlay.classList.add('show');
+  setTimeout(() => {
+    overlay.classList.remove('show');
+    setTimeout(() => cb && cb(), 320);
+  }, dur || 900);
+}
+
+/* ══════════════════════════════════════════
+   GAME STATE
+══════════════════════════════════════════ */
+const BOMB_W = 72, BOMB_H = 80; /* fuse(14) + body(66) */
+const MAX_LIVES = 3;
+const BIT_WEIGHTS = [8, 4, 2, 1]; // 从左到右的权重
+
+const G = {
+  level: 1, score: 0, combo: 1, maxCombo: 1,
+  defused: 0, lives: MAX_LIVES,
+  playing: false,
+};
+
+let bombs = [];          // { id, hexChar, binary, x, y, speed, el, isUrgent }
+let nextBombId = 0;
+let activeBombId = null; // id of selected bomb
+let filledBits = [null, null, null, null];
+let activeInputIdx = 0;
+
+let spawnAccum = 0;      // ms since last spawn
+let lastTs = 0;
+let rafId = null;
+
+let bestScore = parseInt(localStorage.getItem('hb2_best') || '0');
+
+/* ── DOM refs ── */
+const scrStart = document.getElementById('scrStart');
+const scrGame  = document.getElementById('scrGame');
+const scrEnd   = document.getElementById('scrEnd');
+const hudLv = document.getElementById('hudLv');
+const hudSc = document.getElementById('hudSc');
+const hudCb = document.getElementById('hudCb');
+const hudDf = document.getElementById('hudDf');
+const livesRow = document.getElementById('livesRow');
+const gameArea = document.getElementById('gameArea');
+const noTargetMsg = document.getElementById('noTargetMsg');
+const targetUi = document.getElementById('targetUi');
+const bitSlotsEl = document.getElementById('bitSlots');
+const curDecEl   = document.getElementById('curDec');
+const heroEl   = document.getElementById('hero');
+const bestDisplay = document.getElementById('bestDisplay');
+
+/* ══════════════════════════════════════════
+   SCREENS
+══════════════════════════════════════════ */
+function switchScreen(s) {
+  [scrStart, scrGame, scrEnd].forEach(x => x.classList.remove('active'));
+  s.classList.add('active');
+}
+
+/* ══════════════════════════════════════════
+   LEVEL CONFIG
+══════════════════════════════════════════ */
+function getSpawnInterval() {
+  /* ms between spawns */
+  return Math.max(900, 3400 - (G.level - 1) * 250);
+}
+function getMaxBombs() {
+  if (G.level <= 2) return 2;
+  if (G.level <= 4) return 3;
+  if (G.level <= 6) return 4;
+  return 5;
+}
+function getBombSpeed() {
+  /* px/ms — target ~10-14s fall time depending on level */
+  const gameH = gameArea.clientHeight || 400;
+  const fallTime = Math.max(5000, 12000 - (G.level - 1) * 500);
+  return gameH / fallTime;
+}
+function getBombColor(hexChar) {
+  const v = parseInt(hexChar, 16);
+  if (v < 4)  return 'var(--cyan)';
+  if (v < 8)  return 'var(--green)';
+  if (v < 12) return 'var(--purple)';
+  return 'var(--orange)';
+}
+function getBombClass(hexChar) {
+  const v = parseInt(hexChar, 16);
+  if (v < 4)  return 'bc0';
+  if (v < 8)  return 'bc1';
+  if (v < 12) return 'bc2';
+  return 'bc3';
+}
+
+/* ══════════════════════════════════════════
+   BOMB CREATION
+══════════════════════════════════════════ */
+function spawnBomb() {
+  if (bombs.length >= getMaxBombs()) return;
+
+  // 难度分层：
+  // Level 1: 0~4   （更容易）
+  // Level 2: 0~9
+  // Level 3+: 0~F （全范围）
+  let hexChars = '01234';
+  if (G.level >= 2 && G.level < 3) hexChars = '0123456789';
+  else if (G.level >= 3)          hexChars = '0123456789ABCDEF';
+  const hexChar  = hexChars[Math.floor(Math.random() * hexChars.length)];
+  // UI 按 8,4,2,1 从左到右，与标准高位在左一致
+  const binary   = parseInt(hexChar, 16).toString(2).padStart(4, '0');
+  const areaW    = gameArea.clientWidth;
+
+  /* find non-overlapping X */
+  let x = 10;
+  for (let attempt = 0; attempt < 20; attempt++) {
+    x = 10 + Math.floor(Math.random() * (areaW - BOMB_W - 20));
+    if (!bombs.some(b => Math.abs(b.x - x) < BOMB_W + 8)) break;
+  }
+
+  const id  = nextBombId++;
+  const el  = document.createElement('div');
+  el.className = `bomb ${getBombClass(hexChar)}`;
+  el.id = `bomb-${id}`;
+  el.style.left = x + 'px';
+  el.style.top  = -BOMB_H + 'px';
+  el.innerHTML  = `<div class="bomb-fuse"><div class="bomb-spark"></div></div><div class="bomb-body">${hexChar}</div>`;
+  el.addEventListener('click', () => selectBomb(id));
+  gameArea.appendChild(el);
+
+  const bomb = { id, hexChar, binary, x, y: -BOMB_H, speed: getBombSpeed(), el, isUrgent: false };
+  bombs.push(bomb);
+
+  /* auto-select if nothing selected */
+  if (activeBombId === null) selectBomb(id);
+}
+
+/* ══════════════════════════════════════════
+   BOMB SELECTION
+══════════════════════════════════════════ */
+function selectBomb(id) {
+  const bomb = bombs.find(b => b.id === id);
+  if (!bomb) return;
+
+  /* deselect old */
+  if (activeBombId !== null) {
+    const prev = bombs.find(b => b.id === activeBombId);
+    if (prev) prev.el.classList.remove('is-active');
+  }
+
+  activeBombId = id;
+  bomb.el.classList.add('is-active');
+  filledBits = [null, null, null, null];
+  activeInputIdx = 0;
+  sfx('select');
+  updateTargetUI();
+}
+
+function autoSelect() {
+  if (bombs.length === 0) { activeBombId = null; updateTargetUI(); return; }
+  /* pick the bomb closest to the bottom (highest y) */
+  const lowest = bombs.reduce((a, b) => a.y > b.y ? a : b);
+  selectBomb(lowest.id);
+}
+
+/* ══════════════════════════════════════════
+   TARGET UI
+══════════════════════════════════════════ */
+function updateTargetUI() {
+  const bomb = bombs.find(b => b.id === activeBombId);
+  if (!bomb) {
+    noTargetMsg.style.display = 'block';
+    targetUi.style.display    = 'none';
+    if (curDecEl) curDecEl.textContent = '0';
+    return;
+  }
+  noTargetMsg.style.display = 'none';
+  targetUi.style.display    = 'flex';
+
+  bitSlotsEl.innerHTML = '';
+  for (let i = 0; i < 4; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'bsc';
+    cell.id = `bsc${i}`;
+    const val = filledBits[i];
+    if      (val === '1') { cell.textContent = '1'; cell.classList.add('v1'); }
+    else if (val === '0') { cell.textContent = '0'; cell.classList.add('v0'); }
+    if (i === activeInputIdx) cell.classList.add('is-act');
+    const pw = document.createElement('div');
+    pw.className = 'bsc-pw';
+    pw.textContent = BIT_WEIGHTS[i];
+    cell.appendChild(pw);
+    bitSlotsEl.appendChild(cell);
+  }
+  updateCurrentDec();
+}
+function updateCurrentDec() {
+  if (!curDecEl) return;
+  let val = 0;
+  for (let i = 0; i < 4; i++) if (filledBits[i] === '1') val += BIT_WEIGHTS[i];
+  curDecEl.textContent = String(val);
+}
+
+/* ══════════════════════════════════════════
+   INPUT
+══════════════════════════════════════════ */
+function inputBit(bit) {
+  if (!G.playing) return;
+  const bomb = bombs.find(b => b.id === activeBombId);
+  if (!bomb || activeInputIdx >= 4) return;
+
+  sfx(bit === 1 ? 'click1' : 'click0');
+
+  const cell = document.getElementById(`bsc${activeInputIdx}`);
+  filledBits[activeInputIdx] = String(bit);
+
+  if (cell) {
+    cell.textContent = String(bit);
+    cell.className = `bsc ${bit === 1 ? 'v1' : 'v0'} fok`;
+    const pw = document.createElement('div');
+    pw.className = 'bsc-pw';
+    pw.textContent = BIT_WEIGHTS[activeInputIdx];
+    cell.appendChild(pw);
+    setTimeout(() => cell.classList.remove('fok'), 260);
+  }
+
+  activeInputIdx++;
+  updateCurrentDec();
+
+  if (activeInputIdx === 4) {
+    // 完成 4 位后统一判定对错
+    const guess = filledBits.join('');
+    const target = bomb.binary;
+    if (guess === target) {
+      sfx('bitOk');
+      defuseBomb(bomb);
+    } else {
+      // 整体错误：允许输入，但不给过关，提示并允许玩家用退格修改
+      sfx('bitBad');
+      G.combo = 1;
+      hudCb.textContent = '×1';
+      // 小红色闪烁提示
+      for (let i = 0; i < 4; i++) {
+        const c = document.getElementById(`bsc${i}`);
+        if (!c) continue;
+        c.classList.add('fbad');
+      }
+      setTimeout(() => {
+        for (let i = 0; i < 4; i++) {
+          const c = document.getElementById(`bsc${i}`);
+          if (!c) continue;
+          c.classList.remove('fbad');
+        }
+      }, 450);
+    }
+  } else {
+    const nxt = document.getElementById(`bsc${activeInputIdx}`);
+    if (nxt) nxt.classList.add('is-act');
+  }
+
+  updateHUD();
+}
+
+function backspace() {
+  if (!G.playing || activeInputIdx <= 0) return;
+  sfx('bs');
+  const cur = document.getElementById(`bsc${activeInputIdx}`);
+  if (cur) cur.classList.remove('is-act');
+  activeInputIdx--;
+  filledBits[activeInputIdx] = null;
+  const cell = document.getElementById(`bsc${activeInputIdx}`);
+  if (cell) {
+    cell.textContent = '';
+    const pw = document.createElement('div'); pw.className = 'bsc-pw'; pw.textContent = BIT_WEIGHTS[activeInputIdx]; cell.appendChild(pw);
+    cell.className = 'bsc is-act';
+  }
+  updateCurrentDec();
+}
+
+/* Tab: cycle to next bomb */
+function cycleBomb() {
+  if (bombs.length < 2) return;
+  const idx = bombs.findIndex(b => b.id === activeBombId);
+  const next = bombs[(idx + 1) % bombs.length];
+  selectBomb(next.id);
+}
+
+/* ══════════════════════════════════════════
+   DEFUSE / EXPLODE
+══════════════════════════════════════════ */
+function defuseBomb(bomb) {
+  G.defused++;
+  G.combo++;
+  if (G.combo > G.maxCombo) G.maxCombo = G.combo;
+  const pts = 100 + (G.combo - 1) * 25;
+  G.score += pts;
+
+  shootBulletTowards(bomb);
+  sfx('defuse');
+  updateHUD();
+
+  /* explosion FX after bullet travels up */
+  setTimeout(() => {
+    const r = bomb.el.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    spawnParticles(cx, cy, getBombColor(bomb.hexChar), 22);
+    spawnRing(cx, cy, getBombColor(bomb.hexChar));
+    bomb.el.classList.add('exploding');
+  }, 150);
+  activeBombId = null;
+  filledBits = [null, null, null, null];
+  activeInputIdx = 0;
+
+  setTimeout(() => {
+    bomb.el.remove();
+    bombs = bombs.filter(b => b.id !== bomb.id);
+    autoSelect();
+  }, 380);
+
+  /* combo overlay */
+  if (G.combo >= 3) {
+    sfx('combo');
+    showOverlay(`COMBO ×${G.combo}`, `+${pts} 分`, 'green', 650, () => {});
+  }
+
+  /* level up every 5 defused */
+  if (G.defused > 0 && G.defused % 5 === 0) {
+    G.level++;
+    sfx('levelUp');
+    showOverlay(`LEVEL ${G.level}`, '速度提升！继续拆弹！', 'cyan', 800, () => {});
+    hudLv.textContent = G.level;
+  }
+}
+
+function bombReachedBottom(bomb) {
+  G.lives--;
+  G.combo = 1;
+  sfx('boom');
+  lifeFlash();
+
+  const r = bomb.el.getBoundingClientRect();
+  const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  spawnParticles(cx, cy, '#ff3d5a', 28);
+  spawnRing(cx, cy, '#ff3d5a');
+
+  bomb.el.classList.add('fail-explode');
+  const removedId = bomb.id;
+
+  setTimeout(() => {
+    bomb.el.remove();
+    bombs = bombs.filter(b => b.id !== removedId);
+    if (activeBombId === removedId) {
+      activeBombId = null;
+      filledBits = [null, null, null, null];
+      activeInputIdx = 0;
+      autoSelect();
+    }
+  }, 400);
+
+  updateLives();
+  hudCb.textContent = '×1';
+  updateHUD();
+
+  if (G.lives <= 0) {
+    setTimeout(() => endGame(), 500);
+  }
+}
+
+/* ══════════════════════════════════════════
+   GAME LOOP
+══════════════════════════════════════════ */
+function gameLoop(ts) {
+  if (!G.playing) { lastTs = ts; rafId = requestAnimationFrame(gameLoop); return; }
+
+  const dt = Math.min(ts - lastTs, 60);
+  lastTs = ts;
+
+  /* Update bomb positions */
+  const areaH = gameArea.clientHeight;
+  const urgentThresh = areaH * 0.58;
+
+  for (let i = bombs.length - 1; i >= 0; i--) {
+    const b = bombs[i];
+    if (b.el.classList.contains('exploding') || b.el.classList.contains('fail-explode')) continue;
+    b.y += b.speed * dt;
+    b.el.style.top = b.y + 'px';
+
+    if (!b.isUrgent && b.y > urgentThresh) {
+      b.isUrgent = true;
+      b.el.classList.add('is-urgent');
+    }
+    if (b.y + BOMB_H > areaH) {
+      bombReachedBottom(b);
+    }
+  }
+
+  /* Spawn */
+  spawnAccum += dt;
+  if (spawnAccum >= getSpawnInterval()) {
+    spawnAccum = 0;
+    spawnBomb();
+  }
+
+  rafId = requestAnimationFrame(gameLoop);
+}
+
+/* ══════════════════════════════════════════
+   HUD / LIVES
+══════════════════════════════════════════ */
+function updateHUD() {
+  hudSc.textContent = G.score;
+  hudCb.textContent = `×${G.combo}`;
+  hudDf.textContent = G.defused;
+}
+
+function updateLives() {
+  livesRow.innerHTML = '';
+  for (let i = 0; i < MAX_LIVES; i++) {
+    const h = document.createElement('span');
+    h.className = 'heart' + (i >= G.lives ? ' lost' : '');
+    h.textContent = '❤';
+    livesRow.appendChild(h);
+  }
+}
+
+/* ══════════════════════════════════════════
+   START / END
+══════════════════════════════════════════ */
+function startGame() {
+  getAC();
+  Object.assign(G, { level:1, score:0, combo:1, maxCombo:1, defused:0, lives:MAX_LIVES, playing:false });
+  hudLv.textContent = G.level;
+  updateHUD(); updateLives();
+
+  /* clear leftover bombs */
+  bombs.forEach(b => b.el.remove());
+  bombs = []; activeBombId = null;
+  filledBits = [null,null,null,null]; activeInputIdx = 0;
+  spawnAccum = 0;
+
+  switchScreen(scrGame);
+  updateTargetUI();
+
+  showOverlay('READY?', '点击炸弹 → 输入二进制 → 引爆！', 'cyan', 1400, () => {
+    G.playing = true;
+    lastTs = performance.now();
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(gameLoop);
+    spawnBomb(); /* spawn first bomb immediately */
+  });
+}
+
+function endGame() {
+  if (!G.playing) return;
+  G.playing = false;
+  sfx('gameover');
+
+  if (G.score > bestScore) {
+    bestScore = G.score;
+    localStorage.setItem('hb2_best', bestScore);
+    bestDisplay.textContent = bestScore;
+  }
+
+  document.getElementById('endSc').textContent = G.score;
+  document.getElementById('endLv').textContent = G.level;
+  document.getElementById('endDf').textContent = G.defused;
+  document.getElementById('endMx').textContent = G.maxCombo;
+
+  const RANKS = [
+    [0,'新手拆弹员'],[200,'初级拆弹员'],[500,'中级拆弹员'],
+    [1200,'高级拆弹员'],[2500,'专家拆弹员'],[5000,'精英拆弹员'],
+    [8000,'拆弹大师'],[12000,'传说拆弹神'],
+  ];
+  let rank = RANKS[0][1];
+  for (const [min, name] of RANKS) if (G.score >= min) rank = name;
+  document.getElementById('endRank').textContent = rank;
+
+  showOverlay('GAME OVER', `最终得分：${G.score}`, 'red', 1600, () => switchScreen(scrEnd));
+}
+
+/* ══════════════════════════════════════════
+   EVENT LISTENERS
+══════════════════════════════════════════ */
+document.getElementById('btnStart').addEventListener('click', () => startGame());
+document.getElementById('btnReplay').addEventListener('click', () => { bestDisplay.textContent = bestScore; startGame(); });
+document.getElementById('btn0').addEventListener('click', () => inputBit(0));
+document.getElementById('btn1').addEventListener('click', () => inputBit(1));
+document.getElementById('btnBs').addEventListener('click', () => backspace());
+
+window.addEventListener('keydown', e => {
+  if (!G.playing) return;
+  if      (e.key === '1')         inputBit(1);
+  else if (e.key === '0')         inputBit(0);
+  else if (e.key === 'Backspace') { e.preventDefault(); backspace(); }
+  else if (e.key === 'Tab')       { e.preventDefault(); cycleBomb(); }
+});
+
+/* init */
+bestDisplay.textContent = bestScore;
+</script>
+</body>
+</html>
