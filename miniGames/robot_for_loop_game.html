@@ -1,0 +1,2131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏭 代码工厂 · For循环大冒险</title>
+<style>
+@import url('https://fonts.loli.net/css2?family=Fredoka+One&family=Noto+Sans+SC:wght@400;700&family=Share+Tech+Mono&display=swap');
+
+/* ══ RESET & BASE ══ */
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0a0e14;
+  --surf:#111620;
+  --card:#18202e;
+  --border:#232d3f;
+  --b2:#2a3548;
+  --blue:#4f9eff;
+  --cyan:#2dd4bf;
+  --green:#22c55e;
+  --yellow:#facc15;
+  --orange:#fb923c;
+  --red:#ef4444;
+  --purple:#a78bfa;
+  --pink:#f472b6;
+  --text:#e2e8f0;
+  --muted:#64748b;
+  --dim:#334155;
+}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  font-family:'Noto Sans SC',sans-serif;
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ── SCANLINE OVERLAY ── */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);
+}
+
+/* ══ LAYOUT ══ */
+#root{
+  max-width:1000px;margin:0 auto;
+  padding:16px 14px 60px;
+  display:flex;flex-direction:column;gap:0;
+  position:relative;z-index:1;
+}
+
+/* ══ HEADER ══ */
+#hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 0 18px;gap:12px;flex-wrap:wrap;
+}
+.logo{
+  font-family:'Fredoka One',cursive;
+  font-size:clamp(20px,3.5vw,30px);
+  color:var(--yellow);
+  text-shadow:0 0 30px #facc1566,2px 2px 0 #92400e;
+  display:flex;align-items:center;gap:8px;
+}
+.logo-sub{
+  font-family:'Share Tech Mono',monospace;
+  font-size:11px;color:var(--muted);letter-spacing:.15em;
+}
+/* stars / lives */
+.stars{display:flex;gap:4px;align-items:center;}
+.star{font-size:22px;transition:all .3s;filter:drop-shadow(0 0 6px #facc15);}
+.star.empty{filter:grayscale(1);opacity:.3;}
+
+/* ══ STAGE TABS ══ */
+#stage-bar{
+  display:flex;gap:4px;margin-bottom:16px;overflow-x:auto;
+  padding-bottom:4px;
+}
+#stage-bar::-webkit-scrollbar{height:3px;}
+#stage-bar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.stab{
+  font-family:'Share Tech Mono',monospace;
+  font-size:clamp(10px,1.4vw,12px);
+  padding:7px 14px;border-radius:6px;
+  border:1px solid var(--border);
+  background:var(--surf);color:var(--muted);
+  cursor:pointer;white-space:nowrap;
+  transition:all .2s;flex-shrink:0;
+  display:flex;align-items:center;gap:6px;
+}
+.stab.active{background:var(--card);border-color:var(--blue);color:var(--text);}
+.stab.done{border-color:var(--green);color:var(--green);background:#0d1f14;}
+.stab.locked{opacity:.35;cursor:not-allowed;}
+.stab-icon{font-size:14px;}
+
+/* ══ LEVEL CARD ══ */
+.lv-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  overflow:hidden;
+  display:none;
+}
+.lv-card.active{display:flex;flex-direction:column;animation:cardSlide .35s cubic-bezier(.34,1.2,.64,1);}
+@keyframes cardSlide{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+
+/* accent top border */
+.lv-card[data-lv="1"]{ border-top:3px solid var(--blue); }
+.lv-card[data-lv="2"]{ border-top:3px solid var(--green); }
+.lv-card[data-lv="3"]{ border-top:3px solid var(--yellow); }
+.lv-card[data-lv="4"]{ border-top:3px solid var(--red); }
+.lv-card[data-lv="5"]{ border-top:3px solid var(--purple); }
+
+/* ══ FACTORY CANVAS AREA ══ */
+#factory-wrap{
+  position:relative;
+  background:#070a0e;
+  border-bottom:1px solid var(--border);
+  overflow:hidden;
+  height:200px;
+  flex-shrink:0;
+}
+#factory-canvas{
+  display:block;width:100%;height:100%;
+  image-rendering:pixelated;
+}
+
+/* i-counter overlay */
+#i-overlay{
+  position:absolute;top:10px;left:50%;transform:translateX(-50%);
+  background:rgba(7,10,14,.85);
+  border:1px solid var(--cyan);
+  border-radius:8px;padding:4px 16px;
+  font-family:'Share Tech Mono',monospace;font-size:13px;
+  color:var(--cyan);display:none;
+  box-shadow:0 0 12px var(--cyan)44;
+  white-space:nowrap;
+  gap:8px;align-items:center;
+}
+
+/* smoke particles canvas */
+#smoke-canvas{
+  position:absolute;inset:0;pointer-events:none;
+  width:100%;height:100%;
+}
+
+/* Level 3 升级结果大字显示 */
+#lv3-banner{
+  position:absolute;
+  left:50%;top:14px;
+  transform:translateX(-50%);
+  padding:6px 16px;
+  border-radius:999px;
+  background:rgba(15,23,42,.9);
+  border:1px solid var(--yellow);
+  color:var(--yellow);
+  font-family:'Share Tech Mono',monospace;
+  font-size:14px;
+  letter-spacing:2px;
+  box-shadow:0 0 18px rgba(250,204,21,.6);
+  display:none;
+  max-width:90%;
+  text-align:center;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  z-index:5;
+}
+
+/* ══ BOTTOM PANEL ══ */
+.lv-body{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:0;flex:1;min-height:0;
+}
+@media(max-width:640px){.lv-body{grid-template-columns:1fr;}}
+
+.lv-left{
+  padding:18px 20px;
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;gap:12px;
+}
+.lv-right{
+  padding:18px 20px;
+  display:flex;flex-direction:column;gap:12px;
+}
+
+/* level title area */
+.lv-heading{display:flex;align-items:flex-start;gap:10px;margin-bottom:2px;}
+.lv-num{
+  font-family:'Fredoka One',cursive;
+  font-size:28px;line-height:1;
+  opacity:.18;flex-shrink:0;
+}
+.lv-title{
+  font-family:'Fredoka One',cursive;
+  font-size:clamp(16px,2.5vw,20px);
+  line-height:1.25;
+}
+.lv-desc{
+  font-size:12.5px;color:var(--muted);line-height:1.8;
+}
+
+/* ══ CODE DISPLAY ══ */
+.code-block{
+  background:#070a0e;
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:12px 16px;
+  font-family:'Consolas','Courier New',monospace;
+  font-size:clamp(12px,1.7vw,13.5px);
+  line-height:2.1;
+  position:relative;
+  overflow:hidden;
+}
+.code-block::before{
+  content:'JS';
+  position:absolute;top:6px;right:10px;
+  font-size:9px;color:var(--b2);letter-spacing:.1em;
+}
+/* syntax */
+.kw {color:#f472b6;font-weight:bold;}
+.vr {color:#7dd3fc;}
+.nm {color:#fde68a;}
+.op {color:#f472b6;}
+.cm {color:#334155;font-style:italic;}
+.hl-yellow{color:var(--yellow);text-shadow:0 0 8px #facc1566;font-weight:bold;}
+.hl-green {color:var(--green); text-shadow:0 0 8px #22c55e55;font-weight:bold;}
+.hl-cyan  {color:var(--cyan);  text-shadow:0 0 8px #2dd4bf55;font-weight:bold;}
+.hl-red   {color:var(--red);   text-shadow:0 0 8px #ef444455;font-weight:bold;}
+.exec-line{
+  display:block;width:100%;
+  background:#facc1512;border-left:2px solid var(--yellow);
+  padding-left:6px;margin-left:-6px;
+  animation:execpulse .5s ease infinite alternate;
+}
+@keyframes execpulse{from{background:#facc1508}to{background:#facc1520}}
+
+/* ══ INPUTS ══ */
+.field-row{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+}
+.field-label{
+  font-family:'Share Tech Mono',monospace;
+  font-size:12px;color:var(--muted);white-space:nowrap;
+}
+.field-input{
+  font-family:'Share Tech Mono',monospace;
+  font-size:15px;
+  background:#0c1018;border:1.5px solid var(--border);
+  border-radius:6px;color:var(--yellow);
+  padding:7px 12px;outline:none;
+  transition:border-color .2s,box-shadow .2s;
+  width:70px;text-align:center;
+}
+.field-input:focus{border-color:var(--yellow);box-shadow:0 0 8px #facc1533;}
+.field-input.ok{border-color:var(--green);}
+.field-input.bad{border-color:var(--red);animation:shake .3s ease;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
+/* Typing input LV1 */
+.type-wrap{position:relative;}
+.type-input{
+  width:100%;padding:11px 14px;
+  background:#0c1018;border:2px solid var(--border);
+  border-radius:8px;color:var(--text);
+  font-family:'Share Tech Mono',monospace;font-size:13px;
+  outline:none;transition:border-color .2s;
+  caret-color:var(--cyan);
+}
+.type-input:focus{border-color:var(--blue);}
+.type-input.done{border-color:var(--green);}
+.type-input.bad{border-color:var(--red);}
+.type-hint{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);margin-top:5px;}
+
+/* progress */
+.prog-wrap{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:6px;}
+.prog-fill{height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--cyan));border-radius:2px;transition:width .2s;}
+
+/* ══ BUTTONS ══ */
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+.btn{
+  font-family:'Fredoka One',cursive;
+  font-size:clamp(12px,1.8vw,14px);
+  padding:10px 22px;border-radius:8px;
+  border:none;cursor:pointer;
+  transition:all .15s;position:relative;overflow:hidden;
+  letter-spacing:.02em;
+}
+.btn::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.09),transparent);pointer-events:none;}
+.btn:disabled{opacity:.35;cursor:not-allowed;filter:grayscale(.4);}
+.btn:not(:disabled):hover{transform:translateY(-2px);filter:brightness(1.1);}
+.btn:not(:disabled):active{transform:translateY(1px);}
+.btn-blue  {background:linear-gradient(135deg,#1d4ed8,var(--blue));color:#fff;box-shadow:0 3px 0 #1e3a8a;}
+.btn-green {background:linear-gradient(135deg,#15803d,var(--green));color:#fff;box-shadow:0 3px 0 #14532d;}
+.btn-yellow{background:linear-gradient(135deg,#b45309,var(--yellow));color:#111;box-shadow:0 3px 0 #78350f;}
+.btn-red   {background:linear-gradient(135deg,#991b1b,var(--red));color:#fff;box-shadow:0 3px 0 #7f1d1d;}
+.btn-purple{background:linear-gradient(135deg,#5b21b6,var(--purple));color:#fff;box-shadow:0 3px 0 #4c1d95;}
+.btn-ghost {background:var(--surf);border:1px solid var(--border);color:var(--muted);box-shadow:none;}
+.btn-ghost:not(:disabled):hover{border-color:var(--blue);color:var(--blue);}
+
+/* ══ STATUS BAR ══ */
+.status-bar{
+  display:flex;align-items:center;gap:8px;
+  font-family:'Share Tech Mono',monospace;font-size:12px;
+  color:var(--muted);min-height:20px;
+}
+.status-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--border);transition:all .3s;flex-shrink:0;
+}
+.status-dot.run{background:var(--cyan);box-shadow:0 0 6px var(--cyan);animation:sdot .5s ease infinite alternate;}
+.status-dot.ok {background:var(--green);box-shadow:0 0 6px var(--green);}
+.status-dot.err{background:var(--red);box-shadow:0 0 6px var(--red);}
+@keyframes sdot{from{transform:scale(1)}to{transform:scale(1.6)}}
+
+/* ══ SUCCESS PANEL ══ */
+.success-wrap{
+  margin-top:12px;
+  background:linear-gradient(135deg,#0d1f14,#111620);
+  border:1px solid var(--green)44;
+  border-radius:10px;padding:18px 20px;
+  display:none;
+  animation:popIn .4s cubic-bezier(.34,1.56,.64,1);
+}
+.success-wrap.show{display:block;}
+@keyframes popIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.success-title{
+  font-family:'Fredoka One',cursive;
+  font-size:clamp(16px,2.5vw,20px);
+  color:var(--green);margin-bottom:8px;
+}
+.knowledge-card{
+  background:#070a0e;border:1px solid var(--blue)33;
+  border-radius:7px;padding:11px 14px;
+  font-family:'Share Tech Mono',monospace;font-size:12px;
+  color:var(--cyan);line-height:2.1;margin:10px 0;
+}
+
+/* ══ BUG LEVEL (LV4) ══ */
+.bug-line{
+  display:flex;align-items:center;gap:6px;
+  padding:3px 6px;border-radius:4px;
+  cursor:pointer;transition:background .15s;
+  border:1px solid transparent;
+}
+.bug-line:hover{background:#ffffff07;border-color:var(--border);}
+.bug-line.found{background:#ef444412;border-color:var(--red)44;cursor:default;}
+.bug-line.wrong{animation:shake .3s ease;}
+.lnum{color:var(--b2);font-size:11px;min-width:18px;text-align:right;flex-shrink:0;font-family:'Share Tech Mono',monospace;}
+
+/* ══ FREE MODE (LV5) ══ */
+.param-grid{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;
+}
+@media(max-width:480px){.param-grid{grid-template-columns:1fr 1fr;}}
+.param-box{
+  background:#070a0e;border:1px solid var(--border);
+  border-radius:7px;padding:10px 12px;text-align:center;
+}
+.param-name{
+  font-family:'Share Tech Mono',monospace;font-size:10px;
+  color:var(--muted);margin-bottom:5px;letter-spacing:.1em;
+}
+.param-input{
+  font-family:'Share Tech Mono',monospace;font-size:18px;
+  background:none;border:none;color:var(--yellow);
+  width:100%;text-align:center;outline:none;
+}
+.param-input:focus{color:var(--cyan);}
+
+/* ══ ROBOT COUNT BADGE ══ */
+.count-badge{
+  font-family:'Fredoka One',cursive;font-size:13px;
+  padding:3px 12px;border-radius:20px;
+  background:#0c1018;border:1px solid var(--border);
+  color:var(--muted);transition:all .3s;
+  display:inline-block;
+}
+.count-badge.live{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 8px var(--cyan)33;}
+
+/* ══ TOAST ══ */
+#toast{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  font-family:'Fredoka One',cursive;font-size:14px;
+  padding:10px 24px;border-radius:8px;
+  box-shadow:0 4px 20px rgba(0,0,0,.5);
+  z-index:9999;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;
+}
+#toast.show{opacity:1;}
+
+/* ══ CONFETTI ══ */
+.cfti{
+  position:fixed;pointer-events:none;z-index:9998;
+  width:9px;height:9px;border-radius:2px;
+  animation:cffall linear forwards;
+}
+@keyframes cffall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(105vh) rotate(720deg);opacity:0}}
+
+/* ══ TYPING CURSOR BLINK ══ */
+@keyframes cursorblink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ══ LIVE PREVIEW CHIPS ══ */
+.preview-strip{
+  display:flex;gap:4px;flex-wrap:wrap;
+  padding:8px 10px;
+  background:#070a0e;border:1px solid var(--border);
+  border-radius:7px;min-height:36px;
+  align-items:center;
+}
+.pchip{
+  font-family:'Share Tech Mono',monospace;font-size:11px;
+  padding:2px 8px;border-radius:4px;
+  background:var(--surf);border:1px solid var(--b2);
+  color:var(--dim);transition:all .2s;
+}
+.pchip.match{
+  background:var(--green)18;border-color:var(--green)55;color:var(--green);
+}
+.pchip.preview{
+  background:var(--blue)14;border-color:var(--blue)44;color:var(--blue);
+}
+</style>
+</head>
+<body>
+<div id="root">
+
+<!-- ═══ HEADER ═══ -->
+<div id="hdr">
+  <div>
+    <div class="logo">🏭 代码工厂</div>
+    <div class="logo-sub">FOR LOOP · 流水线编程闯关</div>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+    <div class="stars" id="stars-bar">
+      <span class="star" id="s1">⭐</span>
+      <span class="star empty" id="s2">⭐</span>
+      <span class="star empty" id="s3">⭐</span>
+      <span class="star empty" id="s4">⭐</span>
+      <span class="star empty" id="s5">⭐</span>
+    </div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);">5关闯关</div>
+  </div>
+</div>
+
+<!-- ═══ STAGE TABS ═══ -->
+<div id="stage-bar">
+  <div class="stab active" id="tab1" onclick="goLevel(1)"><span class="stab-icon">🏎️</span>第1关·起跑</div>
+  <div class="stab locked" id="tab2" onclick="goLevel(2)"><span class="stab-icon">🔢</span>第2关·计数</div>
+  <div class="stab locked" id="tab3" onclick="goLevel(3)"><span class="stab-icon">🔍</span>第3关·筛选</div>
+  <div class="stab locked" id="tab4" onclick="goLevel(4)"><span class="stab-icon">🐛</span>第4关·捉虫</div>
+  <div class="stab locked" id="tab5" onclick="goLevel(5)"><span class="stab-icon">🧪</span>第5关·自由</div>
+</div>
+
+<!-- ═══════════════════════════════
+     SHARED FACTORY CANVAS
+═══════════════════════════════ -->
+<div id="factory-wrap">
+  <canvas id="factory-canvas"></canvas>
+  <canvas id="smoke-canvas"></canvas>
+  <div id="lv3-banner"></div>
+  <div id="i-overlay" style="display:flex;">
+    <span style="color:var(--muted)">i =</span>
+    <span id="i-val" style="color:var(--yellow);font-weight:bold;min-width:28px;text-align:center;font-size:15px;">—</span>
+    <span style="color:var(--muted);font-size:11px;" id="i-extra"></span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     LEVEL 1 — for循环基础结构 (打字)
+═══════════════════════════════ -->
+<div class="lv-card active" id="lv1" data-lv="1">
+  <div style="padding:18px 22px 20px;display:flex;flex-direction:column;gap:14px;">
+
+    <div class="lv-heading">
+      <div class="lv-num">01</div>
+      <div>
+        <div class="lv-title" style="color:var(--blue)">🏎️ 第一关 · 发动流水线！</div>
+        <div class="lv-desc">照着灰色占位字符逐字输入，打对了字符立刻在代码区变绿高亮！</div>
+      </div>
+    </div>
+
+    <!-- ── 合并代码区 + 输入框 ── -->
+    <!-- 代码块里第一行是"可打字行"，其余行固定显示 -->
+    <div class="code-block" id="lv1-codebox" style="position:relative;cursor:text;" onclick="document.getElementById('lv1-inp').focus()">
+
+      <!-- 第1行：for(...) 打字区 + 固定的 { -->
+      <div style="position:relative;line-height:2.6;min-height:2.6em;display:flex;align-items:center;gap:0;">
+        <!-- 字符高亮层（只读展示） -->
+        <div id="lv1-display" style="pointer-events:none;white-space:pre;flex-shrink:0;"></div>
+        <!-- 固定的大括号，不需要用户输入 -->
+        <span style="color:var(--muted);pointer-events:none;flex-shrink:0;"> {</span>
+        <!-- 透明 input 叠在上方，用于捕获键盘输入 -->
+        <input
+          id="lv1-inp"
+          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+          style="
+            position:absolute;inset:0;
+            opacity:0;
+            width:100%;height:100%;
+            font-family:'Consolas','Courier New',monospace;
+            font-size:inherit;
+            background:transparent;border:none;outline:none;
+            cursor:text;
+            color:transparent;
+            caret-color:transparent;
+          "
+        >
+      </div>
+
+      <!-- 第2行：固定显示 -->
+      <div style="line-height:2.3;color:var(--muted);">
+        &nbsp;&nbsp;<span style="color:#50fa7b;">制造机器人</span>();
+      </div>
+      <!-- 第3行 -->
+      <div style="line-height:2.3;color:var(--muted);">}</div>
+
+      <!-- 进度条贴在代码块底部 -->
+      <div class="prog-wrap" style="margin-top:10px;margin-bottom:2px;">
+        <div class="prog-fill" id="lv1-prog"></div>
+      </div>
+    </div>
+
+    <!-- 提示文字 -->
+    <div id="lv1-hint" style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted);">
+      ⌨️ 点击代码区开始输入：<span style="color:var(--cyan);">for(int i=1; i&lt;=8; i++)</span>
+    </div>
+
+    <!-- 状态栏 + 按钮 -->
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div class="status-bar" style="flex:1;">
+        <div class="status-dot" id="lv1-dot"></div>
+        <span id="lv1-status">点击代码区开始输入…</span>
+      </div>
+      <span class="count-badge" id="lv1-badge">0 / 20</span>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-blue" id="lv1-run" onclick="runLv1()" disabled>▶ 启动流水线</button>
+      <button class="btn btn-ghost" onclick="resetLv1()">↺</button>
+    </div>
+
+    <!-- 通关面板 -->
+    <div class="success-wrap" id="lv1-success">
+      <div class="success-title">🎉 流水线启动成功！</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:10px;">
+        for 循环让代码重复执行 ——<br>
+        i 从 <b style="color:var(--cyan)">1</b> 走到 <b style="color:var(--cyan)">8</b>，每次 <b style="color:var(--green)">+1</b>，一共生产了 <b style="color:var(--yellow)">8</b> 个机器人！
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-green" onclick="unlockAndGo(2)">下一关 →</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     LEVEL 2 — 自定义n，理解循环变量i
+═══════════════════════════════ -->
+<div class="lv-card" id="lv2" data-lv="2">
+  <div style="padding:18px 22px 20px;display:flex;flex-direction:column;gap:14px;">
+
+    <div class="lv-heading">
+      <div class="lv-num">02</div>
+      <div>
+        <div class="lv-title" style="color:var(--green)">🔢 第二关 · 输入 n，召唤机器人！</div>
+        <div class="lv-desc">输入 n，循环从 1 跑到 n，每次生产一个机器人并高喊编号！</div>
+      </div>
+    </div>
+
+    <!-- 代码展示 -->
+    <div class="code-block" id="lv2-codebox">
+<span class="kw">int</span> <span class="vr">n</span>;<br>
+<span class="kw">cin</span> >> <span class="vr">n</span>;<br>
+<span class="kw">for</span>(<span class="kw">int</span> <span class="vr">i</span> = <span class="nm">1</span>; <span class="vr">i</span> &lt;= <span class="hl-yellow" id="l2-n-disp">n</span>; <span class="vr">i</span>++) {<br>
+&nbsp;&nbsp;制造机器人();<br>
+&nbsp;&nbsp;<span class="kw">cout</span> &lt;&lt; <span style="color:#50fa7b;">"我是"</span> &lt;&lt; <span class="vr">i</span> &lt;&lt; <span style="color:#50fa7b;">"号，我爱学编程"</span>;<br>
+}
+    </div>
+
+    <!-- n 输入 -->
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <span style="font-family:'Noto Sans SC',sans-serif;font-size:14px;color:var(--muted);">请输入 n 的值：</span>
+      <input class="param-input" id="l2-n" value="" type="number" min="1" max="50"
+        placeholder="1 ~ 50"
+        style="width:110px;font-size:20px;background:#0c1018;border:2px solid var(--border);border-radius:6px;color:var(--yellow);padding:6px 12px;outline:none;text-align:center;"
+        oninput="onLv2NInput()">
+      <span id="lv2-n-hint" style="font-family:'Consolas',monospace;font-size:12px;color:var(--muted);"></span>
+    </div>
+
+    <!-- 状态 + 按钮 -->
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div class="status-bar" style="flex:1;">
+        <div class="status-dot" id="lv2-dot"></div>
+        <span id="lv2-status">输入 n 后运行</span>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-green" id="lv2-run" onclick="runLv2()" disabled>▶ 运行</button>
+      <button class="btn btn-ghost" onclick="resetLv2()">↺</button>
+    </div>
+
+    <!-- 通关 -->
+    <div class="success-wrap" id="lv2-success">
+      <div class="success-title">🎉 机器人军团集结完毕！</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:10px;">
+        循环变量 <b style="color:var(--cyan)">i</b> 从 1 走到 <b style="color:var(--yellow)" id="lv2-done-n">n</b>，每一个值都代表一个机器人的编号！
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-yellow" onclick="unlockAndGo(3)">下一关 →</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     LEVEL 3 — 双条件筛选 + 升级
+═══════════════════════════════ -->
+<div class="lv-card" id="lv3" data-lv="3">
+  <div style="padding:18px 22px 20px;display:flex;flex-direction:column;gap:14px;">
+
+    <div class="lv-heading">
+      <div class="lv-num">03</div>
+      <div>
+        <div class="lv-title" style="color:var(--yellow)">⚡ 第三关 · 升级特殊机器人！</div>
+        <div class="lv-desc">筛选编号能被 3 整除、但不能被 5 整除的机器人，让它们发光升级！</div>
+      </div>
+    </div>
+
+    <!-- 代码展示 -->
+    <div class="code-block" id="lv3-codebox">
+<span class="kw">int</span> <span class="vr">n</span>;<br>
+<span class="kw">cin</span> >> <span class="vr">n</span>;<br>
+<span class="kw">for</span>(<span class="kw">int</span> <span class="vr">i</span> = <span class="nm">1</span>; <span class="vr">i</span> &lt;= <span class="hl-yellow" id="l3-n-disp">n</span>; <span class="vr">i</span>++) {<br>
+&nbsp;&nbsp;制造机器人();<br>
+&nbsp;&nbsp;<span class="kw">if</span>(<span class="vr">i</span> % <span class="nm">3</span> == <span class="nm">0</span> &amp;&amp; <span class="vr">i</span> % <span class="nm">5</span> != <span class="nm">0</span>) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;升级(<span class="vr">i</span>号); <span class="cm">// ⚡ 发光变大！</span><br>
+&nbsp;&nbsp;}<br>
+}
+    </div>
+
+    <!-- n 输入 -->
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <span style="font-family:'Noto Sans SC',sans-serif;font-size:14px;color:var(--muted);">请输入 n 的值：</span>
+      <input class="param-input" id="l3-n" value="" type="number" min="1" max="50"
+        placeholder="1 ~ 50"
+        style="width:110px;font-size:20px;background:#0c1018;border:2px solid var(--border);border-radius:6px;color:var(--yellow);padding:6px 12px;outline:none;text-align:center;"
+        oninput="onLv3NInput()">
+      <span id="lv3-n-hint" style="font-family:'Consolas',monospace;font-size:12px;color:var(--muted);"></span>
+    </div>
+
+    <div class="status-bar">
+      <div class="status-dot" id="lv3-dot"></div>
+      <span id="lv3-status">输入 n 后运行</span>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-yellow" id="lv3-run" onclick="runLv3()" disabled>▶ 运行</button>
+      <button class="btn btn-ghost" onclick="resetLv3()">↺</button>
+    </div>
+
+    <div class="success-wrap" id="lv3-success">
+      <div class="success-title">⚡ 升级完成！</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:10px;">
+        <b style="color:var(--cyan)">&&</b> 表示"并且"，两个条件同时成立才执行升级！<br>
+        能被3整除 <b style="color:var(--yellow)">且</b> 不能被5整除 → <span id="lv3-done-count" style="color:var(--yellow)">?</span> 个机器人升级！
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-red" onclick="unlockAndGo(4)">下一关 →</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     LEVEL 4 — Bug 调试
+═══════════════════════════════ -->
+<div class="lv-card" id="lv4" data-lv="4">
+  <div class="lv-body">
+    <div class="lv-left">
+      <div class="lv-heading">
+        <div class="lv-num">04</div>
+        <div>
+          <div class="lv-title" style="color:var(--red)">🐛 第四关 · 流水线故障！</div>
+          <div class="lv-desc">工厂流水线卡住了！下面的代码有 <b style="color:var(--red)">Bug</b>，找出有问题的那一行修复它！</div>
+        </div>
+      </div>
+
+      <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:6px;">
+        👆 点击你认为有 Bug 的那行代码
+      </div>
+
+      <!-- Bug code display — lines are clickable -->
+      <div class="code-block" id="lv4-code" style="padding:8px 12px;cursor:default;"></div>
+
+      <div id="lv4-msg" style="font-family:'Share Tech Mono',monospace;font-size:12px;margin-top:8px;min-height:18px;color:var(--muted);"></div>
+
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;">
+        <span style="font-family:'Fredoka One',cursive;font-size:13px;color:var(--muted);">生命：</span>
+        <span id="lv4-lives" style="font-size:18px;letter-spacing:2px;">❤️❤️❤️</span>
+        <span style="font-family:'Fredoka One',cursive;font-size:13px;color:var(--muted);margin-left:auto;">得分：</span>
+        <span id="lv4-score" style="font-family:'Fredoka One',cursive;font-size:16px;color:var(--yellow);">0</span>
+      </div>
+
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn btn-ghost" onclick="showBugHint()">💡 提示 (-1❤️)</button>
+        <button class="btn btn-ghost" onclick="nextBugQ()">换题 →</button>
+      </div>
+    </div>
+
+    <div class="lv-right">
+      <div style="font-family:'Fredoka One',cursive;color:var(--red);font-size:15px;">🔧 常见 Bug 类型</div>
+      <div class="knowledge-card" style="margin:0;color:#aaa;font-size:12px;">
+<span class="cm">// ❌ Bug 1：忘记初始化</span><br>
+<span class="kw">let</span> <span class="vr">sum</span>; <span class="hl-red">← 应写 = 0</span><br><br>
+<span class="cm">// ❌ Bug 2：求积初始值错误</span><br>
+<span class="kw">let</span> <span class="vr">mul</span> = <span class="hl-red">0</span>; <span class="hl-red">← 应写 = 1</span><br><br>
+<span class="cm">// ❌ Bug 3：条件写反</span><br>
+<span class="vr">i</span> % 2 == <span class="hl-red">0</span> <span class="cm">→ 这是偶数条件！</span><br><br>
+<span class="cm">// ❌ Bug 4：死循环</span><br>
+<span class="vr">i</span>-- <span class="hl-red">← 本应 i++</span>
+      </div>
+      <div class="success-wrap" id="lv4-success">
+        <div class="success-title">🐛 Bug 猎人！</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:8px;" id="lv4-summary"></div>
+        <div class="btn-row"><button class="btn btn-purple" onclick="unlockAndGo(5)">最终关 →</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     LEVEL 5 — 自由编程模式
+═══════════════════════════════ -->
+<div class="lv-card" id="lv5" data-lv="5">
+  <div class="lv-body">
+    <div class="lv-left">
+      <div class="lv-heading">
+        <div class="lv-num">05</div>
+        <div>
+          <div class="lv-title" style="color:var(--purple)">🧪 第五关 · 你的工厂！</div>
+          <div class="lv-desc">全部参数由你决定！挑战任务：让流水线只生产编号为奇数的机器人。</div>
+        </div>
+      </div>
+
+      <div class="code-block" id="lv5-code">
+<span class="kw">for</span>(<span class="kw">int</span> <span class="vr">i</span>=<span class="hl-yellow" id="l5-s-disp">?</span>; <span class="vr">i</span>&lt;=<span class="hl-cyan" id="l5-e-disp">?</span>; <span class="vr">i</span>+=<span class="hl-green" id="l5-st-disp">?</span>) {<br>
+&nbsp;&nbsp;<span class="kw">if</span>(<span class="vr">i</span> % <span class="hl-purple" id="l5-m-disp">?</span> == <span class="nm" id="l5-r-disp">?</span>) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;出厂(<span class="vr">i</span>号);<br>
+&nbsp;&nbsp;}<br>
+}
+      </div>
+
+      <div class="param-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="param-box">
+          <div class="param-name" style="color:var(--yellow);">起点 i=</div>
+          <input class="param-input" id="l5-start" value="1" type="number" oninput="updateLv5Preview()">
+        </div>
+        <div class="param-box">
+          <div class="param-name" style="color:var(--cyan);">终点 i&lt;=</div>
+          <input class="param-input" id="l5-end" value="20" type="number" oninput="updateLv5Preview()">
+        </div>
+        <div class="param-box">
+          <div class="param-name" style="color:var(--green);">步长 +=</div>
+          <input class="param-input" id="l5-step" value="1" type="number" oninput="updateLv5Preview()">
+        </div>
+        <div class="param-box">
+          <div class="param-name" style="color:var(--purple);">筛选 i%</div>
+          <input class="param-input" id="l5-mod" value="2" type="number" oninput="updateLv5Preview()">
+        </div>
+        <div class="param-box">
+          <div class="param-name" style="color:var(--muted);">余数 ==</div>
+          <input class="param-input" id="l5-rem" value="1" type="number" oninput="updateLv5Preview()">
+        </div>
+        <div class="param-box" style="background:#0c1018;border-color:var(--purple)33;">
+          <div class="param-name" style="color:var(--purple);">预计输出</div>
+          <div style="font-family:'Fredoka One',cursive;font-size:20px;color:var(--purple);text-align:center;" id="l5-preview-cnt">?</div>
+        </div>
+      </div>
+
+      <div class="preview-strip" id="lv5-preview">
+        <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);">实时预览…</span>
+      </div>
+
+      <div style="padding:8px 12px;background:#160d22;border:1px solid var(--purple)33;border-radius:7px;font-size:12px;color:#c4a8e8;line-height:1.8;margin-top:2px;">
+        🎯 <b>任务：</b>只输出 <b style="color:var(--yellow)">奇数编号</b> 的机器人（1,3,5,7...）
+      </div>
+
+      <div class="status-bar">
+        <div class="status-dot" id="lv5-dot"></div>
+        <span id="lv5-status">调节参数，实现挑战目标</span>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-purple" onclick="runLv5()">▶ 运行工厂</button>
+        <button class="btn btn-ghost" onclick="resetLv5()">↺</button>
+      </div>
+    </div>
+
+    <div class="lv-right">
+      <div style="font-family:'Fredoka One',cursive;color:var(--purple);font-size:15px;">🏆 完整for循环模板</div>
+      <div class="knowledge-card" style="margin:0;font-size:12px;">
+<span class="kw">for</span>(<span class="kw">int</span> <span class="vr">i</span>=<span class="hl-yellow">起点</span>; <span class="vr">i</span>&lt;=<span class="hl-cyan">终点</span>; <span class="vr">i</span>+=<span class="hl-green">步长</span>) {<br>
+&nbsp;&nbsp;<span class="kw">if</span>(<span class="vr">i</span>%<span id="l5-m-know" class="hl-purple">mod</span>==<span id="l5-r-know" class="nm">余数</span>) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;执行代码;<br>
+&nbsp;&nbsp;}<br>
+}<br>
+<span class="cm">// 奇数：i%2==1</span><br>
+<span class="cm">// 偶数：i%2==0</span><br>
+<span class="cm">// 3倍数：i%3==0</span>
+      </div>
+      <div class="success-wrap" id="lv5-success">
+        <div class="success-title">🏆 全关通关！代码工厂大师！</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:8px;">
+          你已经掌握了 for 循环的全部核心知识：<br>
+          <b style="color:var(--blue)">结构</b> · <b style="color:var(--green)">变量</b> · <b style="color:var(--yellow)">筛选</b> · <b style="color:var(--red)">调试</b> · <b style="color:var(--purple)">组合</b>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-yellow" onclick="restartAll()">🔄 再来一次</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /root -->
+<div id="toast"></div>
+
+<script>
+'use strict';
+// ═══════════════════════════════════
+//  CONSTANTS (declared first — used in drawBelt & spawnOnBelt)
+// ═══════════════════════════════════
+const SLOT_W = 34; // px between robot centers — tight packing
+
+// ── Top-level mutable state (declared early to avoid TDZ) ──
+let activeBubbles  = [];   // speech bubbles on canvas (level 2)
+let unlockedLevels = new Set([1]); // which levels are playable
+// isUpgraded: used in drawRobots (defined here to avoid TDZ)
+function isUpgraded(label){ return label%3===0 && label%5!==0; }
+
+// ═══════════════════════════════════
+//  AUDIO
+// ═══════════════════════════════════
+const AC = new(window.AudioContext||window.webkitAudioContext)();
+function beep(f,t,d,v=0.16,dl=0){
+  try{
+    const o=AC.createOscillator(),g=AC.createGain();
+    o.connect(g);g.connect(AC.destination);
+    o.type=t;o.frequency.setValueAtTime(f,AC.currentTime+dl);
+    g.gain.setValueAtTime(v,AC.currentTime+dl);
+    g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+dl+d);
+    o.start(AC.currentTime+dl);o.stop(AC.currentTime+dl+d+.01);
+  }catch(_){}
+}
+const sfxSpawn  = (i) => { beep(440+i*22,'square',.05,.18); beep(660+i*15,'triangle',.08,.14,.05); };
+const sfxTypeOk = () => beep(600,'triangle',.04,.12);
+const sfxTypeErr= () => beep(180,'sawtooth',.1,.2);
+const sfxRight  = () => { beep(523,'triangle',.1,.2); beep(784,'triangle',.12,.18,.1); };
+const sfxWrong  = () => beep(200,'sawtooth',.12,.22);
+const sfxWin    = () => [523,659,784,880,1047].forEach((f,i)=>beep(f,'triangle',.18,.22,i*.1));
+const sfxBelt   = () => beep(120,'sawtooth',.06,.08);
+const sfxBug    = () => { beep(300,'sawtooth',.08,.2); beep(200,'sawtooth',.12,.18,.08); };
+const sfxSmoke  = () => beep(80,'sawtooth',.2,.15);
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// ═══════════════════════════════════
+//  FACTORY CANVAS ENGINE
+// ═══════════════════════════════════
+const FC = document.getElementById('factory-canvas');
+const SC = document.getElementById('smoke-canvas');
+const fctx = FC.getContext('2d');
+const sctx = SC.getContext('2d');
+
+let W,H;
+function resizeCanvas(){
+  const wrap=document.getElementById('factory-wrap');
+  W=wrap.clientWidth; H=wrap.clientHeight;
+  FC.width=W; FC.height=H;
+  SC.width=W; SC.height=H;
+}
+resizeCanvas();
+window.addEventListener('resize',()=>{resizeCanvas();drawFactoryBG();});
+
+// Belt state
+let belt = {
+  robots:[],
+  beltY: 0,
+  speed: 0,
+  running: false,
+  smoke: false,
+  smokes: [],
+  beltOffset: 0,
+  scrollX: 0,
+  factoryX: 0,
+  exitX: 0,
+  nextSlotId: 0,    // monotonic slot counter — each robot gets the next slot
+  totalDrift: 0,    // cumulative px the belt has moved left
+};
+
+// Robot palette
+const RCOLORS = ['#4f9eff','#22c55e','#facc15','#fb923c','#a78bfa','#2dd4bf','#f472b6','#60a5fa','#86efac','#fbbf24'];
+
+// ══ FORGE SPARKS ══
+let forgeSparks = [];
+function spawnForgeSparks(x, y){
+  for(let i=0;i<10;i++){
+    forgeSparks.push({
+      x, y,
+      vx: (Math.random()-0.5)*5,
+      vy: -Math.random()*5 - 1,
+      life: 18 + Math.floor(Math.random()*14),
+      max: 32,
+      r: 1.5 + Math.random()*2,
+      hue: 30 + Math.floor(Math.random()*40),
+    });
+  }
+}
+function updateForgeSparks(ctx){
+  forgeSparks = forgeSparks.filter(s=>s.life>0);
+  forgeSparks.forEach(s=>{
+    ctx.save();
+    ctx.globalAlpha = s.life/s.max;
+    ctx.fillStyle = `hsl(${s.hue},100%,60%)`;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+    s.x += s.vx;
+    s.y += s.vy;
+    s.vy += 0.35;
+    s.vx *= 0.92;
+    s.life--;
+  });
+}
+
+// ══ DRAW FORGE STATION ══
+// x = left edge of the forge zone, H2 = canvas height, running = belt active
+function drawForge(ctx, x, H2, running){
+  const gY = H2 * 0.82;
+  const cx = x + 36;               // center x of forge
+  const floorY = gY;
+
+  // ── Base platform ──
+  ctx.fillStyle = '#1e2d1e';
+  ctx.beginPath();
+  ctx.roundRect(x, floorY - 54, 72, 54, 6);
+  ctx.fill();
+  ctx.strokeStyle = '#2e4a2e';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // ── Anvil ──
+  const anvilY = floorY - 54;
+  // legs
+  ctx.fillStyle = '#374151';
+  ctx.fillRect(cx - 12, anvilY + 24, 8, 20);
+  ctx.fillRect(cx + 4,  anvilY + 24, 8, 20);
+  // body
+  ctx.fillStyle = '#4b5563';
+  ctx.beginPath();
+  ctx.roundRect(cx - 18, anvilY + 12, 36, 14, 3);
+  ctx.fill();
+  // top flat
+  ctx.fillStyle = '#6b7280';
+  ctx.beginPath();
+  ctx.roundRect(cx - 16, anvilY + 6, 32, 8, 2);
+  ctx.fill();
+  // horn
+  ctx.fillStyle = '#4b5563';
+  ctx.beginPath();
+  ctx.moveTo(cx + 16, anvilY + 10);
+  ctx.lineTo(cx + 28, anvilY + 16);
+  ctx.lineTo(cx + 16, anvilY + 18);
+  ctx.closePath();
+  ctx.fill();
+  // shine
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  ctx.fillRect(cx - 14, anvilY + 7, 20, 3);
+
+  // ── Mechanical arm + hammer ──
+  // Arm pivot at top-center, hammer swings down
+  const armPivotX = cx;
+  const armPivotY = floorY - 54 - 30;  // above platform
+
+  // Arm support pillar
+  ctx.fillStyle = '#1a2235';
+  ctx.fillRect(cx - 4, armPivotY - 40, 8, 44);
+  ctx.fillStyle = '#2a3548';
+  ctx.fillRect(cx - 6, armPivotY - 44, 12, 8);
+
+  // Animate hammer angle: swings between -0.2 and 1.4 rad
+  const t = Date.now() * 0.004;
+  // When running: swing fast; when idle: resting up
+  let hammerAngle;
+  if(running){
+    // smooth swing: spend 70% going down fast, 30% coming up
+    const phase = t % (Math.PI * 2);
+    hammerAngle = Math.sin(phase) * 0.9 + 0.55;
+    // on impact (~angle>1.2) spawn sparks
+    if(hammerAngle > 1.18 && Math.random() < 0.25){
+      const impactX = armPivotX + Math.sin(hammerAngle + 0.3) * 38;
+      const impactY = armPivotY + Math.cos(hammerAngle + 0.3) * 38 + 4;
+      spawnForgeSparks(impactX, impactY);
+    }
+  } else {
+    hammerAngle = -0.3;  // resting up
+  }
+
+  // Draw arm
+  const armLen = 38;
+  const hammerTipX = armPivotX + Math.sin(hammerAngle) * armLen;
+  const hammerTipY = armPivotY + Math.cos(hammerAngle) * armLen;
+
+  ctx.save();
+  ctx.strokeStyle = '#374151';
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(armPivotX, armPivotY);
+  ctx.lineTo(hammerTipX, hammerTipY);
+  ctx.stroke();
+  ctx.strokeStyle = '#4b5563';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  ctx.restore();
+
+  // Draw hammer head
+  ctx.save();
+  ctx.translate(hammerTipX, hammerTipY);
+  ctx.rotate(hammerAngle);
+  ctx.fillStyle = running ? '#f97316' : '#6b7280';
+  ctx.beginPath();
+  ctx.roundRect(-7, -6, 14, 20, 3);
+  ctx.fill();
+  ctx.fillStyle = running ? '#fb923c' : '#9ca3af';
+  ctx.fillRect(-5, -4, 10, 5);
+  ctx.restore();
+
+  // Pivot pin
+  ctx.beginPath();
+  ctx.arc(armPivotX, armPivotY, 5, 0, Math.PI*2);
+  ctx.fillStyle = '#facc15';
+  ctx.fill();
+
+  // Glow when active
+  if(running){
+    const grd = ctx.createRadialGradient(cx, anvilY+10, 2, cx, anvilY+10, 28);
+    grd.addColorStop(0, 'rgba(249,115,22,0.22)');
+    grd.addColorStop(1, 'rgba(249,115,22,0)');
+    ctx.fillStyle = grd;
+    ctx.beginPath();
+    ctx.arc(cx, anvilY+10, 28, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  // ── Sparks ──
+  updateForgeSparks(ctx);
+
+  // ── Label ──
+  ctx.fillStyle = running ? '#fb923c' : '#4b5563';
+  ctx.font = 'bold 9px Consolas,monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('FORGE', cx, floorY - 2);
+}
+
+function drawFactoryBG(){
+  const W2=W,H2=H;
+  // Sky gradient
+  const grad=fctx.createLinearGradient(0,0,0,H2);
+  grad.addColorStop(0,'#0a0e14');
+  grad.addColorStop(.6,'#0d1520');
+  grad.addColorStop(1,'#111a10');
+  fctx.fillStyle=grad;fctx.fillRect(0,0,W2,H2);
+
+  // Factory building (left)
+  const fw=100;
+  fctx.fillStyle='#1a2235';
+  fctx.fillRect(0,H2*.15,fw,H2*.85);
+  fctx.fillStyle='#232d42';
+  fctx.fillRect(4,H2*.2,fw-8,H2*.6);
+  // factory windows
+  for(let r=0;r<3;r++)for(let c=0;c<2;c++){
+    fctx.fillStyle=belt.running?`hsl(${40+r*20},80%,50%)`:'#1a2235';
+    if(belt.running&&Math.sin(Date.now()*.003+r+c*.5)>.5) fctx.fillStyle='#f97316';
+    fctx.fillRect(10+c*38,H2*.25+r*30,28,18);
+    fctx.strokeStyle='#2a3548';fctx.lineWidth=1.5;
+    fctx.strokeRect(10+c*38,H2*.25+r*30,28,18);
+  }
+  // chimney
+  fctx.fillStyle='#1a2235';
+  fctx.fillRect(fw-22,H2*.05,16,H2*.12);
+
+  // ── FORGE STATION (right) — hammer + anvil ──
+  const ex=W2-72;
+  drawForge(fctx, ex, H2, belt.running);
+
+  // Ground line
+  const gY=H2*.82;
+  fctx.fillStyle='#1c2333';fctx.fillRect(0,gY,W2,H2-gY);
+  fctx.fillStyle='#232d42';fctx.fillRect(0,gY,W2,3);
+
+  belt.beltY=gY-28;
+  belt.factoryX=fw;
+  belt.exitX=ex;
+
+  drawBelt();
+}
+
+function drawBelt(){
+  const by=belt.beltY, bh=26;
+  const fw=belt.factoryX, ex=belt.exitX;
+
+  // Calculate scroll: if robots go beyond factory, shift everything right
+  const lastRobot = belt.robots.length;
+  const maxX = belt.factoryX + 36 + (lastRobot-1)*SLOT_W + 30;
+  const overflow = Math.max(0, maxX - belt.exitX);
+  belt.scrollX = -Math.min(overflow, maxX - belt.factoryX - 60);
+
+  // Belt body
+  fctx.fillStyle='#1a2235';
+  fctx.fillRect(fw,by,ex-fw,bh);
+
+  // Belt stripes — scroll RIGHT → LEFT
+  belt.beltOffset=(belt.beltOffset+belt.speed*.5)%40;
+  fctx.fillStyle='#232d42';
+  for(let x=fw-belt.beltOffset;x<ex;x+=40){
+    if(x+30>fw&&x<ex){
+      fctx.fillRect(Math.max(x,fw),by+4,Math.min(30,ex-x),bh-8);
+    }
+  }
+  // Belt outline
+  fctx.strokeStyle='#2a3548';fctx.lineWidth=1.5;
+  fctx.strokeRect(fw,by,ex-fw,bh);
+  // Belt rollers
+  [fw+8,ex-8].forEach(rx=>{
+    fctx.beginPath();fctx.arc(rx,by+bh/2,bh/2,0,Math.PI*2);
+    fctx.fillStyle='#2a3548';fctx.fill();
+    fctx.strokeStyle='#364255';fctx.lineWidth=2;fctx.stroke();
+  });
+}
+
+function drawRobots(){
+  // 每一帧：传送带运行时，让所有机器人整体向左移动
+  if(belt.running){
+    const step = belt.speed * 1.8;
+    belt.robots.forEach(r=>{
+      r.x -= step;
+    });
+  }
+
+  belt.robots.forEach(r=>{
+    // 落到传送带上的弹跳效果
+    if(belt.running){
+      r.y += r.vy||0;
+      if(r.y > belt.beltY-(34*(r.scale||1))){
+        r.y = belt.beltY-(34*(r.scale||1));
+        r.vy = -(r.vy||0)*0.45;
+        if(Math.abs(r.vy||0)<0.3) r.vy = 0;
+      } else { r.vy = (r.vy||0)+0.8; }
+      r.phase=(r.phase||0)+0.05;
+    } else {
+      // belt stopped: snap to ground, freeze phase
+      const groundY = belt.beltY-(34*(r.scale||1));
+      if(r.y < groundY) r.y += 2; // settle down quickly
+      r.vy = 0;
+    }
+
+    const sc=r.scale||1;
+    const x=r.x, y=r.y+(r.arrived&&belt.running?Math.sin(r.phase)*1.5:0);
+    const c=r.color||'#4f9eff';
+
+    // Upgraded robots (lv3): special rendering
+    if(isUpgraded(r.label) && currentLevel===3){
+      // temporarily set position for drawUpgradedRobot
+      const savedX=r.x, savedY=r.y;
+      r.x=x; r.y=y;
+      drawUpgradedRobot(r);
+      r.x=savedX; r.y=savedY;
+      return; // skip normal drawing below
+    }
+
+    fctx.save();
+    fctx.translate(x,y);
+    fctx.scale(sc,sc);
+
+    // shadow
+    fctx.beginPath();fctx.ellipse(0,36,14,5,0,0,Math.PI*2);
+    fctx.fillStyle='rgba(0,0,0,.3)';fctx.fill();
+
+    // Body
+    fctx.fillStyle=r.filtered?'#374151':'#1c2333';
+    fctx.fillRect(-14,0,28,22);
+    fctx.fillStyle=c;
+    fctx.fillRect(-13,1,26,20);
+    // Head
+    fctx.fillStyle='#1c2333';fctx.fillRect(-11,-16,22,16);
+    fctx.fillStyle=c;fctx.fillRect(-10,-15,20,14);
+    // eyes
+    fctx.fillStyle='#0a0e14';fctx.fillRect(-7,-12,5,5);fctx.fillRect(2,-12,5,5);
+    fctx.fillStyle='#fff';fctx.fillRect(-6,-11,3,3);fctx.fillRect(3,-11,3,3);
+    if(r.filtered){fctx.fillStyle='#6b7280';fctx.fillRect(-7,-12,5,5);fctx.fillRect(2,-12,5,5);}
+    // mouth
+    if(!r.filtered){fctx.fillStyle='#0a0e14';fctx.fillRect(-5,-5,10,3);}
+    else{fctx.fillStyle='#374151';fctx.arc(0,-3,4,0,Math.PI);fctx.fill();}
+    // antenna
+    fctx.fillStyle=c;fctx.fillRect(-1,-22,2,7);
+    fctx.beginPath();fctx.arc(0,-23,3,0,Math.PI*2);fctx.fill();
+    // legs
+    fctx.fillStyle=c;
+    fctx.fillRect(-10,22,9,10);fctx.fillRect(1,22,9,10);
+    // ── Number on robot chest ──
+    fctx.fillStyle = 'rgba(0,0,0,0.55)';
+    fctx.fillRect(-11, 2, 22, 13);
+    fctx.fillStyle = r.filtered ? '#6b7280' : '#fff';
+    fctx.font = `bold ${r.label > 9 ? 9 : 11}px Consolas,monospace`;
+    fctx.textAlign = 'center';
+    fctx.textBaseline = 'middle';
+    fctx.fillText(String(r.label), 0, 8);
+
+    fctx.restore();
+  });
+}
+
+function drawSmokes(){
+  if(!belt.smoke) return;
+  // add smoke
+  if(Math.random()>.4){
+    belt.smokes.push({x:45,y:H*.18,vx:(Math.random()-.5)*0.5,vy:-0.8-Math.random()*0.5,r:5,life:60,max:60});
+  }
+  belt.smokes=belt.smokes.filter(s=>s.life>0);
+  belt.smokes.forEach(s=>{
+    sctx.beginPath();sctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    sctx.fillStyle=`rgba(180,100,30,${s.life/s.max*0.6})`;
+    sctx.fill();
+    s.x+=s.vx; s.y+=s.vy; s.r+=0.3; s.life--;
+  });
+}
+
+let factoryAnimRaf;
+function factoryLoop(){
+  fctx.clearRect(0,0,W,H);
+  sctx.clearRect(0,0,W,H);
+  drawFactoryBG();
+  drawRobots();
+  drawBubbles();
+  drawSmokes();
+  if(belt.running) belt.beltOffset+=belt.speed;
+  factoryAnimRaf=requestAnimationFrame(factoryLoop);
+}
+factoryLoop();
+
+// 在最右侧固定位置生成机器人，然后交给传送带向左移动
+function spawnOnBelt(label, color, filtered=false, idx=0){
+  // 出生点：传送带最右端稍微偏内侧的位置
+  const spawnX = belt.exitX + 20;
+  belt.robots.push({
+    x: spawnX,
+    y: belt.beltY - 70,
+    vy: 0,
+    label, color, filtered,
+    scale: 0.1,
+    phase: Math.random()*Math.PI*2,
+    idx
+  });
+  const r = belt.robots[belt.robots.length-1];
+  let sc = 0.1;
+  const scaleIn = setInterval(()=>{
+    sc = Math.min(sc+0.15, 1); r.scale = sc;
+    if(sc >= 1) clearInterval(scaleIn);
+  }, 20);
+}
+
+// Move robots across belt
+async function driveRobots(robots, speed=1.4){
+  return new Promise(resolve=>{
+    if(!robots.length){resolve();return;}
+    let done=0;
+    const drive=setInterval(()=>{
+      belt.robots.forEach(r=>{
+        if(!r._done) r.x+=speed;
+        if(r.x>belt.exitX+30&&!r._done){r._done=true;done++;sfxBelt();}
+      });
+      if(done>=robots.length){clearInterval(drive);resolve();}
+    },16);
+  });
+}
+
+// ═══════════════════════════════════
+//  CURRENT LEVEL STATE
+// ═══════════════════════════════════
+let currentLevel=1;
+let totalStars=1;
+
+function goLevel(n){
+  AC.resume();
+  if(!unlockedLevels.has(n)) return;
+  currentLevel=n;
+  // Use data-lv attribute for reliable matching (not DOM order)
+  document.querySelectorAll('.lv-card').forEach(c=>{
+    c.classList.toggle('active', parseInt(c.dataset.lv)===n);
+  });
+  document.querySelectorAll('.stab').forEach((t,i)=>t.classList.toggle('active',i+1===n));
+  belt.robots=[];belt.scrollX=0;belt.running=false;belt.speed=0;belt.smoke=false;
+  belt.nextSlotId=0;belt.totalDrift=0;
+  activeBubbles=[];
+  document.getElementById('i-overlay').style.display='none';
+  // Init level previews
+  try {
+    if(n===2) onLv2NInput();
+    if(n===3) updateLv3Preview();
+    if(n===5) updateLv5Preview();
+    if(n===4) loadBugQ();
+  } catch(e){ console.error('goLevel init error:', e); }
+}
+
+function unlockAndGo(n){
+  unlockedLevels.add(n);
+  const tab=document.getElementById('tab'+n);
+  tab.classList.remove('locked');
+  totalStars=Math.max(totalStars,n);
+  updateStars();
+  setTimeout(()=>goLevel(n),200);
+}
+
+function updateStars(){
+  for(let i=1;i<=5;i++){
+    const s=document.getElementById('s'+i);
+    if(s) s.className='star'+(i>totalStars?' empty':'');
+  }
+}
+
+function setIOverlay(show, val='', extra=''){
+  const ov=document.getElementById('i-overlay');
+  ov.style.display=show?'flex':'none';
+  if(show){ document.getElementById('i-val').textContent=val; document.getElementById('i-extra').textContent=extra; }
+}
+
+function toast(msg, col='var(--yellow)'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.background=col;
+  t.style.color=col==='var(--yellow)'?'#111':'#fff';
+  t.classList.add('show');
+  clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+function confetti(n=40){
+  const cols=['#4f9eff','#22c55e','#facc15','#fb923c','#a78bfa','#2dd4bf','#f472b6'];
+  for(let i=0;i<n;i++){
+    const el=document.createElement('div');el.className='cfti';
+    el.style.cssText=`left:${Math.random()*100}vw;top:-10px;background:${cols[i%cols.length]};width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${1.5+Math.random()*2}s;animation-delay:${Math.random()*.4}s;`;
+    document.body.appendChild(el);setTimeout(()=>el.remove(),3500);
+  }
+}
+
+// ═══════════════════════════════════
+//  LEVEL 1 — TYPING
+// ═══════════════════════════════════
+const LV1_TARGET='for(int i=1; i<=8; i++)';
+// TARGET without spaces, used for matching
+const LV1_NOSPACE = LV1_TARGET.replace(/ /g,'');
+let lv1Done=false;
+
+// Map typed (spaces stripped) onto TARGET positions:
+// returns an array of length TARGET where each entry is
+// 'correct' | 'wrong' | 'pending', accounting for spaces being auto-filled.
+function buildMatchMap(typedRaw){
+  // Strip spaces from what the user typed
+  const typed = typedRaw.replace(/ /g,'');
+  // We walk TARGET; spaces in TARGET are auto-accepted
+  const map = []; // per TARGET char: 'correct'|'wrong'|'pending'
+  let ti = 0; // index into typed (space-stripped)
+  for(let i=0;i<LV1_TARGET.length;i++){
+    if(LV1_TARGET[i]===' '){
+      // space in target — always correct, costs no keystroke
+      map.push('space');
+    } else if(ti < typed.length){
+      map.push(typed[ti]===LV1_TARGET[i] ? 'correct' : 'wrong');
+      ti++;
+    } else {
+      map.push('pending');
+    }
+  }
+  // cursor is at TARGET position of next pending char
+  const cursorPos = map.indexOf('pending');
+  return {map, cursorPos: cursorPos===-1 ? LV1_TARGET.length : cursorPos};
+}
+
+function buildLv1Display(typedRaw){
+  const {map, cursorPos} = buildMatchMap(typedRaw);
+  let html='';
+  for(let i=0;i<LV1_TARGET.length;i++){
+    const raw = LV1_TARGET[i];
+    const ch  = raw.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    // blinking cursor before the next pending char
+    if(i===cursorPos){
+      html+=`<span style="display:inline-block;width:2px;height:1.1em;background:var(--cyan);vertical-align:text-bottom;margin-right:1px;animation:cursorblink .7s step-end infinite;"></span>`;
+    }
+    if(map[i]==='space'){
+      // spaces always shown as correct (dim-green)
+      html+=`<span style="color:var(--green);opacity:.5;">${ch==' '?'&nbsp;':ch}</span>`;
+    } else if(map[i]==='correct'){
+      html+=`<span style="color:var(--green);text-shadow:0 0 8px var(--green)99;">${ch}</span>`;
+    } else if(map[i]==='wrong'){
+      html+=`<span style="color:var(--red);background:#2a0808;border-radius:2px;padding:0 1px;">${ch}</span>`;
+    } else {
+      html+=`<span style="color:#4a5568;">${ch}</span>`;
+    }
+  }
+  document.getElementById('lv1-display').innerHTML=html;
+}
+buildLv1Display('');
+
+document.getElementById('lv1-inp').addEventListener('input',function(){
+  AC.resume();
+  const typedRaw = this.value;
+  const typed = typedRaw.replace(/ /g,''); // strip spaces for matching
+
+  buildLv1Display(typedRaw);
+
+  // Progress = how many non-space TARGET chars have been correctly typed
+  const nonSpaceTarget = LV1_TARGET.replace(/ /g,'');
+  let match=0;
+  for(let i=0;i<typed.length&&i<nonSpaceTarget.length;i++){
+    if(typed[i]===nonSpaceTarget[i]) match++;
+    else break;
+  }
+  const total = nonSpaceTarget.length;
+  const pct = Math.round((match/total)*100);
+  document.getElementById('lv1-prog').style.width=pct+'%';
+  document.getElementById('lv1-badge').textContent=match+' / '+total;
+  document.getElementById('lv1-badge').className='count-badge'+(pct>0?' live':'');
+
+  // Done when all non-space chars typed correctly
+  const done = typed === nonSpaceTarget;
+  if(done){
+    document.getElementById('lv1-run').disabled=false;
+    document.getElementById('lv1-status').textContent='✅ 完美！点击启动流水线';
+    document.getElementById('lv1-dot').className='status-dot ok';
+    document.getElementById('lv1-hint').style.display='none';
+    const box=document.getElementById('lv1-codebox');
+    box.style.borderColor='var(--green)';
+    box.style.boxShadow='0 0 16px var(--green)44';
+    sfxRight();
+  } else {
+    document.getElementById('lv1-run').disabled=true;
+    document.getElementById('lv1-dot').className='status-dot';
+    const lastChar = typed[typed.length-1];
+    const expectedChar = nonSpaceTarget[typed.length-1];
+    if(typed.length>0 && lastChar!==expectedChar){ sfxTypeErr(); }
+    else if(typed.length>0){ sfxTypeOk(); }
+    document.getElementById('lv1-status').textContent=`输入中… ${pct}%`;
+    const box=document.getElementById('lv1-codebox');
+    box.style.borderColor='';box.style.boxShadow='';
+  }
+});
+
+async function runLv1(){
+  if(lv1Done)return;
+  AC.resume();
+  lv1Done=true;
+  document.getElementById('lv1-run').disabled=true;
+  document.getElementById('lv1-inp').disabled=true;
+  belt.robots=[];belt.running=true;belt.speed=0.8;
+  belt.nextSlotId=0;belt.totalDrift=0;
+
+  const dot=document.getElementById('lv1-dot');
+  dot.className='status-dot run';
+  setIOverlay(true,'—','');
+
+  for(let i=1;i<=8;i++){
+    document.getElementById('lv1-status').textContent=`执行中… i = ${i}`;
+    setIOverlay(true,i,'');
+    spawnOnBelt(i,RCOLORS[(i-1)%RCOLORS.length],false,i);
+    sfxSpawn(i);
+    await sleep(1000);
+  }
+
+  setIOverlay(true,'结束','');
+  document.getElementById('lv1-status').textContent='循环结束，i=9 超出 i<=8，停止';
+  await sleep(500);
+  belt.running=false;belt.speed=0;setIOverlay(false);
+  dot.className='status-dot ok';
+
+  sfxWin();confetti(50);
+  document.getElementById('lv1-success').classList.add('show');
+  document.getElementById('tab1').classList.add('done');
+}
+
+function resetLv1(){
+  lv1Done=false;
+  const inp=document.getElementById('lv1-inp');
+  inp.value='';inp.disabled=false;
+  document.getElementById('lv1-run').disabled=true;
+  document.getElementById('lv1-prog').style.width='0%';
+  document.getElementById('lv1-badge').textContent='0 / '+LV1_NOSPACE.length;
+  document.getElementById('lv1-badge').className='count-badge';
+  document.getElementById('lv1-dot').className='status-dot';
+  document.getElementById('lv1-status').textContent='点击代码区开始输入…';
+  document.getElementById('lv1-hint').style.display='';
+  document.getElementById('lv1-success').classList.remove('show');
+  const box=document.getElementById('lv1-codebox');
+  box.style.borderColor='';box.style.boxShadow='';
+  belt.robots=[];belt.nextSlotId=0;belt.totalDrift=0;buildLv1Display('');
+}
+
+// ═══════════════════════════════════
+//  LEVEL 2 — 参数调节
+// ═══════════════════════════════════
+//  LEVEL 2
+// ═══════════════════════════════════
+function onLv2NInput(){
+  const raw = document.getElementById('l2-n').value;
+  const n = parseInt(raw);
+  const disp = document.getElementById('l2-n-disp');
+  const hint = document.getElementById('lv2-n-hint');
+  const inp  = document.getElementById('l2-n');
+  if(!isNaN(n) && n>=1 && n<=50){
+    // keep code display showing 'n' — do NOT replace with number
+    hint.textContent = n > 20 ? `→ 循环 ${n} 次 🤖💥` : `→ 循环 ${n} 次`;
+    inp.style.borderColor = 'var(--green)';
+    document.getElementById('lv2-run').disabled = false;
+    document.getElementById('lv2-status').textContent = `n = ${n}，点击运行`;
+    document.getElementById('lv2-dot').className = 'status-dot ok';
+  } else {
+    disp.textContent = 'n';
+    disp.style.color = '';
+    hint.textContent = raw ? '请输入 1~50' : '';
+    inp.style.borderColor = raw ? 'var(--red)' : 'var(--border)';
+    document.getElementById('lv2-run').disabled = true;
+    document.getElementById('lv2-dot').className = 'status-dot';
+    document.getElementById('lv2-status').textContent = '输入 n 后运行';
+  }
+}
+
+let lv2Running=false;
+async function runLv2(){
+  if(lv2Running)return; AC.resume();
+  const n = parseInt(document.getElementById('l2-n').value);
+  if(isNaN(n)||n<1){ toast('请输入正整数！','var(--red)'); return; }
+  if(n > 50){ toast('最多50个，再多服务器要冒烟了 🔥','var(--orange)'); return; }
+  lv2Running=true;
+  activeBubbles=[];                         // clear previous bubbles
+  document.getElementById('lv2-run').disabled=true;
+  belt.robots=[];belt.running=true;
+  // Speed up belt for large n so robots keep clearing space
+  belt.speed = n > 20 ? 1.4 : 0.8;
+  belt.nextSlotId=0;belt.totalDrift=0;
+  document.getElementById('lv2-dot').className='status-dot run';
+  setIOverlay(true,'—','');
+
+  // Delay shrinks as n grows — big n feels chaotic (intentional fun)
+  const delay = n <= 10 ? 1000 : n <= 20 ? 700 : n <= 35 ? 400 : 200;
+
+  for(let i=1;i<=n;i++){
+    setIOverlay(true, i, '');
+    document.getElementById('lv2-status').textContent=`i = ${i} / ${n}`;
+    spawnOnBelt(i, RCOLORS[(i-1)%RCOLORS.length], false, i);
+    sfxSpawn(i);
+    showRobotBubble(i);                     // bubble follows the robot permanently
+    await sleep(delay);
+  }
+
+  setIOverlay(false);
+  belt.running=false;belt.speed=0;
+  document.getElementById('lv2-dot').className='status-dot ok';
+  const msg = n >= 30 ? `🤖×${n} 工厂爆炸式生产！` : `✅ 循环结束！共生产 ${n} 个`;
+  document.getElementById('lv2-status').textContent=msg;
+  sfxWin();confetti(Math.min(n*5, 80));
+  document.getElementById('lv2-done-n').textContent=n;
+  document.getElementById('lv2-success').classList.add('show');
+  document.getElementById('tab2').classList.add('done');
+  lv2Running=false;
+}
+
+// Speech bubbles — each attached to its own robot, never expire
+// activeBubbles: Map from robot label -> true (just a set of which robots have bubbles)
+function showRobotBubble(i){
+  // mark this robot label as having a bubble
+  if(!activeBubbles.includes(i)) activeBubbles.push(i);
+}
+function drawBubbles(){
+  if(!activeBubbles.length) return;
+  belt.robots.forEach(r=>{
+    if(!activeBubbles.includes(r.label)) return;
+    if(r.x < -30 || r.x > W + 30) return;
+    const rx = r.x;
+    // Anchor bubble to fixed height above belt — never moves up/down
+    const ry = belt.beltY - 34 - 8;
+
+    const numStr  = String(r.label);
+    const prefix  = '我是';
+    const suffix  = '号';
+    const line2   = '我爱学编程';
+
+    // Measure widths with their respective fonts
+    fctx.save();
+    const fontSmall = 'bold 10px "Noto Sans SC",sans-serif';
+    const fontBig   = 'bold 16px "Noto Sans SC",sans-serif';
+    fctx.font = fontSmall;
+    const wPre  = fctx.measureText(prefix).width;
+    const wSuf  = fctx.measureText(suffix).width;
+    const wL2   = fctx.measureText(line2).width;
+    fctx.font = fontBig;
+    const wNum  = fctx.measureText(numStr).width;
+    const line1W = wPre + wNum + wSuf;
+    const bw = Math.max(line1W, wL2) + 16;
+    const bh = 38;
+    const bx = rx - bw/2;
+    const by = ry - bh - 10;
+
+    // Bubble background
+    fctx.fillStyle = '#0d1f0d';
+    fctx.strokeStyle = '#22c55e';
+    fctx.lineWidth = 1.2;
+    fctx.beginPath();
+    fctx.roundRect(bx, by, bw, bh, 5);
+    fctx.fill(); fctx.stroke();
+
+    // Tail
+    fctx.fillStyle = '#0d1f0d';
+    fctx.beginPath();
+    fctx.moveTo(rx-5, by+bh); fctx.lineTo(rx+5, by+bh); fctx.lineTo(rx, by+bh+8);
+    fctx.closePath(); fctx.fill();
+    fctx.strokeStyle='#22c55e'; fctx.lineWidth=1;
+    fctx.beginPath();
+    fctx.moveTo(rx-5,by+bh); fctx.lineTo(rx,by+bh+8); fctx.lineTo(rx+5,by+bh);
+    fctx.stroke();
+
+    // ── Line 1: 我是 [BIG NUMBER] 号 ──
+    // draw from left to right, baseline at by+16
+    const baseY1 = by + 17;
+    let curX = rx - line1W/2;
+
+    // "我是"
+    fctx.font = fontSmall;
+    fctx.fillStyle = '#86efac';
+    fctx.textAlign = 'left';
+    fctx.textBaseline = 'middle';
+    fctx.fillText(prefix, curX, baseY1);
+    curX += wPre;
+
+    // [NUMBER] — big, bright yellow
+    fctx.font = fontBig;
+    fctx.fillStyle = '#facc15';
+    fctx.shadowColor = '#facc15';
+    fctx.shadowBlur = 6;
+    fctx.fillText(numStr, curX, baseY1 - 1); // -1 for visual centering with larger font
+    fctx.shadowBlur = 0;
+    curX += wNum;
+
+    // "号"
+    fctx.font = fontSmall;
+    fctx.fillStyle = '#86efac';
+    fctx.fillText(suffix, curX, baseY1);
+
+    // ── Line 2: 我爱学编程 ──
+    fctx.font = fontSmall;
+    fctx.fillStyle = '#86efac88';
+    fctx.textAlign = 'center';
+    fctx.fillText(line2, rx, by + 30);
+
+    fctx.restore();
+  });
+}
+
+function resetLv2(){
+  lv2Running=false; activeBubbles=[];
+  belt.robots=[];belt.running=false;belt.speed=0;setIOverlay(false);
+  belt.nextSlotId=0;belt.totalDrift=0;
+  document.getElementById('lv2-run').disabled=true;
+  document.getElementById('lv2-dot').className='status-dot';
+  document.getElementById('lv2-status').textContent='输入 n 后运行';
+  document.getElementById('lv2-success').classList.remove('show');
+  document.getElementById('l2-n').value='';
+  document.getElementById('l2-n').style.borderColor='var(--border)';
+  document.getElementById('l2-n-disp').textContent='n';
+  document.getElementById('l2-n-disp').style.color='';
+  document.getElementById('lv2-n-hint').textContent='';
+}
+
+// ═══════════════════════════════════
+//  LEVEL 3 — 双条件升级
+// ═══════════════════════════════════
+function onLv3NInput(){
+  const raw = document.getElementById('l3-n').value;
+  const n   = parseInt(raw);
+  const disp = document.getElementById('l3-n-disp');
+  const hint = document.getElementById('lv3-n-hint');
+  const inp  = document.getElementById('l3-n');
+  if(!isNaN(n) && n>=1 && n<=50){
+    disp.textContent = n;
+    disp.style.color = 'var(--yellow)';
+    // count how many will be upgraded
+    let cnt = 0;
+    for(let i=1;i<=n;i++) if(i%3===0 && i%5!==0) cnt++;
+    hint.textContent = `→ 将升级 ${cnt} 个`;
+    inp.style.borderColor = 'var(--green)';
+    document.getElementById('lv3-run').disabled = false;
+    document.getElementById('lv3-status').textContent = `n = ${n}，点击运行`;
+    document.getElementById('lv3-dot').className = 'status-dot ok';
+  } else {
+    disp.textContent = 'n';
+    disp.style.color = '';
+    hint.textContent = raw ? '请输入 1~50' : '';
+    inp.style.borderColor = raw ? 'var(--red)' : 'var(--border)';
+    document.getElementById('lv3-run').disabled = true;
+    document.getElementById('lv3-dot').className = 'status-dot';
+    document.getElementById('lv3-status').textContent = '输入 n 后运行';
+  }
+}
+
+// Draw upgraded robot: larger + golden glow + crown + star particles
+function drawUpgradedRobot(r){
+  if(r.x < -60 || r.x > W + 60) return;
+  const sc = (r.scale||1) * 1.45;
+  const x = r.x;
+  const y = r.y - 10; // sit a bit higher
+  const c = '#facc15'; // gold
+
+  fctx.save();
+  fctx.translate(x, y);
+  fctx.scale(sc, sc);
+
+  // Outer glow ring
+  const grd = fctx.createRadialGradient(0, 0, 10, 0, 0, 34);
+  grd.addColorStop(0, 'rgba(250,204,21,0.35)');
+  grd.addColorStop(1, 'rgba(250,204,21,0)');
+  fctx.fillStyle = grd;
+  fctx.beginPath(); fctx.arc(0, 8, 34, 0, Math.PI*2); fctx.fill();
+
+  // Shadow
+  fctx.beginPath(); fctx.ellipse(0,36,14,5,0,0,Math.PI*2);
+  fctx.fillStyle='rgba(250,204,21,0.3)'; fctx.fill();
+
+  // Body
+  fctx.fillStyle='#1c2333'; fctx.fillRect(-14,0,28,22);
+  fctx.fillStyle=c;         fctx.fillRect(-13,1,26,20);
+  // Chest star
+  fctx.fillStyle='#fff';
+  fctx.font='bold 10px serif'; fctx.textAlign='center'; fctx.textBaseline='middle';
+  fctx.fillText('★',0,10);
+
+  // Head
+  fctx.fillStyle='#1c2333'; fctx.fillRect(-11,-16,22,16);
+  fctx.fillStyle=c;          fctx.fillRect(-10,-15,20,14);
+  // Eyes — glowing
+  fctx.fillStyle='#0a0e14'; fctx.fillRect(-7,-12,5,5); fctx.fillRect(2,-12,5,5);
+  fctx.fillStyle='#facc15'; fctx.fillRect(-6,-11,3,3); fctx.fillRect(3,-11,3,3);
+  // Mouth smile
+  fctx.fillStyle='#0a0e14';
+  fctx.beginPath(); fctx.arc(0,-3,4,0.1,Math.PI-0.1); fctx.stroke();
+
+  // Antenna
+  fctx.fillStyle=c; fctx.fillRect(-1,-22,2,7);
+  fctx.beginPath(); fctx.arc(0,-23,4,0,Math.PI*2); fctx.fillStyle='#fff'; fctx.fill();
+  fctx.beginPath(); fctx.arc(0,-23,2,0,Math.PI*2); fctx.fillStyle=c; fctx.fill();
+
+  // Crown
+  fctx.fillStyle='#facc15';
+  fctx.beginPath();
+  fctx.moveTo(-10,-28); fctx.lineTo(-10,-36);
+  fctx.lineTo(-6,-32); fctx.lineTo(0,-38);
+  fctx.lineTo(6,-32); fctx.lineTo(10,-36); fctx.lineTo(10,-28);
+  fctx.closePath(); fctx.fill();
+  fctx.strokeStyle='#b45309'; fctx.lineWidth=0.8; fctx.stroke();
+  // Crown gems
+  [[0,-37],[-7,-30],[7,-30]].forEach(([gx,gy])=>{
+    fctx.beginPath(); fctx.arc(gx,gy,1.5,0,Math.PI*2);
+    fctx.fillStyle='#ef4444'; fctx.fill();
+  });
+
+  // Legs
+  fctx.fillStyle=c;
+  fctx.fillRect(-10,22,9,10); fctx.fillRect(1,22,9,10);
+
+  // Number
+  fctx.fillStyle='rgba(0,0,0,0.6)'; fctx.fillRect(-9,4,18,10);
+  fctx.fillStyle='#fff';
+  fctx.font=`bold ${r.label>9?9:11}px Consolas,monospace`;
+  fctx.textAlign='center'; fctx.textBaseline='middle';
+  fctx.fillText(String(r.label),0,8);
+
+  fctx.restore();
+
+  // Sparkle particles around upgraded robot
+  if(belt.running && Math.random() < 0.12){
+    const ang = Math.random()*Math.PI*2;
+    const dist = 28 + Math.random()*14;
+    belt.robots; // just to avoid lint
+    forgeSparks.push({
+      x: x + Math.cos(ang)*dist*sc,
+      y: y + Math.sin(ang)*dist*sc,
+      vx:(Math.random()-.5)*2, vy:-Math.random()*2-0.5,
+      life:20, max:20, r:2, hue:45+Math.floor(Math.random()*20)
+    });
+  }
+}
+
+let lv3Running=false;
+const lv3BannerEl = document.getElementById('lv3-banner');
+async function runLv3(){
+  if(lv3Running)return; AC.resume();
+  const n = parseInt(document.getElementById('l3-n').value);
+  if(isNaN(n)||n<1){ toast('请输入正整数！','var(--red)'); return; }
+  lv3Running=true;
+  activeBubbles=[];
+  document.getElementById('lv3-run').disabled=true;
+  belt.robots=[];belt.running=true;
+  belt.speed = n > 20 ? 1.4 : 0.8;
+  belt.nextSlotId=0;belt.totalDrift=0;
+  document.getElementById('lv3-dot').className='status-dot run';
+  setIOverlay(true,'—','');
+
+  const delay = n<=10 ? 1000 : n<=20 ? 700 : n<=35 ? 400 : 200;
+  let upgradeCount = 0;
+  const upgradedList = []; // 记录所有升级机器人编号
+
+  for(let i=1;i<=n;i++){
+    const upgraded = i%3===0 && i%5!==0;
+    setIOverlay(true, i, upgraded?' ⚡':' ·');
+    document.getElementById('lv3-status').textContent =
+      upgraded ? `i=${i} ⚡ 能被3整除且不能被5整除 → 升级！`
+               : `i=${i} → 普通生产`;
+    spawnOnBelt(i, upgraded ? '#facc15' : RCOLORS[(i-1)%RCOLORS.length], !upgraded, i);
+    sfxSpawn(i);
+    if(upgraded) {
+      upgradeCount++;
+      upgradedList.push(i);
+    }
+    await sleep(delay);
+  }
+
+  setIOverlay(false);
+  belt.running=false; belt.speed=0;
+  document.getElementById('lv3-dot').className='status-dot ok';
+  const listText = upgradedList.length ? `编号：${upgradedList.join(', ')}` : '本轮没有符合条件的机器人';
+  document.getElementById('lv3-status').textContent=`✅ 完成！${upgradeCount} 个机器人升级`;
+  document.getElementById('lv3-done-count').textContent=upgradeCount;
+  // 在上方工厂区域大大显示升级编号
+  if(lv3BannerEl){
+    lv3BannerEl.textContent = '⚡ 升级机器人 → ' + listText;
+    lv3BannerEl.style.display = 'block';
+  }
+  sfxWin(); confetti(Math.min(upgradeCount*8,60));
+  document.getElementById('lv3-success').classList.add('show');
+  document.getElementById('tab3').classList.add('done');
+  lv3Running=false;
+}
+
+function resetLv3(){
+  lv3Running=false; belt.robots=[];belt.running=false;belt.speed=0;
+  belt.nextSlotId=0;belt.totalDrift=0;
+  setIOverlay(false); activeBubbles=[];
+  document.getElementById('lv3-run').disabled=true;
+  document.getElementById('lv3-dot').className='status-dot';
+  document.getElementById('lv3-status').textContent='输入 n 后运行';
+  document.getElementById('lv3-success').classList.remove('show');
+  document.getElementById('l3-n').value='';
+  document.getElementById('l3-n').style.borderColor='var(--border)';
+  document.getElementById('l3-n-disp').textContent='n';
+  document.getElementById('l3-n-disp').style.color='';
+  document.getElementById('lv3-n-hint').textContent='';
+  if(lv3BannerEl){ lv3BannerEl.style.display='none'; lv3BannerEl.textContent=''; }
+}
+
+// updateLv3Preview kept as no-op for goLevel compatibility
+function updateLv3Preview(){}
+
+// ═══════════════════════════════════
+//  LEVEL 4 — BUG HUNT
+// ═══════════════════════════════════
+const BUG_QS=[
+  {
+    title:'求1到n的和，找Bug',
+    lines:[
+      {c:'let n = 10;',           bug:false},
+      {c:'let sum;',              bug:true,  fix:'let sum = 0;',  hint:'sum 没有初始化！累加前必须 = 0'},
+      {c:'for(let i=1;i<=n;i++){',bug:false},
+      {c:'  sum += i;',           bug:false},
+      {c:'}',                     bug:false},
+      {c:'console.log(sum);',     bug:false},
+    ]
+  },
+  {
+    title:'求n的阶乘，找Bug',
+    lines:[
+      {c:'let n = 5;',            bug:false},
+      {c:'let mul = 0;',          bug:true,  fix:'let mul = 1;',  hint:'求积初始值必须是 1，不能是 0！'},
+      {c:'for(let i=1;i<=n;i++){',bug:false},
+      {c:'  mul *= i;',           bug:false},
+      {c:'}',                     bug:false},
+      {c:'console.log(mul);',     bug:false},
+    ]
+  },
+  {
+    title:'找奇数，条件有Bug',
+    lines:[
+      {c:'let n = 20;',           bug:false},
+      {c:'let cnt = 0;',          bug:false},
+      {c:'for(let i=1;i<=n;i++){',bug:false},
+      {c:'  if(i % 2 == 0)',      bug:true,  fix:'if(i % 2 == 1)', hint:'i%2==0 是偶数条件！奇数应写 i%2==1 或 i%2!=0'},
+      {c:'    cnt++;',            bug:false},
+      {c:'}',                     bug:false},
+    ]
+  },
+  {
+    title:'死循环，找Bug',
+    lines:[
+      {c:'let sum = 0;',          bug:false},
+      {c:'for(let i=1;i<=10;i--){',bug:true, fix:'for(let i=1;i<=10;i++){', hint:'i-- 让 i 越来越小，永远满足 i<=10，死循环！应写 i++'},
+      {c:'  sum += i;',           bug:false},
+      {c:'}',                     bug:false},
+      {c:'console.log(sum);',     bug:false},
+    ]
+  },
+];
+
+let bugQIdx=0, bugLives=3, bugScore=0, bugFound=false;
+
+function loadBugQ(){
+  bugFound=false;
+  const q=BUG_QS[bugQIdx%BUG_QS.length];
+  belt.smoke=true;sfxSmoke();
+  // smoke on canvas
+  const wrap=document.getElementById('factory-wrap');
+  const codeEl=document.getElementById('lv4-code');
+  codeEl.innerHTML='';
+  document.getElementById('lv4-msg').textContent='';
+  document.getElementById('lv4-success').classList.remove('show');
+
+  const title=document.createElement('div');
+  title.style.cssText='font-family:Share Tech Mono,monospace;font-size:11px;color:var(--muted);margin-bottom:8px;';
+  title.textContent='// '+q.title;
+  codeEl.appendChild(title);
+
+  q.lines.forEach((line,idx)=>{
+    const div=document.createElement('div');
+    div.className='bug-line';
+    div.dataset.idx=idx;
+    const hasBug=line.bug;
+    div.innerHTML=`<span class="lnum">${idx+1}</span>
+      <span style="font-family:Share Tech Mono,monospace;font-size:12px;color:${hasBug?'#e2e8f0':'#94a3b8'};">${escHtml(line.c)}</span>`;
+    div.onclick=()=>clickBugLine(div,idx,q);
+    codeEl.appendChild(div);
+  });
+
+  renderBugLives();
+}
+
+function clickBugLine(div,idx,q){
+  AC.resume();
+  if(bugFound)return;
+  const line=q.lines[idx];
+  if(line.bug){
+    bugFound=true;
+    belt.smoke=false;belt.smokes=[];
+    div.classList.add('found');
+    sfxRight();
+    const pts=bugLives;bugScore+=pts;
+    document.getElementById('lv4-score').textContent=bugScore;
+    document.getElementById('lv4-msg').innerHTML=
+      `✅ <span style="color:var(--green)">找到了！</span><br>
+       <span style="font-family:Share Tech Mono,monospace;font-size:11px;color:var(--muted);">
+       问题：${line.hint}<br>
+       修复：<span style="color:var(--green);">${escHtml(line.fix||'')}</span></span>`;
+    toast('🐛 消灭Bug！+'+pts+'分','var(--green)');
+    // check if enough score for unlock
+    if(bugScore>=3){
+      setTimeout(()=>{
+        document.getElementById('lv4-summary').innerHTML=`共消灭 ${bugScore} 个Bug，得了 ${bugScore} 分！<br>你对初始化问题和条件错误都掌握了！`;
+        document.getElementById('lv4-success').classList.add('show');
+        document.getElementById('tab4').classList.add('done');
+        sfxWin();confetti(50);
+      },800);
+    }
+  } else {
+    div.classList.add('wrong');
+    sfxBug();sfxWrong();
+    bugLives=Math.max(0,bugLives-1);
+    renderBugLives();
+    setTimeout(()=>div.classList.remove('wrong'),400);
+    document.getElementById('lv4-msg').innerHTML=`❌ <span style="color:var(--red)">这行没问题，再找找…</span>`;
+    if(bugLives===0){
+      document.getElementById('lv4-msg').innerHTML=`💀 <span style="color:var(--red)">没生命了！自动揭示答案…</span>`;
+      const bugLine=document.querySelector('.bug-line');
+      q.lines.forEach((l,i)=>{if(l.bug)document.querySelectorAll('.bug-line')[i+1]?.classList.add('found');});
+      setTimeout(()=>{bugLives=3;nextBugQ();},1200);
+    }
+  }
+}
+
+function renderBugLives(){
+  document.getElementById('lv4-lives').textContent='❤️'.repeat(bugLives)+'🖤'.repeat(3-bugLives);
+}
+
+function showBugHint(){
+  AC.resume();
+  bugLives=Math.max(0,bugLives-1);
+  renderBugLives();
+  const q=BUG_QS[bugQIdx%BUG_QS.length];
+  const bugLine=q.lines.find(l=>l.bug);
+  document.getElementById('lv4-msg').innerHTML=`💡 <span style="color:var(--yellow)">提示：${bugLine?.hint||'找找初始化的问题'}</span>`;
+}
+
+function nextBugQ(){
+  bugQIdx++;bugLives=3;belt.smoke=true;
+  loadBugQ();
+}
+
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ═══════════════════════════════════
+//  LEVEL 5 — 自由模式
+// ═══════════════════════════════════
+function computeLv5(){
+  const s=parseInt(document.getElementById('l5-start').value)||1;
+  const e=parseInt(document.getElementById('l5-end').value)||20;
+  const st=parseInt(document.getElementById('l5-step').value)||1;
+  const mod=parseInt(document.getElementById('l5-mod').value)||2;
+  const rem=parseInt(document.getElementById('l5-rem').value)||1;
+  if(st<=0)return[];
+  const arr=[];
+  for(let i=s;i<=e;i+=st){if(i%mod===rem)arr.push(i);}
+  return arr;
+}
+
+function updateLv5Preview(){
+  const s=document.getElementById('l5-start').value;
+  const e=document.getElementById('l5-end').value;
+  const st=document.getElementById('l5-step').value;
+  const mod=document.getElementById('l5-mod').value;
+  const rem=document.getElementById('l5-rem').value;
+  document.getElementById('l5-s-disp').textContent=s;
+  document.getElementById('l5-e-disp').textContent=e;
+  document.getElementById('l5-st-disp').textContent=st;
+  document.getElementById('l5-m-disp').textContent=mod;
+  document.getElementById('l5-r-disp').textContent=rem;
+  document.getElementById('l5-m-know').textContent=mod;
+  document.getElementById('l5-r-know').textContent=rem;
+  const arr=computeLv5();
+  document.getElementById('l5-preview-cnt').textContent=arr.length;
+  const strip=document.getElementById('lv5-preview');
+  strip.innerHTML='';
+  if(!arr.length){strip.innerHTML='<span style="font-family:Share Tech Mono,monospace;font-size:11px;color:var(--red);">无输出</span>';return;}
+  arr.slice(0,20).forEach(v=>{
+    const ch=document.createElement('span');ch.className='pchip match';ch.textContent='i='+v;strip.appendChild(ch);
+  });
+  if(arr.length>20){const m=document.createElement('span');m.className='pchip';m.textContent='…';strip.appendChild(m);}
+
+  // Check if task is completed (output odd numbers only)
+  const isOdd=arr.every(v=>v%2===1);
+  if(isOdd&&arr.length>0){
+    document.getElementById('lv5-status').textContent='🎯 任务完成！全是奇数！点击运行验证';
+    document.getElementById('lv5-dot').className='status-dot ok';
+  } else {
+    document.getElementById('lv5-status').textContent='调节参数让输出只包含奇数（1,3,5...）';
+    document.getElementById('lv5-dot').className='status-dot';
+  }
+}
+
+let lv5Running=false;
+async function runLv5(){
+  if(lv5Running)return; AC.resume();
+  const arr=computeLv5();
+  if(!arr.length){toast('没有输出！检查参数','var(--red)');return;}
+  lv5Running=true;
+  belt.robots=[];belt.running=true;belt.speed=0.7;
+  belt.nextSlotId=0;belt.totalDrift=0;
+  document.getElementById('lv5-dot').className='status-dot run';
+  setIOverlay(true,'—','');
+
+  for(let idx=0;idx<arr.length;idx++){
+    const i=arr[idx];
+    setIOverlay(true,i,'');
+    document.getElementById('lv5-status').textContent=`生产编号 ${i}…`;
+    spawnOnBelt(i,RCOLORS[idx%RCOLORS.length],false,idx);
+    sfxSpawn(idx);
+    await sleep(Math.max(150,500-arr.length*18));
+  }
+
+  setIOverlay(false);belt.running=false;belt.speed=0;
+
+  const isOdd=arr.every(v=>v%2===1);
+  if(isOdd){
+    document.getElementById('lv5-dot').className='status-dot ok';
+    document.getElementById('lv5-status').textContent='🏆 任务完成！全是奇数！';
+    sfxWin();confetti(60);
+    document.getElementById('lv5-success').classList.add('show');
+    document.getElementById('tab5').classList.add('done');
+    totalStars=5;updateStars();
+  } else {
+    document.getElementById('lv5-dot').className='status-dot err';
+    document.getElementById('lv5-status').textContent='⚠️ 输出中有偶数，调整参数再试！';
+    sfxWrong();
+    toast('输出中包含偶数，继续调整！','var(--red)');
+  }
+  lv5Running=false;
+}
+
+function resetLv5(){
+  lv5Running=false;belt.robots=[];belt.nextSlotId=0;belt.totalDrift=0;belt.running=false;belt.speed=0;setIOverlay(false);
+  document.getElementById('lv5-dot').className='status-dot';
+  document.getElementById('lv5-success').classList.remove('show');
+  updateLv5Preview();
+}
+
+// ═══════════════════════════════════
+//  RESTART
+// ═══════════════════════════════════
+function restartAll(){
+  resetLv1();resetLv2();resetLv3();resetLv3();resetLv5();
+  unlockedLevels=new Set([1]);totalStars=1;updateStars();
+  document.querySelectorAll('.stab').forEach((t,i)=>{
+    t.className='stab'+(i===0?' active':(i>0?' locked':''));
+  });
+  document.querySelectorAll('.lv-card').forEach(c=>c.classList.toggle('active', parseInt(c.dataset.lv)===1));
+  currentLevel=1;bugScore=0;bugLives=3;bugQIdx=0;
+}
+
+// ═══════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════
+drawFactoryBG();
+onLv2NInput();
+updateLv3Preview();
+updateLv5Preview();
+setTimeout(()=>document.getElementById('lv1-inp').focus(),300);
+</script>
+</body>
+</html>

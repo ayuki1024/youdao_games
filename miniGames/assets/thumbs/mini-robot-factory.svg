@@ -1,0 +1,65 @@
+<svg width="128" height="96" viewBox="0 0 128 96" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="rf-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#020617"/>
+      <stop offset="1" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="rf-head" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4f9eff"/>
+      <stop offset="1" stop-color="#22c55e"/>
+    </linearGradient>
+    <linearGradient id="rf-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1f2937"/>
+      <stop offset="1" stop-color="#020617"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="128" height="96" fill="url(#rf-bg)"/>
+
+  <!-- circuit lines -->
+  <g stroke="#1e293b" stroke-width="1.2">
+    <path d="M8 20 H40"/>
+    <path d="M8 34 H48"/>
+    <path d="M80 18 H120"/>
+    <path d="M72 30 H120"/>
+    <circle cx="24" cy="20" r="2.2" fill="#38bdf8"/>
+    <circle cx="36" cy="34" r="2.2" fill="#22c55e"/>
+    <circle cx="96" cy="18" r="2.2" fill="#a855f7"/>
+    <circle cx="104" cy="30" r="2.2" fill="#facc15"/>
+  </g>
+
+  <!-- robot head -->
+  <g transform="translate(36,20)">
+    <rect x="0" y="0" width="56" height="42" rx="16" fill="url(#rf-head)" stroke="#0b1120" stroke-width="2.5"/>
+    <!-- face panel -->
+    <rect x="8" y="8" width="40" height="22" rx="10" fill="#f9fafb"/>
+    <!-- eyes -->
+    <rect x="14" y="13" width="8" height="8" rx="3" fill="#0f172a"/>
+    <rect x="34" y="13" width="8" height="8" rx="3" fill="#0f172a"/>
+    <rect x="16" y="15" width="4" height="4" rx="2" fill="#e5f4ff"/>
+    <rect x="36" y="15" width="4" height="4" rx="2" fill="#e5f4ff"/>
+    <!-- mouth -->
+    <rect x="20" y="24" width="16" height="4" rx="2" fill="#0f172a"/>
+    <!-- antenna -->
+    <rect x="26.5" y="-10" width="3" height="10" rx="1.5" fill="#e5e7eb"/>
+    <circle cx="28" cy="-12" r="3" fill="#facc15"/>
+  </g>
+
+  <!-- robot body -->
+  <g transform="translate(42,56)">
+    <rect x="0" y="0" width="44" height="20" rx="8" fill="url(#rf-body)" stroke="#111827" stroke-width="2"/>
+    <!-- chest panel -->
+    <rect x="8" y="5" width="28" height="10" rx="4" fill="#020617"/>
+    <text x="22" y="13" text-anchor="middle" font-family="Consolas,monospace" font-size="9" fill="#38bdf8">for</text>
+  </g>
+
+  <!-- tiny conveyor -->
+  <g transform="translate(18,80)">
+    <rect x="0" y="0" width="92" height="6" rx="3" fill="#020617" stroke="#1f2937" stroke-width="1"/>
+    <circle cx="8" r="3" cy="3" fill="#111827"/>
+    <circle cx="32" r="3" cy="3" fill="#111827"/>
+    <circle cx="56" r="3" cy="3" fill="#111827"/>
+    <circle cx="80" r="3" cy="3" fill="#111827"/>
+  </g>
+</svg>
+
