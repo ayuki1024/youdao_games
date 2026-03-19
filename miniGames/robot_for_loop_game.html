@@ -127,11 +127,11 @@ body::after{
 
 /* i-counter overlay */
 #i-overlay{
-  position:absolute;top:10px;left:50%;transform:translateX(-50%);
+  position:absolute;top:10px;left:0;transform:none;
   background:rgba(7,10,14,.85);
   border:1px solid var(--cyan);
   border-radius:8px;padding:4px 16px;
-  font-family:'Share Tech Mono',monospace;font-size:13px;
+  font-family:'Share Tech Mono',monospace;font-size:20px;
   color:var(--cyan);display:none;
   box-shadow:0 0 12px var(--cyan)44;
   white-space:nowrap;
@@ -147,7 +147,7 @@ body::after{
 /* Level 3 升级结果大字显示 */
 #lv3-banner{
   position:absolute;
-  left:50%;top:14px;
+  left:50%;top:4px;
   transform:translateX(-50%);
   padding:6px 16px;
   border-radius:999px;
@@ -156,8 +156,8 @@ body::after{
   color:var(--yellow);
   font-family:'Share Tech Mono',monospace;
   font-size:14px;
-  letter-spacing:2px;
-  box-shadow:0 0 18px rgba(250,204,21,.6);
+  letter-spacing:1px;
+  box-shadow:0 0 10px rgba(250,204,21,.6);
   display:none;
   max-width:90%;
   text-align:center;
@@ -205,7 +205,8 @@ body::after{
   background:#070a0e;
   border:1px solid var(--border);
   border-radius:8px;
-  padding:12px 16px;
+  /* 左侧多留一点空白，用于放引导箭头与气泡 */
+  padding:12px 16px 12px 32px;
   font-family:'Consolas','Courier New',monospace;
   font-size:clamp(12px,1.7vw,13.5px);
   line-height:2.1;
@@ -419,6 +420,45 @@ body::after{
 .pchip.preview{
   background:var(--blue)14;border-color:var(--blue)44;color:var(--blue);
 }
+
+/* ══ BLINK ARROW FOR TYPING HINT ══ */
+.blink-arrow{
+  display:inline-block;
+  margin-left:6px;
+  color:var(--cyan);
+  font-size:11px;
+  animation:blinkArrow .8s steps(2,end) infinite;
+  opacity:.9;
+}
+@keyframes blinkArrow{
+  0%,50%{opacity:0;transform:translateX(0);}
+  51%,100%{opacity:1;transform:translateX(2px);}
+}
+
+/* ══ CODE BLOCK ARROW (OUTSIDE) ══ */
+.code-arrow{
+  position:absolute;
+  left:8px;           /* 位于代码块内部左侧空白区 */
+  top:6px;            /* 靠近代码块上边缘 */
+  color:var(--yellow);
+  font-size:16px;
+  animation:blinkArrow .8s steps(2,end) infinite;
+  pointer-events:none;
+  z-index:2;
+}
+.code-arrow::after{
+  content:' 单击这里，开始打字';
+  position:absolute;
+  left:24px;          /* 气泡在箭头右侧，靠近代码顶部 */
+  top:-10px;           /* 视觉上贴近代码区域上方 */
+  padding:2px 8px;
+  border-radius:10px;
+  background:rgba(15,23,42,.95);
+  border:1px solid rgba(250,204,21,.6);
+  color:var(--yellow);
+  font-size:11px;
+  white-space:nowrap;
+}
 </style>
 </head>
 <body>
@@ -427,7 +467,7 @@ body::after{
 <!-- ═══ HEADER ═══ -->
 <div id="hdr">
   <div>
-    <div class="logo">🏭 代码工厂</div>
+    <div class="logo">🏭 机器人 加工厂</div>
     <div class="logo-sub">FOR LOOP · 流水线编程闯关</div>
   </div>
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
@@ -435,20 +475,16 @@ body::after{
       <span class="star" id="s1">⭐</span>
       <span class="star empty" id="s2">⭐</span>
       <span class="star empty" id="s3">⭐</span>
-      <span class="star empty" id="s4">⭐</span>
-      <span class="star empty" id="s5">⭐</span>
     </div>
-    <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);">5关闯关</div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);">3关闯关</div>
   </div>
 </div>
 
 <!-- ═══ STAGE TABS ═══ -->
 <div id="stage-bar">
-  <div class="stab active" id="tab1" onclick="goLevel(1)"><span class="stab-icon">🏎️</span>第1关·起跑</div>
-  <div class="stab locked" id="tab2" onclick="goLevel(2)"><span class="stab-icon">🔢</span>第2关·计数</div>
-  <div class="stab locked" id="tab3" onclick="goLevel(3)"><span class="stab-icon">🔍</span>第3关·筛选</div>
-  <div class="stab locked" id="tab4" onclick="goLevel(4)"><span class="stab-icon">🐛</span>第4关·捉虫</div>
-  <div class="stab locked" id="tab5" onclick="goLevel(5)"><span class="stab-icon">🧪</span>第5关·自由</div>
+  <div class="stab active" id="tab1" onclick="goLevel(1)"><span class="stab-icon">🏎️</span>第1关·启动</div>
+  <div class="stab locked" id="tab2" onclick="goLevel(2)"><span class="stab-icon">🔢</span>第2关·批量制造</div>
+  <div class="stab locked" id="tab3" onclick="goLevel(3)"><span class="stab-icon">🔍</span>第3关·筛选升级</div>
 </div>
 
 <!-- ═══════════════════════════════
@@ -460,7 +496,7 @@ body::after{
   <div id="lv3-banner"></div>
   <div id="i-overlay" style="display:flex;">
     <span style="color:var(--muted)">i =</span>
-    <span id="i-val" style="color:var(--yellow);font-weight:bold;min-width:28px;text-align:center;font-size:15px;">—</span>
+    <span id="i-val" style="color:var(--yellow);font-weight:bold;min-width:28px;text-align:center;font-size:20px;">—</span>
     <span style="color:var(--muted);font-size:11px;" id="i-extra"></span>
   </div>
 </div>
@@ -474,79 +510,88 @@ body::after{
     <div class="lv-heading">
       <div class="lv-num">01</div>
       <div>
-        <div class="lv-title" style="color:var(--blue)">🏎️ 第一关 · 发动流水线！</div>
-        <div class="lv-desc">照着灰色占位字符逐字输入，打对了字符立刻在代码区变绿高亮！</div>
+        <div class="lv-title" style="color:var(--blue)">🏎️ 第一关 · 启动流水线！</div>
+       <div class="lv-desc" style="font-size:14px;">
+   任务：写一个for循环，循环<span style="font-weight:700;color:var(--yellow);">8</span>次，产生<span style="font-weight:700;color:var(--yellow);">8</span>个机器人！
+</div>
       </div>
     </div>
 
-    <!-- ── 合并代码区 + 输入框 ── -->
-    <!-- 代码块里第一行是"可打字行"，其余行固定显示 -->
-    <div class="code-block" id="lv1-codebox" style="position:relative;cursor:text;" onclick="document.getElementById('lv1-inp').focus()">
+    <div class="lv-body">
+      <div class="lv-left">
+        <!-- ── 合并代码区 + 输入框 ── -->
+        <!-- 代码块里第一行是"可打字行"，其余行固定显示 -->
+        <div class="code-block" id="lv1-codebox" style="position:relative;cursor:text;" onclick="document.getElementById('lv1-inp').focus()">
+          <span id="lv1-code-arrow" class="code-arrow">➤</span>
 
-      <!-- 第1行：for(...) 打字区 + 固定的 { -->
-      <div style="position:relative;line-height:2.6;min-height:2.6em;display:flex;align-items:center;gap:0;">
-        <!-- 字符高亮层（只读展示） -->
-        <div id="lv1-display" style="pointer-events:none;white-space:pre;flex-shrink:0;"></div>
-        <!-- 固定的大括号，不需要用户输入 -->
-        <span style="color:var(--muted);pointer-events:none;flex-shrink:0;"> {</span>
-        <!-- 透明 input 叠在上方，用于捕获键盘输入 -->
-        <input
-          id="lv1-inp"
-          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-          style="
-            position:absolute;inset:0;
-            opacity:0;
-            width:100%;height:100%;
-            font-family:'Consolas','Courier New',monospace;
-            font-size:inherit;
-            background:transparent;border:none;outline:none;
-            cursor:text;
-            color:transparent;
-            caret-color:transparent;
-          "
-        >
+          <!-- 第1行：for(...) 打字区 + 固定的 { -->
+          <div style="position:relative;line-height:2.6;min-height:2.6em;display:flex;align-items:center;gap:0;">
+            <!-- 字符高亮层（只读展示） -->
+            <div id="lv1-display" style="pointer-events:none;white-space:pre;flex-shrink:0;"></div>
+            <!-- 固定的大括号，不需要用户输入 -->
+            <span style="color:var(--muted);pointer-events:none;flex-shrink:0;"> {</span>
+            <!-- 透明 input 叠在上方，用于捕获键盘输入 -->
+            <input
+              id="lv1-inp"
+              autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+              style="
+                position:absolute;inset:0;
+                opacity:0;
+                width:100%;height:100%;
+                font-family:'Consolas','Courier New',monospace;
+                font-size:inherit;
+                background:transparent;border:none;outline:none;
+                cursor:text;
+                color:transparent;
+                caret-color:transparent;
+              "
+            >
+          </div>
+
+          <!-- 第2行：固定显示 -->
+          <div style="line-height:2.3;color:var(--muted);">
+            &nbsp;&nbsp;<span style="color:#ffffff;">制造机器人</span>();
+          </div>
+          <!-- 第3行 -->
+          <div style="line-height:2.3;color:var(--muted);">}</div>
+
+          <!-- 进度条贴在代码块底部 -->
+          <div class="prog-wrap" style="margin-top:10px;margin-bottom:2px;">
+            <div class="prog-fill" id="lv1-prog"></div>
+          </div>
+        </div>
       </div>
 
-      <!-- 第2行：固定显示 -->
-      <div style="line-height:2.3;color:var(--muted);">
-        &nbsp;&nbsp;<span style="color:#50fa7b;">制造机器人</span>();
-      </div>
-      <!-- 第3行 -->
-      <div style="line-height:2.3;color:var(--muted);">}</div>
+      <div class="lv-right">
+        <!-- 提示文字 -->
+        <div id="lv1-hint" style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted);">
+          ⌨️ 点击代码区开始输入：<span style="color:var(--cyan);">for(int i=1; i&lt;=8; i++)</span>
+        </div>
 
-      <!-- 进度条贴在代码块底部 -->
-      <div class="prog-wrap" style="margin-top:10px;margin-bottom:2px;">
-        <div class="prog-fill" id="lv1-prog"></div>
-      </div>
-    </div>
+        <!-- 状态栏 + 按钮 -->
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div class="status-bar" style="flex:1;">
+            <div class="status-dot" id="lv1-dot"></div>
+            <span id="lv1-status">点击代码区开始输入…</span>
+          </div>
+          <span class="count-badge" id="lv1-badge">0 / 20</span>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-blue" id="lv1-run" onclick="runLv1()" disabled>▶ 启动流水线</button>
+          <button class="btn btn-ghost" onclick="resetLv1()">↺</button>
+        </div>
 
-    <!-- 提示文字 -->
-    <div id="lv1-hint" style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted);">
-      ⌨️ 点击代码区开始输入：<span style="color:var(--cyan);">for(int i=1; i&lt;=8; i++)</span>
-    </div>
-
-    <!-- 状态栏 + 按钮 -->
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-      <div class="status-bar" style="flex:1;">
-        <div class="status-dot" id="lv1-dot"></div>
-        <span id="lv1-status">点击代码区开始输入…</span>
-      </div>
-      <span class="count-badge" id="lv1-badge">0 / 20</span>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-blue" id="lv1-run" onclick="runLv1()" disabled>▶ 启动流水线</button>
-      <button class="btn btn-ghost" onclick="resetLv1()">↺</button>
-    </div>
-
-    <!-- 通关面板 -->
-    <div class="success-wrap" id="lv1-success">
-      <div class="success-title">🎉 流水线启动成功！</div>
-      <div style="font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:10px;">
-        for 循环让代码重复执行 ——<br>
-        i 从 <b style="color:var(--cyan)">1</b> 走到 <b style="color:var(--cyan)">8</b>，每次 <b style="color:var(--green)">+1</b>，一共生产了 <b style="color:var(--yellow)">8</b> 个机器人！
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-green" onclick="unlockAndGo(2)">下一关 →</button>
+        <!-- 通关面板 -->
+        <div class="success-wrap" id="lv1-success">
+          <div class="success-title">🎉 流水线启动成功！</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:10px;">
+            for 循环让代码重复执行 ——<br>
+            i 从 <b style="color:var(--cyan)">1</b> 走到 <b style="color:var(--cyan)">8</b>，每次 <b style="color:var(--green)">+1</b>，一共生产了 <b style="color:var(--yellow)">8</b> 个机器人！
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-green" onclick="unlockAndGo(2)">下一关 →</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -563,50 +608,76 @@ body::after{
       <div class="lv-num">02</div>
       <div>
         <div class="lv-title" style="color:var(--green)">🔢 第二关 · 输入 n，召唤机器人！</div>
-        <div class="lv-desc">输入 n，循环从 1 跑到 n，每次生产一个机器人并高喊编号！</div>
+        <div class="lv-desc" style="font-size:14px;">
+          任务：输入n，for循环<span style="font-weight:700;color:var(--yellow);"> n </span>次，产生<span style="font-weight:700;color:var(--yellow);"> n </span>个机器人！
+       </div>
       </div>
     </div>
 
-    <!-- 代码展示 -->
-    <div class="code-block" id="lv2-codebox">
-<span class="kw">int</span> <span class="vr">n</span>;<br>
-<span class="kw">cin</span> >> <span class="vr">n</span>;<br>
-<span class="kw">for</span>(<span class="kw">int</span> <span class="vr">i</span> = <span class="nm">1</span>; <span class="vr">i</span> &lt;= <span class="hl-yellow" id="l2-n-disp">n</span>; <span class="vr">i</span>++) {<br>
-&nbsp;&nbsp;制造机器人();<br>
+    <div class="lv-body">
+      <div class="lv-left">
+        <!-- 代码展示（前三行为打字区域：int n; / cin >> n; / for(...)） -->
+        <div class="code-block" id="lv2-codebox">
+          <span id="lv2-code-arrow" class="code-arrow">➤</span>
+          <div style="position:relative;line-height:2.1;min-height:6.6em;cursor:text;" onclick="document.getElementById('lv2-inp').focus()">
+            <!-- 打字行显示在 lv2-display 中；for(...) 行最后由 JS 拼接一个固定的大括号 {，不需要用户输入 -->
+            <div id="lv2-display" style="pointer-events:none;white-space:pre;"></div>
+            <input
+              id="lv2-inp"
+              autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+              style="
+                position:absolute;inset:0;
+                opacity:0;
+                width:100%;height:100%;
+                font-family:'Consolas','Courier New',monospace;
+                font-size:inherit;
+                background:transparent;border:none;outline:none;
+                cursor:text;
+                color:transparent;
+                caret-color:transparent;
+              "
+            >
+          </div>
+&nbsp;&nbsp;<span style="color:#ffffff;">制造机器人</span>();<br>
 &nbsp;&nbsp;<span class="kw">cout</span> &lt;&lt; <span style="color:#50fa7b;">"我是"</span> &lt;&lt; <span class="vr">i</span> &lt;&lt; <span style="color:#50fa7b;">"号，我爱学编程"</span>;<br>
 }
-    </div>
-
-    <!-- n 输入 -->
-    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-      <span style="font-family:'Noto Sans SC',sans-serif;font-size:14px;color:var(--muted);">请输入 n 的值：</span>
-      <input class="param-input" id="l2-n" value="" type="number" min="1" max="50"
-        placeholder="1 ~ 50"
-        style="width:110px;font-size:20px;background:#0c1018;border:2px solid var(--border);border-radius:6px;color:var(--yellow);padding:6px 12px;outline:none;text-align:center;"
-        oninput="onLv2NInput()">
-      <span id="lv2-n-hint" style="font-family:'Consolas',monospace;font-size:12px;color:var(--muted);"></span>
-    </div>
-
-    <!-- 状态 + 按钮 -->
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-      <div class="status-bar" style="flex:1;">
-        <div class="status-dot" id="lv2-dot"></div>
-        <span id="lv2-status">输入 n 后运行</span>
+        </div>
       </div>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-green" id="lv2-run" onclick="runLv2()" disabled>▶ 运行</button>
-      <button class="btn btn-ghost" onclick="resetLv2()">↺</button>
-    </div>
 
-    <!-- 通关 -->
-    <div class="success-wrap" id="lv2-success">
-      <div class="success-title">🎉 机器人军团集结完毕！</div>
-      <div style="font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:10px;">
-        循环变量 <b style="color:var(--cyan)">i</b> 从 1 走到 <b style="color:var(--yellow)" id="lv2-done-n">n</b>，每一个值都代表一个机器人的编号！
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-yellow" onclick="unlockAndGo(3)">下一关 →</button>
+      <div class="lv-right">
+        <!-- n 输入 -->
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+          <span style="font-family:'Noto Sans SC',sans-serif;font-size:14px;color:var(--muted);">请输入 n 的值：</span>
+          <input class="param-input" id="l2-n" value="" type="number" min="1" max="50" disabled
+            placeholder="1 ~ 50"
+            style="width:110px;font-size:20px;background:#0c1018;border:2px solid var(--border);border-radius:6px;color:var(--yellow);padding:6px 12px;outline:none;text-align:center;"
+            oninput="onLv2NInput()">
+          <span id="lv2-n-arrow" class="blink-arrow" style="color:var(--yellow);">← 在这里输入 n 的值</span>
+          <span id="lv2-n-hint" style="font-family:'Consolas',monospace;font-size:12px;color:var(--muted);"></span>
+        </div>
+
+        <!-- 状态 + 按钮 -->
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div class="status-bar" style="flex:1;">
+            <div class="status-dot" id="lv2-dot"></div>
+            <span id="lv2-status">输入 n 后运行</span>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-green" id="lv2-run" onclick="runLv2()" disabled>▶ 运行</button>
+          <button class="btn btn-ghost" onclick="resetLv2()">↺</button>
+        </div>
+
+        <!-- 通关 -->
+        <div class="success-wrap" id="lv2-success">
+          <div class="success-title">🎉 机器人军团集结完毕！</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:10px;">
+            循环变量 <b style="color:var(--cyan)">i</b> 从 1 走到 <b style="color:var(--yellow)" id="lv2-done-n">n</b>，每一个值都代表一个机器人的编号！
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-yellow" onclick="unlockAndGo(3)">下一关 →</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -622,205 +693,83 @@ body::after{
     <div class="lv-heading">
       <div class="lv-num">03</div>
       <div>
-        <div class="lv-title" style="color:var(--yellow)">⚡ 第三关 · 升级特殊机器人！</div>
-        <div class="lv-desc">筛选编号能被 3 整除、但不能被 5 整除的机器人，让它们发光升级！</div>
+        <div class="lv-title" style="color:var(--yellow)">⚡ 第三关 · 筛选机器人，升级！</div>
+        <div class="lv-desc" style="font-size:14px;">
+          任务：遍历1~n号，筛选出能被<span style="font-weight:700;color:var(--yellow);"> 3 </span>整除，不能被<span style="font-weight:700;color:var(--yellow);">5</span>整除的机器人升级！
+       </div>
       </div>
     </div>
 
-    <!-- 代码展示 -->
-    <div class="code-block" id="lv3-codebox">
+    <div class="lv-body">
+      <div class="lv-left">
+        <!-- 代码展示 -->
+        <div class="code-block" id="lv3-codebox">
+          <span id="lv3-code-arrow" class="code-arrow" style="top:120px;">➤</span>
 <span class="kw">int</span> <span class="vr">n</span>;<br>
 <span class="kw">cin</span> >> <span class="vr">n</span>;<br>
 <span class="kw">for</span>(<span class="kw">int</span> <span class="vr">i</span> = <span class="nm">1</span>; <span class="vr">i</span> &lt;= <span class="hl-yellow" id="l3-n-disp">n</span>; <span class="vr">i</span>++) {<br>
 &nbsp;&nbsp;制造机器人();<br>
-&nbsp;&nbsp;<span class="kw">if</span>(<span class="vr">i</span> % <span class="nm">3</span> == <span class="nm">0</span> &amp;&amp; <span class="vr">i</span> % <span class="nm">5</span> != <span class="nm">0</span>) {<br>
-&nbsp;&nbsp;&nbsp;&nbsp;升级(<span class="vr">i</span>号); <span class="cm">// ⚡ 发光变大！</span><br>
+  <div style="position:relative;line-height:2.3;min-height:2.3em;display:flex;align-items:center;gap:0;cursor:text;" onclick="document.getElementById('lv3-make-inp').focus()">
+    &nbsp;&nbsp;<span id="lv3-make-display" style="pointer-events:none;white-space:pre;"></span>
+    <span style="color:var(--muted);pointer-events:none;"> {</span>
+    <input
+      id="lv3-make-inp"
+      autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+      style="
+        position:absolute;inset:0;
+        opacity:0;
+        width:100%;height:100%;
+        font-family:'Consolas','Courier New',monospace;
+        font-size:inherit;
+        background:transparent;border:none;outline:none;
+        cursor:text;
+        color:transparent;
+        caret-color:transparent;
+      "
+    >
+  </div>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">cout</span> &lt;&lt; <span class="vr">i</span> &lt;&lt; <span style="color:#50fa7b;">"号 "</span>;<br>
 &nbsp;&nbsp;}<br>
 }
-    </div>
-
-    <!-- n 输入 -->
-    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-      <span style="font-family:'Noto Sans SC',sans-serif;font-size:14px;color:var(--muted);">请输入 n 的值：</span>
-      <input class="param-input" id="l3-n" value="" type="number" min="1" max="50"
-        placeholder="1 ~ 50"
-        style="width:110px;font-size:20px;background:#0c1018;border:2px solid var(--border);border-radius:6px;color:var(--yellow);padding:6px 12px;outline:none;text-align:center;"
-        oninput="onLv3NInput()">
-      <span id="lv3-n-hint" style="font-family:'Consolas',monospace;font-size:12px;color:var(--muted);"></span>
-    </div>
-
-    <div class="status-bar">
-      <div class="status-dot" id="lv3-dot"></div>
-      <span id="lv3-status">输入 n 后运行</span>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-yellow" id="lv3-run" onclick="runLv3()" disabled>▶ 运行</button>
-      <button class="btn btn-ghost" onclick="resetLv3()">↺</button>
-    </div>
-
-    <div class="success-wrap" id="lv3-success">
-      <div class="success-title">⚡ 升级完成！</div>
-      <div style="font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:10px;">
-        <b style="color:var(--cyan)">&&</b> 表示"并且"，两个条件同时成立才执行升级！<br>
-        能被3整除 <b style="color:var(--yellow)">且</b> 不能被5整除 → <span id="lv3-done-count" style="color:var(--yellow)">?</span> 个机器人升级！
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-red" onclick="unlockAndGo(4)">下一关 →</button>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- ═══════════════════════════════
-     LEVEL 4 — Bug 调试
-═══════════════════════════════ -->
-<div class="lv-card" id="lv4" data-lv="4">
-  <div class="lv-body">
-    <div class="lv-left">
-      <div class="lv-heading">
-        <div class="lv-num">04</div>
-        <div>
-          <div class="lv-title" style="color:var(--red)">🐛 第四关 · 流水线故障！</div>
-          <div class="lv-desc">工厂流水线卡住了！下面的代码有 <b style="color:var(--red)">Bug</b>，找出有问题的那一行修复它！</div>
         </div>
       </div>
 
-      <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:6px;">
-        👆 点击你认为有 Bug 的那行代码
-      </div>
-
-      <!-- Bug code display — lines are clickable -->
-      <div class="code-block" id="lv4-code" style="padding:8px 12px;cursor:default;"></div>
-
-      <div id="lv4-msg" style="font-family:'Share Tech Mono',monospace;font-size:12px;margin-top:8px;min-height:18px;color:var(--muted);"></div>
-
-      <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;">
-        <span style="font-family:'Fredoka One',cursive;font-size:13px;color:var(--muted);">生命：</span>
-        <span id="lv4-lives" style="font-size:18px;letter-spacing:2px;">❤️❤️❤️</span>
-        <span style="font-family:'Fredoka One',cursive;font-size:13px;color:var(--muted);margin-left:auto;">得分：</span>
-        <span id="lv4-score" style="font-family:'Fredoka One',cursive;font-size:16px;color:var(--yellow);">0</span>
-      </div>
-
-      <div class="btn-row" style="margin-top:10px;">
-        <button class="btn btn-ghost" onclick="showBugHint()">💡 提示 (-1❤️)</button>
-        <button class="btn btn-ghost" onclick="nextBugQ()">换题 →</button>
-      </div>
-    </div>
-
-    <div class="lv-right">
-      <div style="font-family:'Fredoka One',cursive;color:var(--red);font-size:15px;">🔧 常见 Bug 类型</div>
-      <div class="knowledge-card" style="margin:0;color:#aaa;font-size:12px;">
-<span class="cm">// ❌ Bug 1：忘记初始化</span><br>
-<span class="kw">let</span> <span class="vr">sum</span>; <span class="hl-red">← 应写 = 0</span><br><br>
-<span class="cm">// ❌ Bug 2：求积初始值错误</span><br>
-<span class="kw">let</span> <span class="vr">mul</span> = <span class="hl-red">0</span>; <span class="hl-red">← 应写 = 1</span><br><br>
-<span class="cm">// ❌ Bug 3：条件写反</span><br>
-<span class="vr">i</span> % 2 == <span class="hl-red">0</span> <span class="cm">→ 这是偶数条件！</span><br><br>
-<span class="cm">// ❌ Bug 4：死循环</span><br>
-<span class="vr">i</span>-- <span class="hl-red">← 本应 i++</span>
-      </div>
-      <div class="success-wrap" id="lv4-success">
-        <div class="success-title">🐛 Bug 猎人！</div>
-        <div style="font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:8px;" id="lv4-summary"></div>
-        <div class="btn-row"><button class="btn btn-purple" onclick="unlockAndGo(5)">最终关 →</button></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════
-     LEVEL 5 — 自由编程模式
-═══════════════════════════════ -->
-<div class="lv-card" id="lv5" data-lv="5">
-  <div class="lv-body">
-    <div class="lv-left">
-      <div class="lv-heading">
-        <div class="lv-num">05</div>
-        <div>
-          <div class="lv-title" style="color:var(--purple)">🧪 第五关 · 你的工厂！</div>
-          <div class="lv-desc">全部参数由你决定！挑战任务：让流水线只生产编号为奇数的机器人。</div>
+      <div class="lv-right">
+        <!-- n 输入 -->
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+          <span style="font-family:'Noto Sans SC',sans-serif;font-size:14px;color:var(--muted);">请输入 n 的值：</span>
+          <input class="param-input" id="l3-n" value="" type="number" min="1" max="50"
+            placeholder="1 ~ 50"
+            style="width:110px;font-size:20px;background:#0c1018;border:2px solid var(--border);border-radius:6px;color:var(--yellow);padding:6px 12px;outline:none;text-align:center;"
+            oninput="onLv3NInput()">
+          <span id="lv3-n-arrow" class="blink-arrow" style="color:var(--yellow);">← 在这里输入 n</span>
+          <span id="lv3-n-hint" style="font-family:'Consolas',monospace;font-size:12px;color:var(--muted);"></span>
         </div>
-      </div>
 
-      <div class="code-block" id="lv5-code">
-<span class="kw">for</span>(<span class="kw">int</span> <span class="vr">i</span>=<span class="hl-yellow" id="l5-s-disp">?</span>; <span class="vr">i</span>&lt;=<span class="hl-cyan" id="l5-e-disp">?</span>; <span class="vr">i</span>+=<span class="hl-green" id="l5-st-disp">?</span>) {<br>
-&nbsp;&nbsp;<span class="kw">if</span>(<span class="vr">i</span> % <span class="hl-purple" id="l5-m-disp">?</span> == <span class="nm" id="l5-r-disp">?</span>) {<br>
-&nbsp;&nbsp;&nbsp;&nbsp;出厂(<span class="vr">i</span>号);<br>
-&nbsp;&nbsp;}<br>
-}
-      </div>
-
-      <div class="param-grid" style="grid-template-columns:1fr 1fr;">
-        <div class="param-box">
-          <div class="param-name" style="color:var(--yellow);">起点 i=</div>
-          <input class="param-input" id="l5-start" value="1" type="number" oninput="updateLv5Preview()">
-        </div>
-        <div class="param-box">
-          <div class="param-name" style="color:var(--cyan);">终点 i&lt;=</div>
-          <input class="param-input" id="l5-end" value="20" type="number" oninput="updateLv5Preview()">
-        </div>
-        <div class="param-box">
-          <div class="param-name" style="color:var(--green);">步长 +=</div>
-          <input class="param-input" id="l5-step" value="1" type="number" oninput="updateLv5Preview()">
-        </div>
-        <div class="param-box">
-          <div class="param-name" style="color:var(--purple);">筛选 i%</div>
-          <input class="param-input" id="l5-mod" value="2" type="number" oninput="updateLv5Preview()">
-        </div>
-        <div class="param-box">
-          <div class="param-name" style="color:var(--muted);">余数 ==</div>
-          <input class="param-input" id="l5-rem" value="1" type="number" oninput="updateLv5Preview()">
-        </div>
-        <div class="param-box" style="background:#0c1018;border-color:var(--purple)33;">
-          <div class="param-name" style="color:var(--purple);">预计输出</div>
-          <div style="font-family:'Fredoka One',cursive;font-size:20px;color:var(--purple);text-align:center;" id="l5-preview-cnt">?</div>
-        </div>
-      </div>
-
-      <div class="preview-strip" id="lv5-preview">
-        <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);">实时预览…</span>
-      </div>
-
-      <div style="padding:8px 12px;background:#160d22;border:1px solid var(--purple)33;border-radius:7px;font-size:12px;color:#c4a8e8;line-height:1.8;margin-top:2px;">
-        🎯 <b>任务：</b>只输出 <b style="color:var(--yellow)">奇数编号</b> 的机器人（1,3,5,7...）
-      </div>
-
-      <div class="status-bar">
-        <div class="status-dot" id="lv5-dot"></div>
-        <span id="lv5-status">调节参数，实现挑战目标</span>
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-purple" onclick="runLv5()">▶ 运行工厂</button>
-        <button class="btn btn-ghost" onclick="resetLv5()">↺</button>
-      </div>
-    </div>
-
-    <div class="lv-right">
-      <div style="font-family:'Fredoka One',cursive;color:var(--purple);font-size:15px;">🏆 完整for循环模板</div>
-      <div class="knowledge-card" style="margin:0;font-size:12px;">
-<span class="kw">for</span>(<span class="kw">int</span> <span class="vr">i</span>=<span class="hl-yellow">起点</span>; <span class="vr">i</span>&lt;=<span class="hl-cyan">终点</span>; <span class="vr">i</span>+=<span class="hl-green">步长</span>) {<br>
-&nbsp;&nbsp;<span class="kw">if</span>(<span class="vr">i</span>%<span id="l5-m-know" class="hl-purple">mod</span>==<span id="l5-r-know" class="nm">余数</span>) {<br>
-&nbsp;&nbsp;&nbsp;&nbsp;执行代码;<br>
-&nbsp;&nbsp;}<br>
-}<br>
-<span class="cm">// 奇数：i%2==1</span><br>
-<span class="cm">// 偶数：i%2==0</span><br>
-<span class="cm">// 3倍数：i%3==0</span>
-      </div>
-      <div class="success-wrap" id="lv5-success">
-        <div class="success-title">🏆 全关通关！代码工厂大师！</div>
-        <div style="font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:8px;">
-          你已经掌握了 for 循环的全部核心知识：<br>
-          <b style="color:var(--blue)">结构</b> · <b style="color:var(--green)">变量</b> · <b style="color:var(--yellow)">筛选</b> · <b style="color:var(--red)">调试</b> · <b style="color:var(--purple)">组合</b>
+        <div class="status-bar">
+          <div class="status-dot" id="lv3-dot"></div>
+          <span id="lv3-status">输入 n 后运行</span>
         </div>
         <div class="btn-row">
-          <button class="btn btn-yellow" onclick="restartAll()">🔄 再来一次</button>
+          <button class="btn btn-yellow" id="lv3-run" onclick="runLv3()" disabled>▶ 运行</button>
+          <button class="btn btn-ghost" onclick="resetLv3()">↺</button>
+        </div>
+
+        <div class="success-wrap" id="lv3-success">
+          <div class="success-title">⚡ 升级完成！</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:10px;">
+            <b style="color:var(--cyan)">&&</b> 表示"并且"，两个条件同时成立才执行升级！<br>
+            能被3整除 <b style="color:var(--yellow)">且</b> 不能被5整除 → <span id="lv3-done-count" style="color:var(--yellow)">?</span> 个机器人升级！
+          </div>
+      <!-- 第 3 关已是最后一关，不再显示“下一关”按钮 -->
         </div>
       </div>
     </div>
+
   </div>
 </div>
+
+<!-- （原第 4、5 关已移除） -->
 
 </div><!-- /root -->
 <div id="toast"></div>
@@ -1168,16 +1117,15 @@ function drawRobots(){
 
     const sc=r.scale||1;
     const x=r.x, y=r.y+(r.arrived&&belt.running?Math.sin(r.phase)*1.5:0);
-    const c=r.color||'#4f9eff';
+    let c=r.color||'#4f9eff';
 
-    // Upgraded robots (lv3): special rendering
-    if(isUpgraded(r.label) && currentLevel===3){
-      // temporarily set position for drawUpgradedRobot
+    // 第 3 关：升级机器人直接以最终升级形态显示
+    if(currentLevel===3 && isUpgraded(r.label)){
       const savedX=r.x, savedY=r.y;
       r.x=x; r.y=y;
       drawUpgradedRobot(r);
       r.x=savedX; r.y=savedY;
-      return; // skip normal drawing below
+      return;
     }
 
     fctx.save();
@@ -1188,17 +1136,32 @@ function drawRobots(){
     fctx.beginPath();fctx.ellipse(0,36,14,5,0,0,Math.PI*2);
     fctx.fillStyle='rgba(0,0,0,.3)';fctx.fill();
 
-    // Body
-    fctx.fillStyle=r.filtered?'#374151':'#1c2333';
-    fctx.fillRect(-14,0,28,22);
-    fctx.fillStyle=c;
-    fctx.fillRect(-13,1,26,20);
-    // Head
-    fctx.fillStyle='#1c2333';fctx.fillRect(-11,-16,22,16);
-    fctx.fillStyle=c;fctx.fillRect(-10,-15,20,14);
+    // Body & head
+    // 第 3 关中，未升级的机器人绘制为灰色轮廓，与发光升级机器人形成对比
+    if(currentLevel===3 && !isUpgraded(r.label)){
+      // 灰色轮廓机器人：深色底 + 浅灰描边
+      fctx.fillStyle='#020617';
+      fctx.fillRect(-14,0,28,22);
+      fctx.strokeStyle='#4b5563';
+      fctx.lineWidth=2;
+      fctx.strokeRect(-14,0,28,22);
+      fctx.fillStyle='#020617';
+      fctx.fillRect(-11,-16,22,16);
+      fctx.strokeRect(-11,-16,22,16);
+      c = '#6b7280';
+    } else {
+      fctx.fillStyle=r.filtered?'#374151':'#1c2333';
+      fctx.fillRect(-14,0,28,22);
+      fctx.fillStyle=c;
+      fctx.fillRect(-13,1,26,20);
+      // Head
+      fctx.fillStyle='#1c2333';fctx.fillRect(-11,-16,22,16);
+      fctx.fillStyle=c;fctx.fillRect(-10,-15,20,14);
+    }
     // eyes
     fctx.fillStyle='#0a0e14';fctx.fillRect(-7,-12,5,5);fctx.fillRect(2,-12,5,5);
-    fctx.fillStyle='#fff';fctx.fillRect(-6,-11,3,3);fctx.fillRect(3,-11,3,3);
+    fctx.fillStyle = (currentLevel===3 && !isUpgraded(r.label)) ? '#9ca3af' : '#fff';
+    fctx.fillRect(-6,-11,3,3);fctx.fillRect(3,-11,3,3);
     if(r.filtered){fctx.fillStyle='#6b7280';fctx.fillRect(-7,-12,5,5);fctx.fillRect(2,-12,5,5);}
     // mouth
     if(!r.filtered){fctx.fillStyle='#0a0e14';fctx.fillRect(-5,-5,10,3);}
@@ -1212,7 +1175,8 @@ function drawRobots(){
     // ── Number on robot chest ──
     fctx.fillStyle = 'rgba(0,0,0,0.55)';
     fctx.fillRect(-11, 2, 22, 13);
-    fctx.fillStyle = r.filtered ? '#6b7280' : '#fff';
+    fctx.fillStyle = r.filtered ? '#6b7280'
+      : (currentLevel===3 && !isUpgraded(r.label) ? '#e5e7eb' : '#fff');
     fctx.font = `bold ${r.label > 9 ? 9 : 11}px Consolas,monospace`;
     fctx.textAlign = 'center';
     fctx.textBaseline = 'middle';
@@ -1292,6 +1256,40 @@ async function driveRobots(robots, speed=1.4){
 let currentLevel=1;
 let totalStars=1;
 
+function focusActiveInput(){
+  try{
+    if(currentLevel===1){
+      const inp=document.getElementById('lv1-inp');
+      if(inp && !inp.disabled){ inp.focus(); return; }
+    }
+    if(currentLevel===2){
+      const nInp=document.getElementById('l2-n');
+      const codeInp=document.getElementById('lv2-inp');
+      if(nInp && !nInp.disabled){ nInp.focus(); return; }
+      if(codeInp && !codeInp.disabled){ codeInp.focus(); return; }
+    }
+    if(currentLevel===3){
+      const nInp=document.getElementById('l3-n');
+      const codeInp=document.getElementById('lv3-make-inp');
+      // 第3关优先输入第5行条件代码，完成后再引导输入 n
+      if(!lv3MakeDone && codeInp && !codeInp.disabled){ codeInp.focus(); return; }
+      if(nInp && !nInp.disabled){ nInp.focus(); return; }
+      if(codeInp && !codeInp.disabled){ codeInp.focus(); return; }
+    }
+  }catch(_){}
+}
+
+// 兜底：用户开始敲键盘时，自动把焦点切到当前关卡输入框（无需点代码区、无需 Tab）
+document.addEventListener('keydown', (e)=>{
+  const tag = (document.activeElement && document.activeElement.tagName || '').toLowerCase();
+  const alreadyTyping = tag==='input' || tag==='textarea';
+  if(alreadyTyping) return;
+  const isTypingKey =
+    e.key.length===1 || e.key==='Backspace' || e.key==='Delete' || e.key==='Enter';
+  if(!isTypingKey) return;
+  focusActiveInput();
+});
+
 function goLevel(n){
   AC.resume();
   if(!unlockedLevels.has(n)) return;
@@ -1304,14 +1302,47 @@ function goLevel(n){
   belt.robots=[];belt.scrollX=0;belt.running=false;belt.speed=0;belt.smoke=false;
   belt.nextSlotId=0;belt.totalDrift=0;
   activeBubbles=[];
-  document.getElementById('i-overlay').style.display='none';
-  // Init level previews
+  // 三个循环关卡都需要用到 i = ? 模块，这里统一初始化为占位符
+  if(n===1 || n===2 || n===3){
+    setIOverlay(true,'—','');
+  }
+  // 初始化各关的引导箭头：默认只亮左侧代码箭头，右侧 n 箭头关闭
+  if(n===2){
+    const codeArrow = document.getElementById('lv2-code-arrow');
+    const nArrow = document.getElementById('lv2-n-arrow');
+    if(codeArrow) codeArrow.style.display = 'inline-block';
+    if(nArrow) nArrow.style.display = 'none';
+  }
+  if(n===3){
+    const codeArrow = document.getElementById('lv3-code-arrow');
+    const nArrow = document.getElementById('lv3-n-arrow');
+    if(codeArrow) codeArrow.style.display = 'inline-block';
+    if(nArrow) nArrow.style.display = 'none';
+  }
+  // Init level previews / banners
   try {
     if(n===2) onLv2NInput();
-    if(n===3) updateLv3Preview();
+    if(n===3){
+      updateLv3Preview();
+      // 第 3 关一开始就显示升级结果模块，提示玩家运行后会看到统计
+      const banner = document.getElementById('lv3-banner');
+      if(banner){
+        banner.style.display = 'block';
+        // 初始时还没有升级任何机器人，分两行显示：数量 + 编号占位
+        banner.innerHTML =
+          '<span style="color:#9ca3af;">⚡ 共升级 </span>' +
+          '<span style="color:#facc15;">0</span>' +
+          '<span style="color:#9ca3af;"> 个机器人</span><br>' +
+          '<span style="color:#9ca3af;">编号：</span>' +
+          '<span style="color:#facc15;"></span>';
+      }
+    }
     if(n===5) updateLv5Preview();
     if(n===4) loadBugQ();
   } catch(e){ console.error('goLevel init error:', e); }
+
+  // 进入关卡后尝试自动聚焦
+  setTimeout(()=>focusActiveInput(), 40);
 }
 
 function unlockAndGo(n){
@@ -1324,7 +1355,7 @@ function unlockAndGo(n){
 }
 
 function updateStars(){
-  for(let i=1;i<=5;i++){
+  for(let i=1;i<=3;i++){
     const s=document.getElementById('s'+i);
     if(s) s.className='star'+(i>totalStars?' empty':'');
   }
@@ -1332,8 +1363,17 @@ function updateStars(){
 
 function setIOverlay(show, val='', extra=''){
   const ov=document.getElementById('i-overlay');
-  ov.style.display=show?'flex':'none';
-  if(show){ document.getElementById('i-val').textContent=val; document.getElementById('i-extra').textContent=extra; }
+  // 不再隐藏，只在需要时更新内容和位置
+  if(!show) return;
+  // 确保模块可见（覆盖 CSS 中的 display:none）
+  ov.style.display = 'flex';
+  document.getElementById('i-val').textContent=val;
+  document.getElementById('i-extra').textContent=extra;
+  // 将 i = ? 小模块水平移动到机器人诞生位置附近（传送带右端）
+  if(typeof belt === 'object' && typeof belt.exitX === 'number'){
+    // 稍微向左偏一点，避免贴边太紧
+    ov.style.left = Math.max(0, belt.exitX - 80) + 'px';
+  }
 }
 
 function toast(msg, col='var(--yellow)'){
@@ -1356,34 +1396,63 @@ function confetti(n=40){
 // ═══════════════════════════════════
 //  LEVEL 1 — TYPING
 // ═══════════════════════════════════
-const LV1_TARGET='for(int i=1; i<=8; i++)';
+const LV1_TARGET='for(int i = 1; i <= 8; i++)';
+// 与 LV1_TARGET 等长的语法高亮信息，参考第2关样式
+// 索引对应字符：for(int i=1; i<=8; i++)
+// 0:f 1:o 2:r 3:( 4:i 5:n 6:t 7:space 8:i 9:= 10:1 11:; 12:space 13:i 14:< 15:= 16:8 17:; 18:space 19:i 20:+ 21:+ 22:)
+const LV1_SYNTAX = [
+  'kw','kw','kw','',
+  'kw','kw','kw','',
+  'vr','op','nm','',
+  '','vr','op','op','nm','',
+  '','vr','op','op',''
+];
 // TARGET without spaces, used for matching
 const LV1_NOSPACE = LV1_TARGET.replace(/ /g,'');
 let lv1Done=false;
+let lv1CodeDone=false; // 第 1 关代码输入是否已完成（完成后锁定，不再回退）
 
 // Map typed (spaces stripped) onto TARGET positions:
 // returns an array of length TARGET where each entry is
 // 'correct' | 'wrong' | 'pending', accounting for spaces being auto-filled.
 function buildMatchMap(typedRaw){
-  // Strip spaces from what the user typed
+  // 去掉空格后的真实输入，用于和不含空格的目标串比较
   const typed = typedRaw.replace(/ /g,'');
-  // We walk TARGET; spaces in TARGET are auto-accepted
-  const map = []; // per TARGET char: 'correct'|'wrong'|'pending'
-  let ti = 0; // index into typed (space-stripped)
+
+  // 计算当前已经连续打对了多少个字符（前缀长度）
+  const nonSpaceTarget = LV1_TARGET.replace(/ /g,'');
+  let correctCount = 0;
+  for(let i=0;i<typed.length && i<nonSpaceTarget.length;i++){
+    if(typed[i] === nonSpaceTarget[i]) correctCount++;
+    else break; // 一旦出错，后面的都暂不算通过
+  }
+
+  // map：对每个目标字符（包含空格）标注状态
+  const map = []; // 'correct' | 'wrong' | 'pending' | 'space'
+  let logicalIdx = 0; // 当前是第几个「非空格」目标字符
   for(let i=0;i<LV1_TARGET.length;i++){
-    if(LV1_TARGET[i]===' '){
-      // space in target — always correct, costs no keystroke
+    const ch = LV1_TARGET[i];
+    if(ch === ' '){
       map.push('space');
-    } else if(ti < typed.length){
-      map.push(typed[ti]===LV1_TARGET[i] ? 'correct' : 'wrong');
-      ti++;
+      continue;
+    }
+    if(logicalIdx < correctCount){
+      map.push('correct');
+    } else if(logicalIdx === correctCount && typed.length > correctCount){
+      // 只在「第一个未通过的位置且用户已经多输了一位」标记为 wrong
+      map.push('wrong');
     } else {
       map.push('pending');
     }
+    logicalIdx++;
   }
-  // cursor is at TARGET position of next pending char
-  const cursorPos = map.indexOf('pending');
-  return {map, cursorPos: cursorPos===-1 ? LV1_TARGET.length : cursorPos};
+
+  // 光标：优先停在 wrong，其次是第一个 pending，最后在末尾
+  let cursorPos = map.indexOf('wrong');
+  if(cursorPos === -1) cursorPos = map.indexOf('pending');
+  if(cursorPos === -1) cursorPos = LV1_TARGET.length;
+
+  return {map, cursorPos};
 }
 
 function buildLv1Display(typedRaw){
@@ -1391,36 +1460,69 @@ function buildLv1Display(typedRaw){
   let html='';
   for(let i=0;i<LV1_TARGET.length;i++){
     const raw = LV1_TARGET[i];
-    const ch  = raw.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const chEsc  = raw.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const syntaxClass = LV1_SYNTAX[i] || '';
     // blinking cursor before the next pending char
     if(i===cursorPos){
       html+=`<span style="display:inline-block;width:2px;height:1.1em;background:var(--cyan);vertical-align:text-bottom;margin-right:1px;animation:cursorblink .7s step-end infinite;"></span>`;
     }
     if(map[i]==='space'){
-      // spaces always shown as correct (dim-green)
-      html+=`<span style="color:var(--green);opacity:.5;">${ch==' '?'&nbsp;':ch}</span>`;
+      // 空格：保持为轻微高亮
+      html+=`<span style="color:var(--muted);opacity:.7;">${raw===' ' ? '&nbsp;' : chEsc}</span>`;
     } else if(map[i]==='correct'){
-      html+=`<span style="color:var(--green);text-shadow:0 0 8px var(--green)99;">${ch}</span>`;
+      // 正确：沿用第2关语法色，只增加一点发光效果
+      const cls = syntaxClass ? ` class="${syntaxClass}"` : '';
+      html+=`<span${cls} style="text-shadow:0 0 8px var(--green)55;">${chEsc}</span>`;
     } else if(map[i]==='wrong'){
-      html+=`<span style="color:var(--red);background:#2a0808;border-radius:2px;padding:0 1px;">${ch}</span>`;
+      // 错误：保留语法色，叠加鲜红色背景
+      const cls = syntaxClass ? ` class="${syntaxClass}"` : '';
+      html+=`<span${cls} style="background:rgba(239,68,68,0.6);border-radius:3px;padding:0 2px;">${chEsc}</span>`;
     } else {
-      html+=`<span style="color:#4a5568;">${ch}</span>`;
+      // 待输入：使用语法色，但整体略暗（统一透明度 0.15）
+      const cls = syntaxClass ? ` class="${syntaxClass}"` : '';
+      html+=`<span${cls} style="opacity:.20;">${chEsc}</span>`;
     }
   }
   document.getElementById('lv1-display').innerHTML=html;
+  const codeArrow = document.getElementById('lv1-code-arrow');
+  if(codeArrow){
+    codeArrow.style.display = typedRaw.length ? 'none' : 'inline-block';
+  }
 }
 buildLv1Display('');
 
 document.getElementById('lv1-inp').addEventListener('input',function(){
   AC.resume();
-  const typedRaw = this.value;
-  const typed = typedRaw.replace(/ /g,''); // strip spaces for matching
+  // 一旦第 1 关代码已正确完成，后续误触输入不再影响按钮状态
+  if(lv1CodeDone){
+    return;
+  }
+  let typedRaw = this.value;
+  let typed = typedRaw.replace(/ /g,''); // strip spaces for matching
+
+  const nonSpaceTarget = LV1_TARGET.replace(/ /g,'');
+
+  // 计算当前连续打对的前缀长度
+  let correctCount = 0;
+  for(let i=0;i<typed.length && i<nonSpaceTarget.length;i++){
+    if(typed[i] === nonSpaceTarget[i]) correctCount++;
+    else break;
+  }
+
+  // 如果用户在某一位打错后继续输入，我们只保留“正确前缀 + 最新尝试的那个字符”
+  if(typed.length > correctCount + 1){
+    const lastTry = typed[typed.length-1];
+    typed = nonSpaceTarget.slice(0, correctCount) + lastTry;
+  }
+
+  // 将输入框内容重置为我们整理后的串（不包含空格）
+  this.value = typed;
+  typedRaw = this.value;
 
   buildLv1Display(typedRaw);
 
   // Progress = how many non-space TARGET chars have been correctly typed
-  const nonSpaceTarget = LV1_TARGET.replace(/ /g,'');
-  let match=0;
+  let match = 0;
   for(let i=0;i<typed.length&&i<nonSpaceTarget.length;i++){
     if(typed[i]===nonSpaceTarget[i]) match++;
     else break;
@@ -1434,6 +1536,7 @@ document.getElementById('lv1-inp').addEventListener('input',function(){
   // Done when all non-space chars typed correctly
   const done = typed === nonSpaceTarget;
   if(done){
+    lv1CodeDone = true;
     document.getElementById('lv1-run').disabled=false;
     document.getElementById('lv1-status').textContent='✅ 完美！点击启动流水线';
     document.getElementById('lv1-dot').className='status-dot ok';
@@ -1446,7 +1549,7 @@ document.getElementById('lv1-inp').addEventListener('input',function(){
     document.getElementById('lv1-run').disabled=true;
     document.getElementById('lv1-dot').className='status-dot';
     const lastChar = typed[typed.length-1];
-    const expectedChar = nonSpaceTarget[typed.length-1];
+    const expectedChar = nonSpaceTarget[Math.min(typed.length-1, correctCount)];
     if(typed.length>0 && lastChar!==expectedChar){ sfxTypeErr(); }
     else if(typed.length>0){ sfxTypeOk(); }
     document.getElementById('lv1-status').textContent=`输入中… ${pct}%`;
@@ -1476,7 +1579,8 @@ async function runLv1(){
     await sleep(1000);
   }
 
-  setIOverlay(true,'结束','');
+  // 结束时保留最后一次循环之后的 i 值（这里是 9），不要覆盖成“结束”字样
+  setIOverlay(true,'9','');
   document.getElementById('lv1-status').textContent='循环结束，i=9 超出 i<=8，停止';
   await sleep(500);
   belt.running=false;belt.speed=0;setIOverlay(false);
@@ -1489,6 +1593,7 @@ async function runLv1(){
 
 function resetLv1(){
   lv1Done=false;
+  lv1CodeDone=false;
   const inp=document.getElementById('lv1-inp');
   inp.value='';inp.disabled=false;
   document.getElementById('lv1-run').disabled=true;
@@ -1505,7 +1610,185 @@ function resetLv1(){
 }
 
 // ═══════════════════════════════════
-//  LEVEL 2 — 参数调节
+//  LEVEL 2 — 参数调节 + 代码打字（同第1关交互风格）
+//  用户需依次打出：int n; / cin >> n; / for(int i = 1; i <= n; i++)
+// ═══════════════════════════════════
+let lv2CodeDone = false; // 第 2 关三行代码是否已正确输入
+const LV2_TARGET = 'int n;\ncin >> n;\nfor(int i = 1; i <= n; i++)';
+// 与 LV2_TARGET 等长的语法高亮信息，索引对应：
+// "int n;\ncin >> n;\nfor(int i = 1; i <= n; i++)"
+// 0:i 1:n 2:t 3:space 4:n 5:; 6:\n
+// 7:c 8:i 9:n 10:space 11:> 12:> 13:space 14:n 15:; 16:\n
+// 17:f 18:o 19:r 20:( 21:i 22:n 23:t 24:space 25:i 26:space 27:= 28:space 29:1 30:; 31:space
+// 32:i 33:space 34:< 35:= 36:space 37:n 38:; 39:space 40:i 41:+ 42:+ 43:)
+const LV2_SYNTAX = [
+  // "int n;"
+  'kw','kw','kw','',  // int
+  'vr','',            // n;
+  '',                 // \n
+  // "cin >> n;"
+  'kw','kw','kw','',  // cin
+  'op','op','',       // >>
+  'vr','',            // n;
+  '',                 // \n
+  // "for(int i = 1; i <= n; i++)"
+  'kw','kw','kw','',  // for(
+  'vr','vr','vr','',  // int i  （int 按第1关当 kw，这里也可以视作 kw，视觉一致）
+  'vr','',            // i =
+  'op','',            // =
+  'nm','',            // 1;
+  '',                 // space
+  'vr','',            // i
+  'op','op','',       // <=
+  'vr','',            // n;
+  '',                 // space
+  'vr','op','op',''   // i++
+];
+
+function buildLv2MatchMap(typedRaw){
+  const typed = typedRaw.replace(/[ \n]/g,'');
+  const nonSpaceTarget = LV2_TARGET.replace(/[ \n]/g,'');
+
+  // 计算连续打对的前缀长度
+  let correctCount = 0;
+  for(let i=0;i<typed.length && i<nonSpaceTarget.length;i++){
+    if(typed[i] === nonSpaceTarget[i]) correctCount++;
+    else break;
+  }
+
+  const map = []; // 'correct' | 'wrong' | 'pending' | 'space'
+  let logicalIdx = 0;
+  for(let i=0;i<LV2_TARGET.length;i++){
+    const ch = LV2_TARGET[i];
+    if(ch === ' ' || ch === '\n'){
+      map.push('space');
+      continue;
+    }
+    if(logicalIdx < correctCount){
+      map.push('correct');
+    }else if(logicalIdx === correctCount && typed.length > correctCount){
+      map.push('wrong');
+    }else{
+      map.push('pending');
+    }
+    logicalIdx++;
+  }
+
+  let cursorPos = map.indexOf('wrong');
+  if(cursorPos === -1) cursorPos = map.indexOf('pending');
+  if(cursorPos === -1) cursorPos = LV2_TARGET.length;
+
+  return {map, cursorPos};
+}
+
+function buildLv2Display(typedRaw){
+  const {map, cursorPos} = buildLv2MatchMap(typedRaw);
+  let html = '';
+  for(let i=0;i<LV2_TARGET.length;i++){
+    const raw = LV2_TARGET[i];
+    if(raw === '\n'){
+      html += '<br>';
+      continue;
+    }
+    const chEsc = raw.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const syntaxClass = LV2_SYNTAX[i] || '';
+
+    if(i === cursorPos){
+      html += `<span style="display:inline-block;width:2px;height:1.1em;background:var(--cyan);vertical-align:text-bottom;margin-right:1px;animation:cursorblink .7s step-end infinite;"></span>`;
+    }
+
+    if(map[i]==='space'){
+      html += `<span style="color:var(--muted);opacity:.7;">${raw===' ' ? '&nbsp;' : chEsc}</span>`;
+    }else if(map[i]==='correct'){
+      const cls = syntaxClass ? ` class="${syntaxClass}"` : '';
+      html += `<span${cls} style="text-shadow:0 0 6px var(--green)55;">${chEsc}</span>`;
+    }else if(map[i]==='wrong'){
+      const cls = syntaxClass ? ` class="${syntaxClass}"` : '';
+      html += `<span${cls} style="background:rgba(239,68,68,0.6);border-radius:3px;padding:0 2px;">${chEsc}</span>`;
+    }else{
+      // 待输入：统一透明度 0.15
+      const cls = syntaxClass ? ` class="${syntaxClass}"` : '';
+      html += `<span${cls} style="opacity:.15;">${chEsc}</span>`;
+    }
+  }
+  // 在打字区的最后一行 for(...) 末尾，拼接一个固定的大括号 {，不需要用户输入
+  html += `<span style="color:var(--muted);"> {</span>`;
+  document.getElementById('lv2-display').innerHTML = html;
+  const codeArrow = document.getElementById('lv2-code-arrow');
+  if(codeArrow){
+    codeArrow.style.display = typedRaw.length ? 'none' : 'inline-block';
+  }
+}
+
+buildLv2Display('');
+
+document.getElementById('lv2-inp').addEventListener('input', function(){
+  AC.resume();
+  // 一旦代码已正确完成，后续多余输入不再影响按钮状态
+  if(lv2CodeDone){
+    return;
+  }
+  let typedRaw = this.value;
+  let typed = typedRaw.replace(/[ \n]/g,'');
+
+  const nonSpaceTarget = LV2_TARGET.replace(/[ \n]/g,'');
+
+  // 计算当前连续打对前缀
+  let correctCount = 0;
+  for(let i=0;i<typed.length && i<nonSpaceTarget.length;i++){
+    if(typed[i] === nonSpaceTarget[i]) correctCount++;
+    else break;
+  }
+
+  // 只保留“正确前缀 + 最新尝试字符”
+  if(typed.length > correctCount + 1){
+    const lastTry = typed[typed.length-1];
+    typed = nonSpaceTarget.slice(0, correctCount) + lastTry;
+  }
+
+  this.value = typed;
+  typedRaw = this.value;
+
+  buildLv2Display(typedRaw);
+
+  // 进度与状态
+  let match = 0;
+  for(let i=0;i<typed.length && i<nonSpaceTarget.length;i++){
+    if(typed[i] === nonSpaceTarget[i]) match++;
+    else break;
+  }
+  const total = nonSpaceTarget.length;
+  const pct = Math.round((match/total)*100);
+
+  const done = (typed === nonSpaceTarget);
+  const nInput = document.getElementById('l2-n');
+
+  if(done){
+    lv2CodeDone = true;
+    nInput.disabled = false;
+    document.getElementById('lv2-status').textContent = '✅ 代码正确，继续输入 n 的值';
+    document.getElementById('lv2-dot').className = 'status-dot ok';
+    const codeArrow = document.getElementById('lv2-code-arrow');
+    if(codeArrow) codeArrow.style.display = 'none';
+    const nArrow = document.getElementById('lv2-n-arrow');
+    if(nArrow) nArrow.style.display = 'inline-block';
+    sfxRight();
+  }else{
+    nInput.disabled = true;
+    document.getElementById('lv2-run').disabled = true;
+    document.getElementById('lv2-dot').className = 'status-dot';
+    const nArrow = document.getElementById('lv2-n-arrow');
+    if(nArrow) nArrow.style.display = 'none';
+
+    const lastChar = typed[typed.length-1];
+    const expectedChar = nonSpaceTarget[Math.min(typed.length-1, correctCount)];
+    if(typed.length>0 && lastChar!==expectedChar){ sfxTypeErr(); }
+    else if(typed.length>0){ sfxTypeOk(); }
+
+    document.getElementById('lv2-status').textContent = `先正确输入 int n; 和 cin >> n; (${pct}%)`;
+  }
+});
+
 // ═══════════════════════════════════
 //  LEVEL 2
 // ═══════════════════════════════════
@@ -1519,9 +1802,19 @@ function onLv2NInput(){
     // keep code display showing 'n' — do NOT replace with number
     hint.textContent = n > 20 ? `→ 循环 ${n} 次 🤖💥` : `→ 循环 ${n} 次`;
     inp.style.borderColor = 'var(--green)';
-    document.getElementById('lv2-run').disabled = false;
-    document.getElementById('lv2-status').textContent = `n = ${n}，点击运行`;
-    document.getElementById('lv2-dot').className = 'status-dot ok';
+    const nArrow = document.getElementById('lv2-n-arrow');
+    // 只有代码三行全部输入正确时，才允许运行；否则继续引导输入代码
+    if(lv2CodeDone){
+      document.getElementById('lv2-run').disabled = false;
+      document.getElementById('lv2-status').textContent = `n = ${n}，点击运行`;
+      document.getElementById('lv2-dot').className = 'status-dot ok';
+      if(nArrow) nArrow.style.display = 'none';
+    }else{
+      document.getElementById('lv2-run').disabled = true;
+      document.getElementById('lv2-status').textContent = `n = ${n}，先完成左侧代码输入`;
+      document.getElementById('lv2-dot').className = 'status-dot';
+      if(nArrow) nArrow.style.display = 'none';
+    }
   } else {
     disp.textContent = 'n';
     disp.style.color = '';
@@ -1530,6 +1823,15 @@ function onLv2NInput(){
     document.getElementById('lv2-run').disabled = true;
     document.getElementById('lv2-dot').className = 'status-dot';
     document.getElementById('lv2-status').textContent = '输入 n 后运行';
+    const nArrow = document.getElementById('lv2-n-arrow');
+    // 初始 raw 为空时不亮右侧箭头；只有当已经完成左侧代码并且用户开始输入 n（raw 有值）时，才亮右侧箭头
+    if(nArrow){
+      if(lv2CodeDone && raw){
+        nArrow.style.display = 'inline-block';
+      }else{
+        nArrow.style.display = 'none';
+      }
+    }
   }
 }
 
@@ -1561,7 +1863,8 @@ async function runLv2(){
     await sleep(delay);
   }
 
-  setIOverlay(false);
+  // 结束时显示最后一次循环之后的 i 值（这里是 n+1），方便对照循环停止条件
+  setIOverlay(true, String(n+1), '');
   belt.running=false;belt.speed=0;
   document.getElementById('lv2-dot').className='status-dot ok';
   const msg = n >= 30 ? `🤖×${n} 工厂爆炸式生产！` : `✅ 循环结束！共生产 ${n} 个`;
@@ -1670,45 +1973,225 @@ function resetLv2(){
   belt.nextSlotId=0;belt.totalDrift=0;
   document.getElementById('lv2-run').disabled=true;
   document.getElementById('lv2-dot').className='status-dot';
-  document.getElementById('lv2-status').textContent='输入 n 后运行';
+  document.getElementById('lv2-status').textContent='先正确输入 int n; 和 cin >> n;';
   document.getElementById('lv2-success').classList.remove('show');
+  // 重置 n 输入与代码打字区
   document.getElementById('l2-n').value='';
   document.getElementById('l2-n').style.borderColor='var(--border)';
+  document.getElementById('l2-n').disabled = true;
+  const lv2Inp = document.getElementById('lv2-inp');
+  if(lv2Inp){
+    lv2Inp.value = '';
+  }
+  const lv2Disp = document.getElementById('lv2-display');
+  if(lv2Disp){
+    buildLv2Display('');
+  }
   document.getElementById('l2-n-disp').textContent='n';
   document.getElementById('l2-n-disp').style.color='';
   document.getElementById('lv2-n-hint').textContent='';
+  lv2CodeDone = false;
+  const codeArrow = document.getElementById('lv2-code-arrow');
+  if(codeArrow){ codeArrow.style.display = 'inline-block'; }
+  const nArrow = document.getElementById('lv2-n-arrow');
+  if(nArrow){ nArrow.style.display = 'none'; }
 }
 
 // ═══════════════════════════════════
 //  LEVEL 3 — 双条件升级
 // ═══════════════════════════════════
+let lv3MakeDone = false; // 第 5 行 if(...) 是否打完
+
 function onLv3NInput(){
   const raw = document.getElementById('l3-n').value;
   const n   = parseInt(raw);
   const disp = document.getElementById('l3-n-disp');
   const hint = document.getElementById('lv3-n-hint');
   const inp  = document.getElementById('l3-n');
+  // 第 3 关代码区始终保持模板写法 <= n，不替换成具体数值
+  disp.textContent = 'n';
+  disp.style.color = '';
   if(!isNaN(n) && n>=1 && n<=50){
-    disp.textContent = n;
-    disp.style.color = 'var(--yellow)';
     // count how many will be upgraded
     let cnt = 0;
     for(let i=1;i<=n;i++) if(i%3===0 && i%5!==0) cnt++;
     hint.textContent = `→ 将升级 ${cnt} 个`;
     inp.style.borderColor = 'var(--green)';
-    document.getElementById('lv3-run').disabled = false;
-    document.getElementById('lv3-status').textContent = `n = ${n}，点击运行`;
-    document.getElementById('lv3-dot').className = 'status-dot ok';
+    // 只有当 n 合法 且 第 5 行 if(...) 已正确输入时，才允许运行
+    if(lv3MakeDone){
+      document.getElementById('lv3-run').disabled = false;
+      document.getElementById('lv3-status').textContent = `n = ${n}，点击运行`;
+      document.getElementById('lv3-dot').className = 'status-dot ok';
+      const nArrow = document.getElementById('lv3-n-arrow');
+      if(nArrow) nArrow.style.display = 'none';
+    }else{
+      document.getElementById('lv3-run').disabled = true;
+      document.getElementById('lv3-status').textContent = `n = ${n}，先完成下面 if 条件的输入`;
+      document.getElementById('lv3-dot').className = 'status-dot';
+      const nArrow = document.getElementById('lv3-n-arrow');
+      if(nArrow) nArrow.style.display = 'none';
+    }
   } else {
-    disp.textContent = 'n';
-    disp.style.color = '';
     hint.textContent = raw ? '请输入 1~50' : '';
     inp.style.borderColor = raw ? 'var(--red)' : 'var(--border)';
     document.getElementById('lv3-run').disabled = true;
     document.getElementById('lv3-dot').className = 'status-dot';
     document.getElementById('lv3-status').textContent = '输入 n 后运行';
+    const nArrow = document.getElementById('lv3-n-arrow');
+    // 第3关参考第2关：代码行完成后，立即点亮右侧 n 输入提醒
+    if(nArrow){
+      if(lv3MakeDone){
+        nArrow.style.display = 'inline-block';
+      }else{
+        nArrow.style.display = 'none';
+      }
+    }
   }
 }
+
+// 第 3 关第 5 行筛选条件 if(...) 打字练习（不包含前面的缩进和 { ）
+const LV3_MAKE_TARGET = 'if(i % 3 == 0 && i % 5 != 0)';
+const LV3_MAKE_NOSPACE = LV3_MAKE_TARGET.replace(/ /g,'');
+// 与 LV3_MAKE_TARGET 等长的语法高亮信息，参考原来的代码高亮风格
+// if(i % 3 == 0 && i % 5 != 0)
+// 0:i 1:f 2:( 3:i 4:space 5:% 6:space 7:3 8:space 9:= 10:= 11:space 12:0 13:space 14:& 15:& 16:space 17:i 18:space 19:% 20:space 21:5 22:space 23:! 24:= 25:space 26:0
+const LV3_MAKE_SYNTAX = [
+  'kw','kw','',    // if(
+  'vr','',         // i
+  'op','',         // %
+  'nm','',         // 3
+  'op','op','',    // ==
+  'nm','',         // 0
+  'op','op','',    // &&
+  'vr','',         // i
+  'op','',         // %
+  'nm','',         // 5
+  'op','op','',    // !=
+  'nm'             // 0
+];
+
+function buildLv3MakeDisplay(typedRaw){
+  // typedRaw 已经去掉空格，这里直接使用
+  let typed = typedRaw;
+  let html = '';
+  // 规则参考第 2 关 + 第 1 关：忽略空格，只根据去空格后的前缀判断
+  const target = LV3_MAKE_TARGET;
+  const nospaceTarget = LV3_MAKE_NOSPACE;
+
+  // 计算连续正确前缀长度（基于去空格后的目标串）
+  let correctCount = 0;
+  for(let i=0;i<typed.length && i<nospaceTarget.length;i++){
+    if(typed[i] === nospaceTarget[i]) correctCount++;
+    else break;
+  }
+  // 限制：只保留“正确前缀 + 最新尝试字符”
+  if(typed.length > correctCount + 1){
+    const lastTry = typed[typed.length-1];
+    typed = nospaceTarget.slice(0, correctCount) + lastTry;
+  }
+
+  // 根据带空格的目标串逐字符渲染
+  let logicalIdx = 0; // 指向 nospaceTarget 中的索引
+  for(let i=0;i<target.length;i++){
+    const raw = target[i];
+    const esc = raw.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const syntaxClass = LV3_MAKE_SYNTAX[i] || '';
+
+    // 空格：直接按“已正确”的样式（淡灰），不消耗 typed
+    if(raw === ' '){
+      const cls = syntaxClass ? ` class="${syntaxClass}"` : '';
+      html += `<span${cls} style="opacity:.15;">${esc}</span>`;
+      continue;
+    }
+
+    const typedCh = typed[logicalIdx] ?? '';
+    let status;
+    if(typedCh === '') status = 'pending';
+    else if(typedCh === raw && logicalIdx < correctCount) status = 'correct';
+    else if(typedCh === raw && logicalIdx === correctCount && typed.length === correctCount+1) status = 'correct';
+    else if(logicalIdx === correctCount && typed.length === correctCount+1 && typedCh !== raw) status = 'wrong';
+    else status = 'pending';
+
+    if(status === 'pending'){
+      // 待输入：统一透明度 0.15
+      const cls = syntaxClass ? ` class="${syntaxClass}"` : '';
+      html += `<span${cls} style="opacity:.15;">${esc}</span>`;
+    }else if(status === 'correct'){
+      const cls = syntaxClass ? ` class="${syntaxClass}"` : '';
+      html += `<span${cls} style="text-shadow:0 0 6px var(--green)55;">${esc}</span>`;
+    }else{ // wrong
+      const cls = syntaxClass ? ` class="${syntaxClass}"` : '';
+      html += `<span${cls} style="background:rgba(239,68,68,0.6);border-radius:3px;padding:0 2px;">${esc}</span>`;
+    }
+
+    logicalIdx++;
+  }
+  document.getElementById('lv3-make-display').innerHTML = html;
+  const codeArrow = document.getElementById('lv3-code-arrow');
+  if(codeArrow){
+    codeArrow.style.display = typedRaw.length ? 'none' : 'inline-block';
+  }
+}
+
+// 初始渲染为空输入
+buildLv3MakeDisplay('');
+
+document.getElementById('lv3-make-inp').addEventListener('input', function(){
+  AC.resume();
+  // 一旦 if 条件行已正确完成，后续多余输入不再影响按钮状态
+  if(lv3MakeDone){
+    return;
+  }
+  let typed = this.value;
+  // 忽略空格：用户输入的空格不会计入匹配
+  typed = typed.replace(/ /g,'');
+  const target = LV3_MAKE_NOSPACE;
+  // 限制最大长度
+  if(typed.length > target.length){
+    typed = typed.slice(0, target.length);
+  }
+  // 应用与显示中相同的“正确前缀 + 最新尝试字符”规则
+  let correctCount = 0;
+  for(let i=0;i<typed.length && i<target.length;i++){
+    if(typed[i] === target[i]) correctCount++;
+    else break;
+  }
+  if(typed.length > correctCount + 1){
+    const lastTry = typed[typed.length-1];
+    typed = target.slice(0, correctCount) + lastTry;
+  }
+  this.value = typed;
+  buildLv3MakeDisplay(typed);
+
+  // 更新第 5 行是否打完的状态，并联动运行按钮（通过后锁定）
+  if(typed === LV3_MAKE_NOSPACE){
+    lv3MakeDone = true;
+  }
+  const nRaw = document.getElementById('l3-n').value;
+  const nVal = parseInt(nRaw);
+  const nOk  = !isNaN(nVal) && nVal>=1 && nVal<=50;
+  if(nOk && lv3MakeDone){
+    document.getElementById('lv3-run').disabled = false;
+    document.getElementById('lv3-status').textContent = `n = ${nVal}，条件已就位，点击运行`;
+    document.getElementById('lv3-dot').className = 'status-dot ok';
+    const nArrow = document.getElementById('lv3-n-arrow');
+    if(nArrow) nArrow.style.display = 'none';
+  }else if(nOk){
+    document.getElementById('lv3-run').disabled = true;
+    document.getElementById('lv3-status').textContent = `n = ${nVal}，先完成 if 条件的输入`;
+    document.getElementById('lv3-dot').className = 'status-dot';
+    const nArrow = document.getElementById('lv3-n-arrow');
+    if(nArrow) nArrow.style.display = 'inline-block';
+  }else{
+    document.getElementById('lv3-run').disabled = true;
+    // 代码行刚完成但 n 还没填好时，立即引导去右侧输入 n
+    if(lv3MakeDone){
+      document.getElementById('lv3-status').textContent = '✅ 条件行完成，继续输入 n 的值';
+      const nArrow = document.getElementById('lv3-n-arrow');
+      if(nArrow) nArrow.style.display = 'inline-block';
+    }
+  }
+});
 
 // Draw upgraded robot: larger + golden glow + crown + star particles
 function drawUpgradedRobot(r){
@@ -1755,20 +2238,7 @@ function drawUpgradedRobot(r){
   fctx.fillStyle=c; fctx.fillRect(-1,-22,2,7);
   fctx.beginPath(); fctx.arc(0,-23,4,0,Math.PI*2); fctx.fillStyle='#fff'; fctx.fill();
   fctx.beginPath(); fctx.arc(0,-23,2,0,Math.PI*2); fctx.fillStyle=c; fctx.fill();
-
-  // Crown
-  fctx.fillStyle='#facc15';
-  fctx.beginPath();
-  fctx.moveTo(-10,-28); fctx.lineTo(-10,-36);
-  fctx.lineTo(-6,-32); fctx.lineTo(0,-38);
-  fctx.lineTo(6,-32); fctx.lineTo(10,-36); fctx.lineTo(10,-28);
-  fctx.closePath(); fctx.fill();
-  fctx.strokeStyle='#b45309'; fctx.lineWidth=0.8; fctx.stroke();
-  // Crown gems
-  [[0,-37],[-7,-30],[7,-30]].forEach(([gx,gy])=>{
-    fctx.beginPath(); fctx.arc(gx,gy,1.5,0,Math.PI*2);
-    fctx.fillStyle='#ef4444'; fctx.fill();
-  });
+  // （移除王冠以简化造型）
 
   // Legs
   fctx.fillStyle=c;
@@ -1827,19 +2297,50 @@ async function runLv3(){
     if(upgraded) {
       upgradeCount++;
       upgradedList.push(i);
+      // 动态更新顶部统计：共升级 x 个机器人：x号 x号 ...
+      if(lv3BannerEl){
+        // 数量中的数字高亮为黄色；每个编号中数字黄色、“号”字灰色
+        const listTextNow = upgradedList.map(v=>{
+          return `<span style="color:#facc15;">${v}</span><span style="color:#9ca3af;">号</span>`;
+        }).join('，');
+        lv3BannerEl.innerHTML =
+          `<span style="color:#9ca3af;">⚡ 共升级 </span>` +
+          `<span style="color:#facc15;">${upgradeCount}</span>` +
+          `<span style="color:#9ca3af;"> 个机器人</span><br>` +
+          `<span style="color:#9ca3af;">编号：</span>` +
+          `<span style="color:#facc15;">${listTextNow}</span>`;
+        lv3BannerEl.style.display = 'block';
+      }
     }
     await sleep(delay);
   }
 
-  setIOverlay(false);
+  // 结束时显示最后一次循环之后的 i 值（这里是 n+1），方便对照循环停止条件
+  setIOverlay(true, String(n+1), '');
   belt.running=false; belt.speed=0;
   document.getElementById('lv3-dot').className='status-dot ok';
-  const listText = upgradedList.length ? `编号：${upgradedList.join(', ')}` : '本轮没有符合条件的机器人';
-  document.getElementById('lv3-status').textContent=`✅ 完成！${upgradeCount} 个机器人升级`;
+  const listText = upgradedList.length
+    ? upgradedList.map(v=>`<span style="color:#facc15;">${v}</span><span style="color:#9ca3af;">号</span>`).join('，')
+    : '';
+  document.getElementById('lv3-status').textContent=`✅ 完成！共升级 ${upgradeCount} 个机器人`;
   document.getElementById('lv3-done-count').textContent=upgradeCount;
-  // 在上方工厂区域大大显示升级编号
+  // 在上方工厂区域大大显示最终升级统计：数量/前缀灰色，编号列表黄色
   if(lv3BannerEl){
-    lv3BannerEl.textContent = '⚡ 升级机器人 → ' + listText;
+    if(upgradeCount>0){
+      lv3BannerEl.innerHTML =
+        `<span style="color:#9ca3af;">⚡ 共升级 </span>` +
+        `<span style="color:#facc15;">${upgradeCount}</span>` +
+        `<span style="color:#9ca3af;"> 个机器人</span><br>` +
+        `<span style="color:#9ca3af;">编号：</span>` +
+        `<span style="color:#facc15;">${listText}</span>`;
+    }else{
+      lv3BannerEl.innerHTML =
+        `<span style="color:#9ca3af;">⚡ 共升级 </span>` +
+        `<span style="color:#facc15;">0</span>` +
+        `<span style="color:#9ca3af;"> 个机器人</span><br>` +
+        `<span style="color:#9ca3af;">编号：</span>` +
+        `<span style="color:#facc15;"></span>`;
+    }
     lv3BannerEl.style.display = 'block';
   }
   sfxWin(); confetti(Math.min(upgradeCount*8,60));
@@ -1861,6 +2362,15 @@ function resetLv3(){
   document.getElementById('l3-n-disp').textContent='n';
   document.getElementById('l3-n-disp').style.color='';
   document.getElementById('lv3-n-hint').textContent='';
+  // 重置第 5 行 if(...) 打字状态
+  lv3MakeDone = false;
+  const makeInp = document.getElementById('lv3-make-inp');
+  if(makeInp){ makeInp.value = ''; }
+  buildLv3MakeDisplay('');
+  const codeArrow = document.getElementById('lv3-code-arrow');
+  if(codeArrow){ codeArrow.style.display = 'inline-block'; }
+  const nArrow = document.getElementById('lv3-n-arrow');
+  if(nArrow){ nArrow.style.display = 'none'; }
   if(lv3BannerEl){ lv3BannerEl.style.display='none'; lv3BannerEl.textContent=''; }
 }
 
@@ -2125,7 +2635,7 @@ drawFactoryBG();
 onLv2NInput();
 updateLv3Preview();
 updateLv5Preview();
-setTimeout(()=>document.getElementById('lv1-inp').focus(),300);
+setTimeout(()=>focusActiveInput(),300);
 </script>
 </body>
 </html>
