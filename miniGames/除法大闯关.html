@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>除法大冒险 · 算式×情境闯关（去重版）</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: linear-gradient(145deg, #2b5a8c 0%, #1e3e64 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+        .game-container {
+            max-width: 1000px;
+            width: 100%;
+            background: #fef9e8;
+            border-radius: 48px 48px 32px 32px;
+            box-shadow: 0 20px 30px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,240,0.6);
+            padding: 24px 24px 32px;
+            border: 4px solid #ffcf9a;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffb882;
+            padding: 16px 24px;
+            border-radius: 60px;
+            margin-bottom: 20px;
+            color: #2d3e50;
+            font-weight: bold;
+            border: 2px solid #ffe3b0;
+            box-shadow: inset 0 -3px 0 #b27a4a;
+        }
+        .level-badge {
+            background: #2d3e50;
+            color: #ffdeae;
+            padding: 8px 24px;
+            border-radius: 40px;
+            font-size: 1.3rem;
+            letter-spacing: 2px;
+            box-shadow: 0 4px 0 #0f1a24;
+        }
+        .stars {
+            font-size: 1.8rem;
+            color: #ffd966;
+            text-shadow: 2px 2px 0 #b47d4b;
+        }
+        .top-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            align-items: stretch;
+        }
+        .counter-panel {
+            background: #e3d5b5;
+            border-radius: 40px;
+            padding: 12px 24px;
+            flex: 3;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.3rem;
+            font-weight: 600;
+            border: 3px solid #c8a77b;
+            color: #2c3e4e;
+            box-shadow: inset 0 2px 8px #fff2d7, 0 6px 0 #8b6f4c;
+        }
+        .counter-text {
+            background: #f4e8d3;
+            padding: 8px 24px;
+            border-radius: 50px;
+            border: 2px solid #a38662;
+        }
+        .progress-badge {
+            background: #6b4f32;
+            color: #ffeec2;
+            padding: 8px 24px;
+            border-radius: 30px;
+        }
+        .new-game-btn {
+            flex: 1;
+            background: #fcca6b;
+            border: 3px solid #d49b3b;
+            color: #2d3e50;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 60px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #a0742f, inset 0 2px 10px #ffeeaa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.07s;
+            padding: 0 10px;
+        }
+        .new-game-btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 #a0742f;
+        }
+        .level3-wrong-counter {
+            background: #f0c0a8;
+            border-radius: 40px;
+            padding: 8px 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            border: 3px solid #b95b3b;
+            color: #411f0f;
+            box-shadow: inset 0 2px 8px #ffe2c1, 0 5px 0 #884a2f;
+        }
+        .wrong-badge {
+            background: #632e18;
+            color: #ffd9b3;
+            padding: 5px 30px;
+            border-radius: 30px;
+        }
+        .wrong-stars {
+            color: #ff4136;
+            font-size: 1.8rem;
+            letter-spacing: 6px;
+        }
+        .options-area {
+            background: #fff2da;
+            border-radius: 60px;
+            padding: 32px 24px;
+            border: 4px solid #e5b887;
+            box-shadow: inset 0 0 0 2px #ffe6bf, 0 10px 0 #aa7d54;
+            margin-bottom: 28px;
+        }
+        .question-hint {
+            text-align: center;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #2d4a2d;
+            margin-bottom: 28px;
+            background: #ffdbb5;
+            padding: 10px 32px;
+            border-radius: 50px;
+            margin-left: auto;
+            margin-right: auto;
+            width: fit-content;
+            border: 3px solid #b98f64;
+            box-shadow: inset 0 2px 5px #ffeeaa;
+        }
+        .options-grid {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+        .option-btn {
+            background: #fcf3e0;
+            border: 4px solid #c69c6d;
+            color: #2c3e4e;
+            font-size: 1.3rem;
+            font-weight: 600;
+            padding: 20px 12px;
+            border-radius: 60px;
+            cursor: pointer;
+            box-shadow: 0 8px 0 #8b694a, 0 4px 12px rgba(0,0,0,0.2);
+            transition: all 0.07s ease;
+            text-align: center;
+            line-height: 1.4;
+            word-break: break-word;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .option-btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 #8b694a;
+        }
+        .option-btn.correct-effect {
+            background: #b0e5b0;
+            border-color: #2f7d2f;
+            box-shadow: 0 6px 0 #1f5a1f;
+        }
+        .option-btn.wrong-effect {
+            background: #f8b5b5;
+            border-color: #b33f3f;
+            box-shadow: 0 6px 0 #7a2e2e;
+        }
+        .option-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #6b4f3a;
+            background: #cdc3b2;
+            border-color: #9e846b;
+        }
+        /* 分数样式 */
+        .fraction {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            line-height: 1.2;
+            margin: 0 2px;
+        }
+        .fraction .numerator, .fraction .denominator {
+            padding: 0 4px;
+            font-size: 1.2rem;
+        }
+        .fraction .bar {
+            border-top: 2px solid currentColor;
+            width: 100%;
+            margin: 2px 0;
+        }
+        .message-box {
+            background: #1f364d;
+            border-radius: 40px;
+            padding: 16px 28px;
+            color: #fbeed3;
+            font-size: 1.3rem;
+            font-weight: 500;
+            border: 3px solid #ffc491;
+            box-shadow: inset 0 -3px 0 #0e1f2c, 0 6px 0 #0b1a24;
+            min-height: 82px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .next-level-hint {
+            background: #dba870;
+            color: #2a3b2a;
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border: 2px solid #ffe3b5;
+        }
+        .shake {
+            animation: shake 0.2s ease-in-out 0s 2;
+        }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            50% { transform: translateX(6px); }
+            75% { transform: translateX(-3px); }
+            100% { transform: translateX(0); }
+        }
+        .glow {
+            animation: glow 0.3s ease;
+        }
+        @keyframes glow {
+            0% { background-color: #fcf3e0; }
+            50% { background-color: #c5e0b4; }
+            100% { background-color: #fcf3e0; }
+        }
+    </style>
+</head>
+<body>
+<div class="game-container" id="gameContainer">
+    <div class="header">
+        <span class="level-badge" id="levelDisplay">第 1 关 / 算式二选一</span>
+        <span class="stars" id="starDisplay">⭐⭐⭐</span>
+    </div>
+
+    <div class="top-bar">
+        <div class="counter-panel">
+            <span class="counter-text" id="counterDesc">连续正确</span>
+            <span class="progress-badge" id="counterValue">0 / 3</span>
+        </div>
+        <div class="new-game-btn" id="newGameBtn">🔄 新开一局</div>
+    </div>
+
+    <div id="level3WrongArea" class="level3-wrong-counter" style="display: none;">
+        <span class="wrong-stars" id="wrongStars">❤️❤️</span>
+        <span class="wrong-badge" id="wrongCountDisplay">错误 0 / 2</span>
+    </div>
+
+    <div class="options-area">
+        <div class="question-hint" id="questionHint">⚡ 哪个算式是除法？ ⚡</div>
+        <div class="options-grid" id="optionsContainer"></div>
+    </div>
+
+    <div class="message-box" id="messageBox">✨ 点击选项开始冒险吧 ✨</div>
+
+    <div class="footer">
+        <span class="next-level-hint" id="hintText">第1关：连续答对3题</span>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ---------- 第1关：算式二选一（包含除号和分数，分数显示为分数线）----------
+        const level1Pool = [
+            // 基础除号
+            { options: [ { text: "12 ÷ 4", needDivide: true }, { text: "5 × 3", needDivide: false, reason: "这是乘法，不是除法。" } ] },
+            { options: [ { text: "20 ÷ 5", needDivide: true }, { text: "6 + 9", needDivide: false, reason: "这是加法，不是除法。" } ] },
+            { options: [ { text: "15 ÷ 3", needDivide: true }, { text: "10 - 4", needDivide: false, reason: "这是减法，不是除法。" } ] },
+            { options: [ { text: "24 ÷ 6", needDivide: true }, { text: "8 × 2", needDivide: false, reason: "这是乘法，不是除法。" } ] },
+            { options: [ { text: "36 ÷ 9", needDivide: true }, { text: "7 + 5", needDivide: false, reason: "加法哦。" } ] },
+            { options: [ { text: "42 ÷ 7", needDivide: true }, { text: "13 - 6", needDivide: false, reason: "减法。" } ] },
+            // 分数形式（斜杠），显示为分数线
+            { options: [ { text: "3/4", needDivide: true }, { text: "7 - 2", needDivide: false, reason: "这是减法，不是除法。" } ] },
+            { options: [ { text: "9/3", needDivide: true }, { text: "4 × 8", needDivide: false, reason: "乘法。" } ] },
+            { options: [ { text: "2/5", needDivide: true }, { text: "3 + 7", needDivide: false, reason: "加法。" } ] },
+            { options: [ { text: "7/8", needDivide: true }, { text: "9 - 4", needDivide: false, reason: "减法。" } ] },
+            { options: [ { text: "11/2", needDivide: true }, { text: "6 × 3", needDivide: false, reason: "乘法。" } ] },
+            { options: [ { text: "15/3", needDivide: true }, { text: "12 + 8", needDivide: false, reason: "加法。" } ] },
+            { options: [ { text: "21/7", needDivide: true }, { text: "20 - 5", needDivide: false, reason: "减法。" } ] },
+            // 混合运算
+            { options: [ { text: "18 ÷ 2", needDivide: true }, { text: "5 + 6", needDivide: false, reason: "加法，不是除法。" } ] },
+            { options: [ { text: "5/6", needDivide: true }, { text: "8 - 3", needDivide: false, reason: "减法，不是除法。" } ] },
+            { options: [ { text: "100 ÷ 10", needDivide: true }, { text: "4 × 7", needDivide: false, reason: "乘法，不是除法。" } ] },
+            { options: [ { text: "1/2", needDivide: true }, { text: "9 + 1", needDivide: false, reason: "加法。" } ] },
+            { options: [ { text: "99 ÷ 11", needDivide: true }, { text: "33 - 22", needDivide: false, reason: "减法。" } ] },
+            { options: [ { text: "4/8", needDivide: true }, { text: "2 + 2", needDivide: false, reason: "加法。" } ] },
+            { options: [ { text: "81 ÷ 9", needDivide: true }, { text: "9 × 9", needDivide: false, reason: "乘法。" } ] },
+            { options: [ { text: "12/6", needDivide: true }, { text: "18 - 12", needDivide: false, reason: "减法。" } ] },
+            { options: [ { text: "144 ÷ 12", needDivide: true }, { text: "12 × 12", needDivide: false, reason: "乘法。" } ] },
+            { options: [ { text: "7/1", needDivide: true }, { text: "7 × 1", needDivide: false, reason: "乘法。" } ] },
+            { options: [ { text: "0 ÷ 5", needDivide: true }, { text: "0 + 5", needDivide: false, reason: "加法。" } ] },
+            { options: [ { text: "8/2", needDivide: true }, { text: "2 × 4", needDivide: false, reason: "乘法。" } ] },
+            // 更多分数
+            { options: [ { text: "3/5", needDivide: true }, { text: "3 + 5", needDivide: false, reason: "加法。" } ] },
+            { options: [ { text: "7/2", needDivide: true }, { text: "7 - 2", needDivide: false, reason: "减法。" } ] },
+            { options: [ { text: "9/4", needDivide: true }, { text: "9 × 4", needDivide: false, reason: "乘法。" } ] }
+        ];
+
+        // 第2关：生活实例三选一（已修正BMI错误）
+        const level2Pool = [
+            { options: [ { text: "计算全班期末总分", needDivide: false, reason: "总分用加法。" }, { text: "计算平均分", needDivide: true }, { text: "测量黑板长度", needDivide: false, reason: "测量不用除法。" } ] },
+            { options: [ { text: "求一个数的3倍", needDivide: false, reason: "乘法。" }, { text: "把30块糖平均分给5个朋友", needDivide: true }, { text: "计算操场的周长", needDivide: false, reason: "周长用加法和乘法。" } ] },
+            { options: [ { text: "已知总价和数量求单价", needDivide: true }, { text: "已知速度和时间求路程", needDivide: false, reason: "路程=速度×时间。" }, { text: "求两个数的差", needDivide: false, reason: "减法。" } ] },
+            { options: [ { text: "每小时走5千米，4小时走多远", needDivide: false, reason: "乘法。" }, { text: "总价24元买了6支笔，每支多少钱", needDivide: true }, { text: "一箱牛奶重6千克，3箱多重", needDivide: false, reason: "乘法。" } ] },
+            { options: [ { text: "面积120平方米，宽8米，求长", needDivide: true }, { text: "长方形长8宽3求面积", needDivide: false, reason: "乘法。" }, { text: "小明12岁，妈妈年龄是他的3倍，求妈妈年龄", needDivide: false, reason: "乘法。" } ] },
+            { options: [ { text: "把一根绳子剪成相等的3段", needDivide: true }, { text: "计算正方形周长（边长4）", needDivide: false, reason: "周长=边长×4。" }, { text: "每小时生产20个，5小时生产几个", needDivide: false, reason: "20×5=100，乘法。" } ] },
+            { options: [ { text: "加工一批零件，5天做了300个，每天做几个", needDivide: true }, { text: "一台电视2500元，买4台总价", needDivide: false, reason: "乘法。" }, { text: "测量黑板的宽度", needDivide: false, reason: "测量直接用尺子，不需要除法。" } ] }
+        ];
+
+        // 第3关：混合五选三（2个算式+3个生活实例，共3个正确）
+        const level3Pool = [
+            { // 正确：算式1正确，实例1正确，实例3正确
+                options: [
+                    { text: "12 ÷ 4", needDivide: true },  // 算式正确
+                    { text: "5 × 3", needDivide: false, reason: "这是乘法，不是除法。" },
+                    { text: "计算平均分", needDivide: true }, // 实例正确
+                    { text: "测量黑板长度", needDivide: false, reason: "测量不用除法。" },
+                    { text: "把30块糖平均分给5个朋友", needDivide: true } // 实例正确
+                ]
+            },
+            { // 正确：算式1正确，实例1正确，实例2正确
+                options: [
+                    { text: "3/4", needDivide: true },
+                    { text: "7 - 2", needDivide: false, reason: "这是减法。" },
+                    { text: "已知总价和数量求单价", needDivide: true },
+                    { text: "已知速度和时间求路程", needDivide: false, reason: "路程=速度×时间，乘法。" },
+                    { text: "总价24元买了6支笔，每支多少钱", needDivide: true }
+                ]
+            },
+            { // 正确：算式1正确，实例2正确，实例3正确
+                options: [
+                    { text: "20 ÷ 5", needDivide: true },
+                    { text: "6 + 9", needDivide: false, reason: "加法。" },
+                    { text: "每小时走5千米，4小时走多远", needDivide: false, reason: "乘法。" },
+                    { text: "把240本书平均放到6个书架上", needDivide: true },
+                    { text: "计算三角形面积（底×高÷2）", needDivide: true }
+                ]
+            },
+            { // 正确：算式1正确，实例1正确，实例3正确
+                options: [
+                    { text: "9/3", needDivide: true },
+                    { text: "4 × 8", needDivide: false, reason: "乘法。" },
+                    { text: "求一个数的2倍", needDivide: false, reason: "乘法。" },
+                    { text: "加工一批零件，5天做了300个，每天做几个", needDivide: true },
+                    { text: "把一箱苹果按人数平均分配", needDivide: true }
+                ]
+            },
+            { // 正确：算式1正确，实例2正确，实例3正确
+                options: [
+                    { text: "15 ÷ 3", needDivide: true },
+                    { text: "10 - 4", needDivide: false, reason: "减法。" },
+                    { text: "每箱牛奶24盒，144盒可以装几箱", needDivide: true },
+                    { text: "计算操场的周长", needDivide: false, reason: "周长用加法和乘法。" },
+                    { text: "买3千克苹果花了36元，每千克多少钱", needDivide: true }
+                ]
+            },
+            { // 正确：算式1正确，实例1正确，实例2正确
+                options: [
+                    { text: "2/5", needDivide: true },
+                    { text: "3 + 7", needDivide: false, reason: "加法。" },
+                    { text: "总产量÷工作时间=工作效率", needDivide: true },
+                    { text: "把一根绳子剪成相等的3段", needDivide: true },
+                    { text: "计算正方形周长（边长4）", needDivide: false, reason: "周长=边长×4，乘法。" }
+                ]
+            }
+        ];
+
+        // ---------- 辅助函数：将分数文本转换为分数线显示，其他文本原样返回 ----------
+        function formatOptionText(text) {
+            // 匹配纯数字/数字（可能有多位），如 "3/4", "11/2" 等
+            const fractionRegex = /^(\d+)\/(\d+)$/;
+            const match = text.match(fractionRegex);
+            if (match) {
+                const numerator = match[1];
+                const denominator = match[2];
+                return `<span class="fraction"><span class="numerator">${numerator}</span><span class="bar"></span><span class="denominator">${denominator}</span></span>`;
+            }
+            // 其他文本（包含 ÷ 或汉字等）直接返回
+            return text;
+        }
+
+        // ---------- 全局变量（用于避免连续重复）----------
+        let level1LastIndex = -1;
+        let level2LastIndex = -1;
+        let level3LastIndex = -1;
+
+        // 随机抽取题目，并保证不与上一题重复（除非题库只有一个）
+        function getRandomQuestionFromPool(level, excludeIndex = -1) {
+            let pool;
+            if (level === 1) pool = level1Pool;
+            else if (level === 2) pool = level2Pool;
+            else pool = level3Pool;
+
+            if (pool.length === 0) return null;
+            if (pool.length === 1) {
+                // 只有一个题目，直接返回
+                return JSON.parse(JSON.stringify(pool[0]));
+            }
+
+            let newIndex;
+            do {
+                newIndex = Math.floor(Math.random() * pool.length);
+            } while (newIndex === excludeIndex);
+
+            // 更新对应的 lastIndex
+            if (level === 1) level1LastIndex = newIndex;
+            else if (level === 2) level2LastIndex = newIndex;
+            else level3LastIndex = newIndex;
+
+            return JSON.parse(JSON.stringify(pool[newIndex]));
+        }
+
+        // ---------- 状态变量 ----------
+        let currentLevel = 1;               
+        let level1CorrectCount = 0;          
+        let level2CorrectCount = 0;
+        let level3CorrectSelected = 0;       
+        let level3WrongCount = 0;            
+        let currentQuestion = null;           
+        let level3DisabledIndices = [];       
+        let level3WrongDisabledIndices = [];  
+
+        // DOM 元素
+        const levelDisplay = document.getElementById('levelDisplay');
+        const starDisplay = document.getElementById('starDisplay');
+        const counterDesc = document.getElementById('counterDesc');
+        const counterValue = document.getElementById('counterValue');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const messageBox = document.getElementById('messageBox');
+        const hintText = document.getElementById('hintText');
+        const newGameBtn = document.getElementById('newGameBtn');
+        const level3WrongArea = document.getElementById('level3WrongArea');
+        const wrongStars = document.getElementById('wrongStars');
+        const wrongCountDisplay = document.getElementById('wrongCountDisplay');
+        const questionHint = document.getElementById('questionHint');
+
+        // 刷新当前关卡的题目（可传入排除索引，通常为当前关卡的上一题索引）
+        function refreshQuestion(resetLevel3State = true) {
+            let excludeIndex = -1;
+            if (currentLevel === 1) excludeIndex = level1LastIndex;
+            else if (currentLevel === 2) excludeIndex = level2LastIndex;
+            else if (currentLevel === 3) excludeIndex = level3LastIndex;
+
+            if (currentLevel === 1) {
+                currentQuestion = getRandomQuestionFromPool(1, excludeIndex);
+            } else if (currentLevel === 2) {
+                currentQuestion = getRandomQuestionFromPool(2, excludeIndex);
+            } else if (currentLevel === 3) {
+                currentQuestion = getRandomQuestionFromPool(3, excludeIndex);
+                if (resetLevel3State) {
+                    level3CorrectSelected = 0;
+                    level3WrongCount = 0;
+                    level3DisabledIndices = [];
+                    level3WrongDisabledIndices = [];
+                }
+            }
+            renderOptions();
+            updateLevel3WrongUI();
+            updateQuestionHintByLevel();
+        }
+
+        // 根据关卡更新提示语
+        function updateQuestionHintByLevel() {
+            if (currentLevel === 1) {
+                questionHint.textContent = '⚡ 哪个算式是除法？ ⚡';
+            } else if (currentLevel === 2) {
+                questionHint.textContent = '⚡ 哪个生活情境需要用到除法？ ⚡';
+            } else {
+                questionHint.textContent = '⚡ 选出所有需要除法的算式或情境 (共3个) ⚡';
+            }
+        }
+
+        // 渲染选项按钮
+        function renderOptions() {
+            if (!currentQuestion) return;
+            const options = currentQuestion.options;
+            optionsContainer.innerHTML = '';
+
+            if (currentLevel === 3) {
+                options.forEach((opt, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option-btn';
+                    // 使用格式化后的HTML
+                    btn.innerHTML = formatOptionText(opt.text);
+                    if (level3DisabledIndices.includes(idx) || level3WrongDisabledIndices.includes(idx)) {
+                        btn.disabled = true;
+                    }
+                    btn.dataset.index = idx;
+                    btn.dataset.needDivide = opt.needDivide;
+                    btn.dataset.reason = opt.reason || (opt.needDivide ? '' : '这个不需要除法。');
+                    btn.addEventListener('click', onOptionClickLevel3);
+                    optionsContainer.appendChild(btn);
+                });
+            } else {
+                options.forEach((opt, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option-btn';
+                    btn.innerHTML = formatOptionText(opt.text);
+                    btn.dataset.index = idx;
+                    btn.dataset.needDivide = opt.needDivide;
+                    btn.dataset.reason = opt.reason || (opt.needDivide ? '' : '这个不需要除法。');
+                    btn.addEventListener('click', onOptionClickLevel12);
+                    optionsContainer.appendChild(btn);
+                });
+            }
+
+            updateCounterDisplay();
+        }
+
+        function updateCounterDisplay() {
+            if (currentLevel === 1) {
+                counterDesc.textContent = '连续正确';
+                counterValue.textContent = `${level1CorrectCount} / 3`;
+            } else if (currentLevel === 2) {
+                counterDesc.textContent = '连续正确';
+                counterValue.textContent = `${level2CorrectCount} / 3`;
+            } else {
+                counterDesc.textContent = '已选对';
+                counterValue.textContent = `${level3CorrectSelected} / 3`;
+            }
+        }
+
+        function updateLevel3WrongUI() {
+            if (currentLevel === 3) {
+                level3WrongArea.style.display = 'flex';
+                const remain = 2 - level3WrongCount;
+                let hearts = '';
+                for (let i=0; i<remain; i++) hearts += '❤️';
+                for (let i=0; i<level3WrongCount; i++) hearts += '🖤';
+                wrongStars.textContent = hearts;
+                wrongCountDisplay.textContent = `错误 ${level3WrongCount} / 2`;
+            } else {
+                level3WrongArea.style.display = 'none';
+            }
+        }
+
+        // 第1、2关点击处理
+        function onOptionClickLevel12(e) {
+            const btn = e.currentTarget;
+            const needDivide = btn.dataset.needDivide === 'true';
+            const reason = btn.dataset.reason;
+            const isCorrect = needDivide;
+
+            btn.classList.add(isCorrect ? 'correct-effect' : 'wrong-effect', 'shake');
+            setTimeout(() => {
+                btn.classList.remove('correct-effect', 'wrong-effect', 'shake');
+            }, 300);
+
+            if (isCorrect) {
+                if (currentLevel === 1) {
+                    level1CorrectCount++;
+                    messageBox.textContent = '✅ 正确！这个算式表示除法！';
+                } else {
+                    level2CorrectCount++;
+                    messageBox.textContent = '✅ 正确！这个情境需要除法！';
+                }
+
+                if ((currentLevel === 1 && level1CorrectCount === 3) || (currentLevel === 2 && level2CorrectCount === 3)) {
+                    if (currentLevel === 1) {
+                        messageBox.textContent = '🎉 第1关通过！进入第2关：生活情境三选一，连续对3题！';
+                        hintText.textContent = '第2关：连续答对3题';
+                        currentLevel = 2;
+                        level1CorrectCount = 0;
+                        level2CorrectCount = 0;
+                        // 重置第2关上一题索引，避免刚切换时使用旧的排除索引
+                        level2LastIndex = -1;
+                    } else if (currentLevel === 2) {
+                        messageBox.textContent = '🏆 第2关通过！最终关：混合挑战，选出3个正确选项，容错2次！';
+                        hintText.textContent = '第3关：选对3个，容错2次';
+                        currentLevel = 3;
+                        level2CorrectCount = 0;
+                        level3CorrectSelected = 0;
+                        level3WrongCount = 0;
+                        level3DisabledIndices = [];
+                        level3WrongDisabledIndices = [];
+                        // 重置第3关上一题索引
+                        level3LastIndex = -1;
+                    }
+                    updateLevelDisplay();
+                    refreshQuestion(true);
+                } else {
+                    refreshQuestion(false);
+                }
+            } else {
+                messageBox.textContent = `❌ 错误：${reason || '这个不需要除法。'} 重新计数！`;
+                if (currentLevel === 1) {
+                    level1CorrectCount = 0;
+                } else {
+                    level2CorrectCount = 0;
+                }
+                refreshQuestion(false);
+            }
+            updateCounterDisplay();
+            updateLevel3WrongUI();
+        }
+
+        // 第3关点击处理
+        function onOptionClickLevel3(e) {
+            const btn = e.currentTarget;
+            const idx = parseInt(btn.dataset.index);
+            const needDivide = btn.dataset.needDivide === 'true';
+            const reason = btn.dataset.reason;
+
+            if (btn.disabled) return;
+
+            if (needDivide) {
+                btn.classList.add('correct-effect', 'glow');
+                setTimeout(() => btn.classList.remove('correct-effect', 'glow'), 300);
+                btn.disabled = true;
+                level3DisabledIndices.push(idx);
+                level3CorrectSelected++;
+
+                messageBox.textContent = `✅ 选对了！还差 ${3 - level3CorrectSelected} 个。`;
+
+                if (level3CorrectSelected === 3) {
+                    messageBox.textContent = '🎉🎉 恭喜你！除法大冒险通关！你太棒了！';
+                    hintText.textContent = '✨ 完美通关 ✨';
+                    document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+                }
+            } else {
+                btn.classList.add('wrong-effect', 'shake');
+                setTimeout(() => btn.classList.remove('wrong-effect', 'shake'), 300);
+                level3WrongCount++;
+                btn.disabled = true;
+                level3WrongDisabledIndices.push(idx);
+
+                messageBox.textContent = `❌ 错误：${reason || '不需要除法。'} 容错 ${2-level3WrongCount} 次。`;
+
+                if (level3WrongCount >= 2) {
+                    messageBox.textContent = '⚠️ 两次错误，全部重置！刷新题目。';
+                    level3CorrectSelected = 0;
+                    level3WrongCount = 0;
+                    level3DisabledIndices = [];
+                    level3WrongDisabledIndices = [];
+                    refreshQuestion(true);
+                } else {
+                    renderOptions(); 
+                }
+            }
+            updateCounterDisplay();
+            updateLevel3WrongUI();
+        }
+
+        function updateLevelDisplay() {
+            if (currentLevel === 1) {
+                levelDisplay.textContent = '第 1 关 · 算式二选一';
+                starDisplay.textContent = '⭐⭕⭕';
+            } else if (currentLevel === 2) {
+                levelDisplay.textContent = '第 2 关 · 生活情境三选一';
+                starDisplay.textContent = '⭐⭐⭕';
+            } else {
+                levelDisplay.textContent = '第 3 关 · 算式×情境混合';
+                starDisplay.textContent = '⭐⭐⭐';
+            }
+        }
+
+        function resetGame() {
+            currentLevel = 1;
+            level1CorrectCount = 0;
+            level2CorrectCount = 0;
+            level3CorrectSelected = 0;
+            level3WrongCount = 0;
+            level3DisabledIndices = [];
+            level3WrongDisabledIndices = [];
+            // 重置所有上一题索引
+            level1LastIndex = -1;
+            level2LastIndex = -1;
+            level3LastIndex = -1;
+            updateLevelDisplay();
+            hintText.textContent = '第1关：连续答对3题';
+            messageBox.textContent = '🐼 新的一局！选择需要除法的算式或情境吧！';
+            refreshQuestion(true);
+            updateLevel3WrongUI();
+            updateQuestionHintByLevel();
+        }
+
+        function initGame() {
+            resetGame();
+        }
+
+        newGameBtn.addEventListener('click', resetGame);
+
+        initGame();
+    })();
+</script>
+</body>
+</html>

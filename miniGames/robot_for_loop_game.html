@@ -2166,6 +2166,9 @@ document.getElementById('lv3-make-inp').addEventListener('input', function(){
   // 更新第 5 行是否打完的状态，并联动运行按钮（通过后锁定）
   if(typed === LV3_MAKE_NOSPACE){
     lv3MakeDone = true;
+    // 第3关参考第2关：左侧代码输入完成后，立即亮起右侧“输入 n”的提醒
+    const nArrow = document.getElementById('lv3-n-arrow');
+    if(nArrow) nArrow.style.display = 'inline-block';
   }
   const nRaw = document.getElementById('l3-n').value;
   const nVal = parseInt(nRaw);
@@ -2189,6 +2192,9 @@ document.getElementById('lv3-make-inp').addEventListener('input', function(){
       document.getElementById('lv3-status').textContent = '✅ 条件行完成，继续输入 n 的值';
       const nArrow = document.getElementById('lv3-n-arrow');
       if(nArrow) nArrow.style.display = 'inline-block';
+    }else{
+      const nArrow = document.getElementById('lv3-n-arrow');
+      if(nArrow) nArrow.style.display = 'none';
     }
   }
 });

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>浮点数 vs 整数 · 拖拽分类游戏</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none; /* 防止拖动时选中文字 */
+        }
+
+        body {
+            background: linear-gradient(145deg, #2b3a4f 0%, #1d2a36 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            margin: 0;
+            padding: 16px;
+        }
+
+        .game-container {
+            max-width: 900px;
+            width: 100%;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(8px);
+            border-radius: 48px;
+            padding: 32px 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        h1 {
+            text-align: center;
+            margin: 0 0 12px 0;
+            font-weight: 400;
+            font-size: 2.2rem;
+            letter-spacing: 1px;
+            color: #f6e9d9;
+            text-shadow: 0 4px 8px #00000040;
+        }
+
+        .sub {
+            text-align: center;
+            color: #cbd5e6;
+            margin-bottom: 32px;
+            font-style: italic;
+            font-size: 1.1rem;
+        }
+
+        /* 两个分类区域 */
+        .zones {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+        }
+
+        .zone {
+            flex: 1 1 250px;
+            min-width: 220px;
+            background: #213743;
+            border-radius: 32px;
+            padding: 24px 16px;
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #fff4e0;
+            box-shadow: inset 0 -4px 0 #0f1a21, 0 12px 20px -10px black;
+            transition: all 0.1s ease;
+            border: 2px solid #3f5565;
+            position: relative;
+        }
+
+        .zone.float {
+            background: #1b4b5e;
+            border-color: #6fc5d9;
+        }
+
+        .zone.int {
+            background: #3f2e4a;
+            border-color: #cf9eff;
+        }
+
+        .zone.highlight {
+            transform: scale(1.02);
+            border-width: 4px;
+            filter: brightness(1.3);
+            box-shadow: 0 0 20px #ffeaa0;
+        }
+
+        .zone .count {
+            display: inline-block;
+            background: #ffffff30;
+            border-radius: 40px;
+            padding: 4px 16px;
+            font-size: 1.4rem;
+            margin-left: 12px;
+            border: 1px solid white;
+            color: white;
+        }
+
+        .zone-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .zone small {
+            display: block;
+            font-size: 1rem;
+            opacity: 0.8;
+            margin-top: 8px;
+            font-weight: 400;
+        }
+
+        /* 卡片区域 */
+        .cards-area {
+            background: #17212b;
+            border-radius: 56px;
+            padding: 28px 20px;
+            margin: 24px 0 20px;
+            border: 2px solid #506b7c;
+            box-shadow: inset 0 2px 6px #00000080;
+        }
+
+        .cards-title {
+            color: #bdd3e6;
+            font-size: 1.3rem;
+            margin-bottom: 16px;
+            padding-left: 12px;
+        }
+
+        .cards-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: center;
+            min-height: 120px;
+        }
+
+        .card {
+            background: #fcf3e0;
+            background-image: radial-gradient(circle at 20px 20px, #ffffff80, transparent);
+            border-radius: 28px;
+            padding: 18px 22px;
+            font-size: 2.2rem;
+            font-weight: 600;
+            color: #1f3a4b;
+            box-shadow: 0 8px 0 #947e63, 0 12px 20px -8px black;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            transition: 0.1s;
+            border: 2px solid #ffd78c;
+            min-width: 110px;
+            transform: rotate(0deg);
+            will-change: transform;
+        }
+
+        .card:active {
+            cursor: grabbing;
+            opacity: 0.9;
+            transform: scale(0.98);
+            box-shadow: 0 4px 0 #947e63, 0 8px 12px -6px black;
+        }
+
+        .card[draggable="true"]:hover {
+            background: #fff6e6;
+            border-color: #ffbc6e;
+        }
+
+        /* 消息区域 */
+        .message-box {
+            height: 50px;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 500;
+            color: #ffecaa;
+            text-shadow: 0 2px 4px black;
+            margin: 16px 0 8px;
+            transition: 0.2s;
+        }
+
+        /* 按钮 */
+        .btn-new {
+            background: #fedb9f;
+            border: none;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #1f3a4b;
+            padding: 16px 40px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 8px 0 #9b7c5a, 0 6px 16px black;
+            transition: 0.08s linear;
+            display: block;
+            margin: 0 auto;
+            letter-spacing: 1px;
+        }
+
+        .btn-new:active {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 #9b7c5a, 0 6px 16px black;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: center;
+            margin-top: 8px;
+            color: #9db7d1;
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <h1>🔢 浮点数 · 整数 🧮</h1>
+    <div class="sub">把数字卡片拖到正确的区域 —— 注意 <span style="background:#2f4f5f; padding:4px 10px; border-radius:40px;">1.0</span> 也是浮点数哦！</div>
+
+    <!-- 两个分类区 -->
+    <div class="zones">
+        <div class="zone float" id="zoneFloat" data-type="float">
+            <div class="zone-label">
+                <span>💧 浮点数</span>
+                <span class="count" id="floatCount">0</span>
+            </div>
+            <small>包含小数部分, 例如 3.14 / 1.0 / -0.5</small>
+        </div>
+        <div class="zone int" id="zoneInt" data-type="int">
+            <div class="zone-label">
+                <span>🔢 整数</span>
+                <span class="count" id="intCount">0</span>
+            </div>
+            <small>没有小数点的数字, 例如 42 / -7 / 0</small>
+        </div>
+    </div>
+
+    <!-- 卡片池 -->
+    <div class="cards-area">
+        <div class="cards-title">📋 待分类卡片 (拖动到上方区域)</div>
+        <div class="cards-grid" id="cardsContainer"></div>
+    </div>
+
+    <!-- 提示消息 & 控制 -->
+    <div class="message-box" id="message"></div>
+    <button class="btn-new" id="newGameBtn">✨ 新的一局 ✨</button>
+    <div class="footer">—— 拖放卡片，错误会有提示 ——</div>
+</div>
+
+<script>
+    (function() {
+        // ----- 获取元素 -----
+        const floatZone = document.getElementById('zoneFloat');
+        const intZone = document.getElementById('zoneInt');
+        const cardsContainer = document.getElementById('cardsContainer');
+        const floatCountSpan = document.getElementById('floatCount');
+        const intCountSpan = document.getElementById('intCount');
+        const messageDiv = document.getElementById('message');
+        const newGameBtn = document.getElementById('newGameBtn');
+
+        // 计数器
+        let floatCorrect = 0;
+        let intCorrect = 0;
+
+        // 当前卡片数量 (用于检测全部完成)
+        let currentCardCount = 0;
+
+        // ----- 辅助函数：显示短暂消息 (错误/成功) -----
+        let messageTimeout = null;
+        function showMessage(text, isError = true) {
+            if (messageTimeout) clearTimeout(messageTimeout);
+            messageDiv.textContent = text;
+            messageDiv.style.color = isError ? '#ffb0a0' : '#c6ffb0';
+            messageTimeout = setTimeout(() => {
+                messageDiv.textContent = '';
+            }, 1500);
+        }
+
+        // ----- 更新计数器显示 -----
+        function updateCounters() {
+            floatCountSpan.textContent = floatCorrect;
+            intCountSpan.textContent = intCorrect;
+        }
+
+        // ----- 检查是否所有卡片都分类完了 -----
+        function checkAllClassified() {
+            const remainingCards = document.querySelectorAll('.card').length;
+            if (remainingCards === 0 && currentCardCount > 0) {
+                showMessage('🎉 太棒了！所有数字分类完毕！', false);
+            }
+        }
+
+        // ----- 生成随机卡片数据 (浮点数 & 整数) -----
+        function generateCardsData() {
+            const cards = [];
+            const total = 8; // 一共8张卡片
+
+            // 强制生成规则：浮点数至少包含一个 ".0" 的数字 (如 1.0, 2.0)
+            // 我们先生成4个整数和4个浮点数，并确保浮点数里有1.0或类似
+            const floatIndices = [0, 1, 2, 3];  // 假设前4张为浮点数
+            const intIndices = [4, 5, 6, 7];    // 后4张为整数
+
+            // 浮点数列表 (随机 + 强制 .0)
+            for (let i = 0; i < 4; i++) {
+                let displayNum;
+                // 确保至少一个为 .0 格式 (i === 0 设置为 1.0 ; i === 1 设置为 2.0)
+                if (i === 0) {
+                    displayNum = '1.0';
+                } else if (i === 1) {
+                    displayNum = '2.0';
+                } else {
+                    // 随机产生一位小数，范围 -2.5 ～ 4.5 左右
+                    let raw = (Math.random() * 7 - 2).toFixed(1);
+                    // 避免出现 '-0.0' 显示问题，统一处理
+                    if (raw === '-0.0') raw = '0.0';
+                    displayNum = raw;
+                }
+                cards.push({ display: displayNum, type: 'float' });
+            }
+
+            // 整数列表 (随机 -3 ~ 10 之间的整数)
+            for (let i = 0; i < 4; i++) {
+                let intValue = Math.floor(Math.random() * 14) - 3;  // -3..10
+                // 避免与浮点数中的整数形式重复感觉没问题，但保证包含0、正负
+                cards.push({ display: intValue.toString(), type: 'int' });
+            }
+
+            // 打乱顺序 (让游戏更有趣，不总是前四个浮点后四个整数)
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+
+            return cards;
+        }
+
+        // ----- 渲染卡片 (绑定 drag 事件) -----
+        function renderCards(cardsData) {
+            cardsContainer.innerHTML = '';  // 清空
+            floatCorrect = 0;
+            intCorrect = 0;
+            updateCounters();
+
+            cardsData.forEach((card, index) => {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'card';
+                cardDiv.id = `card_${index}_${Date.now()}_${Math.random()}`; // 尽量唯一
+                cardDiv.setAttribute('draggable', 'true');
+                cardDiv.dataset.type = card.type;      // 'float' 或 'int'
+                cardDiv.textContent = card.display;     // 显示数字，如 "1.0"
+                cardsContainer.appendChild(cardDiv);
+
+                // 绑定 dragstart
+                cardDiv.addEventListener('dragstart', handleDragStart);
+                // 可选：dragend 清理 (不需要特殊处理)
+            });
+
+            currentCardCount = cardsData.length;
+        }
+
+        // ----- 开始拖拽：保存被拖拽卡片的id -----
+        function handleDragStart(e) {
+            // 存储被拖拽元素的id，用于后续drop时查找
+            e.dataTransfer.setData('text/plain', e.target.id);
+            e.dataTransfer.effectAllowed = 'move';
+            // 取消默认拖拽图片 (可选，但不影响功能)
+            // 设置拖拽时的光标状态
+            e.target.style.opacity = '0.6';
+        }
+
+        // 恢复拖拽结束时的样式 (所有卡片)
+        document.addEventListener('dragend', function(e) {
+            if (e.target.classList.contains('card')) {
+                e.target.style.opacity = '1';
+            }
+            // 同时移除所有zone高亮
+            floatZone.classList.remove('highlight');
+            intZone.classList.remove('highlight');
+        });
+
+        // ----- 为放置区域添加事件 (floatZone 和 intZone) -----
+        function setupZones() {
+            // 共同的dragover：阻止默认，添加高亮
+            [floatZone, intZone].forEach(zone => {
+                zone.addEventListener('dragover', (e) => {
+                    e.preventDefault();  // 必须！
+                    e.dataTransfer.dropEffect = 'move';
+                    zone.classList.add('highlight');
+                });
+
+                zone.addEventListener('dragleave', () => {
+                    zone.classList.remove('highlight');
+                });
+            });
+
+            // 单独处理 drop (因为逻辑区分)
+            floatZone.addEventListener('drop', handleDrop);
+            intZone.addEventListener('drop', handleDrop);
+        }
+
+        // ----- drop 处理函数 (根据 event 目标区域区分) -----
+        function handleDrop(e) {
+            e.preventDefault();
+            const zone = e.currentTarget; // floatZone 或 intZone
+            zone.classList.remove('highlight');
+
+            // 获取被拖拽卡片的id
+            const cardId = e.dataTransfer.getData('text/plain');
+            const cardElement = document.getElementById(cardId);
+
+            // 如果卡片不存在 (可能已经被移走/重复drop)，忽略
+            if (!cardElement) {
+                showMessage('⏳ 这张卡片已经分类过了', true);
+                return;
+            }
+
+            // 获取卡片类型和目标区域类型
+            const cardType = cardElement.dataset.type;     // 'float' 或 'int'
+            const targetType = zone.dataset.type;           // 'float' 或 'int'
+
+            // 判断是否正确
+            if (cardType === targetType) {
+                // 正确！移除卡片，增加相应计数器
+                cardElement.remove();  // 从DOM中删除
+
+                if (cardType === 'float') {
+                    floatCorrect++;
+                    showMessage(`✅ 正确！${cardElement.textContent} 是浮点数`, false);
+                } else {
+                    intCorrect++;
+                    showMessage(`✅ 正确！${cardElement.textContent} 是整数`, false);
+                }
+                updateCounters();
+                // 检查是否全部完成
+                checkAllClassified();
+            } else {
+                // 错误: 提示，卡片保留 (不移除)
+                showMessage(`❌ 错误：${cardElement.textContent} 不是 ${targetType === 'float' ? '浮点数' : '整数'} ，再试试看`, true);
+                // 轻微抖动提示 (简单增加一个类，然后移除)
+                cardElement.style.transform = 'translateX(4px)';
+                setTimeout(() => cardElement.style.transform = '', 100);
+            }
+
+            // 清除拖拽数据，防止二次使用 (不重要)
+            e.dataTransfer.clearData();
+        }
+
+        // ----- 重置游戏 (新游戏) -----
+        function newGame() {
+            // 生成新卡片数据
+            const newCards = generateCardsData();
+            renderCards(newCards);
+            // 重置计数器
+            floatCorrect = 0;
+            intCorrect = 0;
+            updateCounters();
+            // 清空消息
+            messageDiv.textContent = '';
+            // 移除所有高亮
+            floatZone.classList.remove('highlight');
+            intZone.classList.remove('highlight');
+        }
+
+        // ----- 初始化所有事件 & 第一局 -----
+        function initGame() {
+            setupZones();
+            // 全局阻止浏览器默认拖放行为（防止打开链接等）
+            document.addEventListener('dragover', (e) => e.preventDefault());
+            document.addEventListener('drop', (e) => e.preventDefault());
+
+            // 新游戏按钮
+            newGameBtn.addEventListener('click', newGame);
+
+            // 开始第一局
+            newGame();
+        }
+
+        // 启动一切
+        initGame();
+
+        // 额外细节：卡片上的 dragend 恢复透明已在document上处理
+        // 并且防止某些浏览器在拖动时显示“禁止”图标，已通过全局dragover预防
+    })();
+</script>
+</body>
+</html>

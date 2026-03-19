@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>🍎 苹果分组实验室 · 整除与取模大冒险（%版）</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+        body {
+            background: linear-gradient(145deg, #f9f3e8 0%, #fff3d9 100%);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+        .game-box {
+            max-width: 1000px;
+            width: 100%;
+            background: rgba(255, 250, 240, 0.8);
+            backdrop-filter: blur(4px);
+            border-radius: 60px 60px 40px 40px;
+            box-shadow: 0 20px 35px rgba(200, 120, 50, 0.2), 0 8px 12px rgba(0,0,0,0.1);
+            padding: 28px 24px 36px;
+            border: 4px solid #fbc28b;
+        }
+        h1 {
+            margin: 0 0 12px 0;
+            font-weight: 700;
+            font-size: 2.2rem;
+            color: #8b5a2b;
+            text-shadow: 2px 2px 0 #ffe0a5;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        h1 span {
+            background: #ffc48c;
+            font-size: 1.4rem;
+            padding: 8px 25px;
+            border-radius: 60px;
+            color: #4b2e16;
+            box-shadow: inset 0 -3px 0 #d38b4b;
+        }
+        .panel {
+            background: #ffeecc;
+            border-radius: 50px;
+            padding: 20px 24px;
+            margin: 20px 0 25px;
+            border: 2px solid #ffb882;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            box-shadow: 0 6px 0 #e0a56b;
+        }
+        .slider-group {
+            flex: 1 1 250px;
+            min-width: 200px;
+        }
+        .slider-group label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            color: #6b3f1c;
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+        }
+        .slider-group label img, .slider-group label span {
+            font-size: 1.8rem;
+        }
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: #ffdeae;
+            padding: 10px 20px;
+            border-radius: 40px;
+            border: 1px solid #e5a259;
+        }
+        .slider-row input[type=range] {
+            flex: 1;
+            height: 10px;
+            border-radius: 20px;
+            background: #f5b67a;
+            -webkit-appearance: none;
+        }
+        .slider-row input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 28px;
+            height: 28px;
+            background: #a3490c;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid #ffc491;
+            box-shadow: 0 2px 6px #7b3f0e;
+        }
+        .slider-row .value-badge {
+            background: #7b3f1a;
+            color: #ffd9a3;
+            font-weight: bold;
+            font-size: 1.6rem;
+            padding: 0 10px;
+            min-width: 55px;
+            text-align: center;
+            border-radius: 30px;
+            font-family: monospace;
+            border: 2px solid #febf77;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            background: #fcd396;
+            border: none;
+            border-radius: 40px;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #4b2a10;
+            cursor: pointer;
+            border-bottom: 5px solid #b2713a;
+            transition: all 0.07s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 5px 10px rgba(160, 100, 30, 0.2);
+        }
+        .btn:active {
+            border-bottom-width: 2px;
+            transform: translateY(3px);
+            background: #f0bc7c;
+        }
+        .btn:disabled {
+            opacity: 0.4;
+            pointer-events: none;
+            border-bottom-color: #8b5a40;
+        }
+        .random-btn {
+            background: #bbd686;
+            border-bottom-color: #6f9247;
+            color: #2a4d1a;
+        }
+        .auto-btn {
+            background: #f9b88b;
+            border-bottom-color: #b15f2a;
+        }
+        .formula {
+            background: #c9e0b2;
+            border-radius: 50px;
+            padding: 15px 25px;
+            text-align: center;
+            border: 3px solid #92b47a;
+            margin: 10px 0 25px;
+            font-size: 2rem;
+            font-weight: 600;
+            color: #1f4d1a;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 20px 30px;
+        }
+        .formula div {
+            background: #fefad0;
+            padding: 6px 25px;
+            border-radius: 40px;
+            border: 2px solid #7da064;
+            font-family: 'Courier New', monospace;
+        }
+        .formula .mod-badge {
+            background: #fdd0b2;
+            border-color: #b26b2e;
+        }
+        .playground {
+            background: #fbe6c2;
+            border-radius: 50px 50px 30px 30px;
+            padding: 25px 15px 20px;
+            border: 3px solid #c99158;
+            box-shadow: inset 0 0 0 5px #fef1dd;
+            margin-top: 20px;
+        }
+        .groups-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px 25px;
+            justify-content: flex-start;
+            align-items: flex-start;
+            min-height: 180px;
+        }
+        .group {
+            border-radius: 30px 30px 20px 20px;
+            padding: 12px 12px 8px;
+            box-shadow: 0 8px 0 #a56129, 0 12px 18px -8px #b45f2a;
+            transition: all 0.2s;
+            border: 2px solid #fec27e;
+            background: #e5f0cf;  /* 默认完整组浅绿 */
+        }
+        .group.remain-group {
+            background: #fde4c2;  /* 剩余组浅橙 */
+            box-shadow: 0 8px 0 #c57c3e, 0 12px 18px -8px #b86329;
+        }
+        .group-label {
+            font-weight: 700;
+            font-size: 1.1rem;
+            background: #ffffffb3;
+            display: inline-block;
+            padding: 4px 16px 6px;
+            border-radius: 40px;
+            margin-bottom: 10px;
+            border: 2px solid #ffb66c;
+            color: #572f12;
+            backdrop-filter: blur(2px);
+        }
+        .apple-container {
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+            padding: 8px 5px 5px;
+            overflow-x: auto;
+            max-width: 100%;
+            scrollbar-width: thin;
+            scrollbar-color: #c57c3e #ffeac2;
+            border-radius: 30px;
+        }
+        .apple-container::-webkit-scrollbar {
+            height: 12px;
+        }
+        .apple-container::-webkit-scrollbar-thumb {
+            background: #c57c3e;
+            border-radius: 20px;
+            border: 2px solid #ffdaa0;
+        }
+        .apple {
+            font-size: 2.2rem;
+            line-height: 1;
+            filter: drop-shadow(2px 4px 4px rgba(120, 50, 0, 0.3));
+            transition: transform 0.15s ease;
+            flex-shrink: 0;
+            width: 52px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffe3b7;
+            border-radius: 30px;
+            border: 2px solid #c55a11;
+            transform: rotate(0deg);
+            cursor: default;
+        }
+        .apple:hover {
+            transform: scale(1.1) rotate(3deg);
+            background: #ffd69a;
+        }
+        .empty-message {
+            font-size: 2rem;
+            padding: 30px;
+            color: #a56528;
+            opacity: 0.8;
+            text-align: center;
+            width: 100%;
+            background: #ffeac2;
+            border-radius: 60px;
+        }
+        .legend {
+            display: flex;
+            gap: 25px;
+            margin: 30px 0 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            font-size: 1.2rem;
+            color: #4d321a;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #fad7a8;
+            padding: 6px 25px;
+            border-radius: 40px;
+            border: 2px solid #c97f39;
+        }
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 20px;
+            background: #ddefb0;
+            border: 2px solid #679436;
+        }
+        .legend-color.remain {
+            background: #fbd6ac;
+            border-color: #c16f2c;
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #8b5a36;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+<div class="game-box">
+    <h1>
+        🍎 苹果分组实验室
+        <span>整除 / 取模 %</span>
+    </h1>
+    <!-- 控制区 -->
+    <div class="panel">
+        <div class="slider-group">
+            <label><span>🍎</span> 苹果总数</label>
+            <div class="slider-row">
+                <input type="range" id="totalSlider" min="0" max="30" value="12" step="1">
+                <span class="value-badge" id="totalValue">12</span>
+            </div>
+            <div class="button-group">
+                <button class="btn" id="totalMinus">−1</button>
+                <button class="btn" id="totalPlus">+1</button>
+            </div>
+        </div>
+        <div class="slider-group">
+            <label><span>📦</span> 每组大小</label>
+            <div class="slider-row">
+                <input type="range" id="sizeSlider" min="1" max="10" value="4" step="1">
+                <span class="value-badge" id="sizeValue">4</span>
+            </div>
+            <div class="button-group">
+                <button class="btn" id="sizeMinus">−1</button>
+                <button class="btn" id="sizePlus">+1</button>
+            </div>
+        </div>
+    </div>
+    <!-- 辅助按钮组 -->
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 10px;">
+        <button class="btn random-btn" id="randomBtn">🎲 随机组合</button>
+        <button class="btn auto-btn" id="animateBtn">▶️ 动画演示 (总数滚动)</button>
+    </div>
+    <!-- 公式显示区（已改为 / 和 %） -->
+    <div class="formula" id="formulaArea">
+        <div id="divExpr">12 / 4 = 3</div>
+        <div class="mod-badge" id="modExpr">12 % 4 = 0</div>
+    </div>
+    <!-- 苹果分组展示区 -->
+    <div class="playground">
+        <div class="groups-container" id="groupsContainer">
+            <!-- 动态渲染 -->
+        </div>
+        <!-- 图例说明 -->
+        <div class="legend">
+            <div class="legend-item"><span class="legend-color"></span> 完整组 (商)</div>
+            <div class="legend-item"><span class="legend-color remain"></span> 剩余组 (余数)</div>
+        </div>
+    </div>
+    <footer>
+        ✨ 每组苹果水平滑动查看 · 点击动画可观察余数循环 ✨
+    </footer>
+</div>
+
+<script>
+    (function() {
+        // 获取DOM元素
+        const totalSlider = document.getElementById('totalSlider');
+        const sizeSlider = document.getElementById('sizeSlider');
+        const totalValue = document.getElementById('totalValue');
+        const sizeValue = document.getElementById('sizeValue');
+        const groupsContainer = document.getElementById('groupsContainer');
+        const divExpr = document.getElementById('divExpr');
+        const modExpr = document.getElementById('modExpr');
+
+        // 按钮
+        const totalMinus = document.getElementById('totalMinus');
+        const totalPlus = document.getElementById('totalPlus');
+        const sizeMinus = document.getElementById('sizeMinus');
+        const sizePlus = document.getElementById('sizePlus');
+        const randomBtn = document.getElementById('randomBtn');
+        const animateBtn = document.getElementById('animateBtn');
+
+        // 动画句柄
+        let animationInterval = null;
+
+        // 核心渲染函数：直接从滑块读取最新值
+        function renderGroups() {
+            // 从滑块获取当前值（确保是整数）
+            let total = parseInt(totalSlider.value, 10);
+            let size = parseInt(sizeSlider.value, 10);
+
+            // 边界保护 (滑块本身有min/max，但以防万一)
+            if (isNaN(total) || total < 0) total = 0;
+            if (isNaN(size) || size < 1) size = 1;
+            // 修正滑块显示（如果越界）
+            if (total > 30) total = 30;
+            if (size > 10) size = 10;
+            totalSlider.value = total;
+            sizeSlider.value = size;
+
+            // 更新数字显示
+            totalValue.innerText = total;
+            sizeValue.innerText = size;
+
+            // 计算商和余数
+            const quotient = Math.floor(total / size);
+            const remainder = total % size;
+
+            // 更新公式区：使用 / 和 % 符号
+            divExpr.innerText = `${total} / ${size} = ${quotient}`;
+            modExpr.innerText = `${total} % ${size} = ${remainder}`;
+
+            // 生成分组HTML
+            let htmlStr = '';
+            if (total === 0) {
+                htmlStr = '<div class="empty-message">🍽️ 没有苹果，快用滑块增加一些吧！</div>';
+            } else {
+                // 完整组
+                for (let i = 0; i < quotient; i++) {
+                    htmlStr += '<div class="group">';
+                    htmlStr += `<div class="group-label">第 ${i+1} 组</div>`;
+                    htmlStr += '<div class="apple-container">';
+                    for (let j = 0; j < size; j++) {
+                        htmlStr += '<div class="apple">🍎</div>';
+                    }
+                    htmlStr += '</div></div>';
+                }
+                // 剩余组
+                if (remainder > 0) {
+                    htmlStr += '<div class="group remain-group">';
+                    htmlStr += `<div class="group-label">✨ 剩余组</div>`;
+                    htmlStr += '<div class="apple-container">';
+                    for (let k = 0; k < remainder; k++) {
+                        htmlStr += '<div class="apple">🍎</div>';
+                    }
+                    htmlStr += '</div></div>';
+                }
+            }
+            groupsContainer.innerHTML = htmlStr;
+        }
+
+        // 事件绑定：滑块
+        totalSlider.addEventListener('input', renderGroups);
+        sizeSlider.addEventListener('input', renderGroups);
+
+        // 加减按钮
+        totalMinus.addEventListener('click', function() {
+            totalSlider.value = Math.max(0, parseInt(totalSlider.value, 10) - 1);
+            renderGroups();
+        });
+        totalPlus.addEventListener('click', function() {
+            totalSlider.value = Math.min(30, parseInt(totalSlider.value, 10) + 1);
+            renderGroups();
+        });
+        sizeMinus.addEventListener('click', function() {
+            sizeSlider.value = Math.max(1, parseInt(sizeSlider.value, 10) - 1);
+            renderGroups();
+        });
+        sizePlus.addEventListener('click', function() {
+            sizeSlider.value = Math.min(10, parseInt(sizeSlider.value, 10) + 1);
+            renderGroups();
+        });
+
+        // 随机组合
+        randomBtn.addEventListener('click', function() {
+            totalSlider.value = Math.floor(Math.random() * 31); // 0-30
+            sizeSlider.value = Math.floor(Math.random() * 10) + 1; // 1-10
+            renderGroups();
+        });
+
+        // 动画演示 (总数自动增加循环)
+        animateBtn.addEventListener('click', function() {
+            if (animationInterval) {
+                clearInterval(animationInterval);
+                animationInterval = null;
+                animateBtn.innerText = '▶️ 动画演示 (总数滚动)';
+            } else {
+                animateBtn.innerText = '⏸️ 暂停动画';
+                animationInterval = setInterval(function() {
+                    let currentTotal = parseInt(totalSlider.value, 10);
+                    currentTotal = (currentTotal + 1) % 31; // 0~30循环
+                    totalSlider.value = currentTotal;
+                    renderGroups(); // 直接渲染
+                }, 550);
+            }
+        });
+
+        // 页面卸载时清理动画
+        window.addEventListener('beforeunload', function() {
+            if (animationInterval) {
+                clearInterval(animationInterval);
+            }
+        });
+
+        // 初始化渲染
+        renderGroups();
+    })();
+</script>
+</body>
+</html>
