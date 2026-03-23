@@ -1,157 +1,410 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>有道编程游戏索引</title>
-    <meta name="description" content="L1、L2、L3、L4 游戏入口索引">
-    <style>
-        :root {
-            --bg: #f8fafc;
-            --card: #ffffff;
-            --accent: #0ea5e9;
-            --text: #0f172a;
-            --muted: #475569;
-            --border: #e2e8f0;
-            --disabled: #94a3b8;
-        }
-        html, body { height: 100%; }
-        body {
-            margin: 0;
-            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-            color: var(--text);
-            background: radial-gradient(1200px 800px at 20% -10%, #eef2ff 0%, var(--bg) 50%),
-                        radial-gradient(1000px 600px at 120% 10%, #e0f2fe 0%, var(--bg) 40%),
-                        var(--bg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-        }
-        .container { width: 100%; max-width: 760px; }
-        header { text-align: center; margin-bottom: 16px; }
-        h1 { margin: 0 0 6px 0; font-size: 28px; letter-spacing: 0.2px; }
-        .subtitle { color: var(--muted); font-size: 14px; }
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>有道编程游戏</title>
+  <meta name="description" content="有道编程互动游戏合集 — 图灵班、L1~L4 全系列入口">
+  <link rel="icon" href="L1Games/assets/thumbs/u01.svg">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:    #05080f;
+      --panel: #0c1020;
+      --bd:    #1a2540;
+      --text:  #e2e8f0;
+      --muted: #64748b;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+    }
 
-        .grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+    /* ────── HERO ────── */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+      padding: 72px 24px 56px;
+    }
+    .hero-glow {
+      position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 900px 400px at 50% -10%, rgba(99,102,241,.2) 0%, transparent 70%),
+        radial-gradient(ellipse 500px 250px at 10% 120%, rgba(34,211,238,.08) 0%, transparent 60%),
+        radial-gradient(ellipse 500px 250px at 90% 110%, rgba(168,85,247,.08) 0%, transparent 60%);
+    }
+    /* subtle grid */
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size: 48px 48px;
+      -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 0%, transparent 100%);
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 0%, transparent 100%);
+    }
 
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px;
-            color: inherit;
-            position: relative;
-            overflow: hidden;
-            transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
-            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-        }
-        .card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(15, 23, 42, 0.10); border-color: #bfdbfe; }
-        .card h3 { margin: 0 0 6px 0; font-size: 18px; }
-        .card p { margin: 0 0 12px 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+      color: #818cf8;
+      background: rgba(99,102,241,.1);
+      border: 1px solid rgba(99,102,241,.25);
+      border-radius: 999px;
+      padding: 5px 14px;
+      margin-bottom: 22px;
+    }
+    .hero-eyebrow .pulse {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #818cf8;
+      box-shadow: 0 0 0 0 rgba(129,140,248,.6);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%   { box-shadow: 0 0 0 0   rgba(129,140,248,.6); }
+      70%  { box-shadow: 0 0 0 7px rgba(129,140,248,0);  }
+      100% { box-shadow: 0 0 0 0   rgba(129,140,248,0);  }
+    }
 
-        .badge {
-            position: absolute; top: 10px; right: 10px; font-size: 11px; color: #075985;
-            background: linear-gradient(90deg, #7dd3fc, #93c5fd);
-            padding: 4px 8px; border-radius: 999px; font-weight: 700; letter-spacing: 0.3px;
-        }
+    .hero h1 {
+      font-size: clamp(32px, 6vw, 52px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1.1;
+      margin-bottom: 14px;
+      background: linear-gradient(135deg, #f1f5f9 0%, #a5b4fc 50%, #67e8f9 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: 16px; color: var(--muted);
+      max-width: 440px; margin: 0 auto 36px;
+      line-height: 1.7;
+    }
+    .hero-stats {
+      display: flex; justify-content: center; gap: 32px; flex-wrap: wrap;
+    }
+    .hero-stat { text-align: center; }
+    .hero-stat .num {
+      font-size: 26px; font-weight: 800;
+      background: linear-gradient(135deg, #a5b4fc, #67e8f9);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-stat .lbl { font-size: 11px; color: var(--muted); margin-top: 2px; letter-spacing: .06em; }
 
-        .actions { display: flex; gap: 10px; }
-        .btn { appearance: none; border: 1px solid var(--border); background: #ffffff; color: var(--text); padding: 10px 14px; border-radius: 10px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; transition: background 150ms ease, border-color 150ms ease, transform 120ms ease;
-        }
-        .btn:hover { background: #f8fafc; border-color: #cbd5e1; }
-        .btn:active { transform: translateY(1px); }
-        .btn-primary { background: linear-gradient(180deg, #38bdf8, #0ea5e9); color: #ffffff; border: 1px solid #0284c7; }
-        .btn-primary:hover { background: linear-gradient(180deg, #7dd3fc, #38bdf8); border-color: #0284c7; }
-        .btn-disabled { background: #f1f5f9; color: #94a3b8; border-color: #e2e8f0; cursor: not-allowed; }
-        .btn-disabled:hover { background: #f1f5f9; }
+    /* ────── MAIN ────── */
+    .wrap { max-width: 880px; margin: 0 auto; padding: 48px 24px 80px; }
 
-        .disabled { opacity: 0.9; }
-        footer { text-align: center; margin-top: 18px; color: var(--muted); font-size: 12px; }
-    </style>
-    <link rel="icon" href="L1Games/assets/thumbs/u01.svg">
+    .section-label {
+      font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 18px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-label::after {
+      content: ''; flex: 1; height: 1px; background: var(--bd);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+      margin-bottom: 52px;
+    }
+
+    /* ────── CARD ────── */
+    .card {
+      position: relative;
+      background: var(--panel);
+      border: 1px solid var(--bd);
+      border-radius: 16px;
+      padding: 24px;
+      text-decoration: none;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      overflow: hidden;
+      transition: transform .2s, box-shadow .2s, border-color .2s;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(0,0,0,.35);
+    }
+    /* accent glow behind card on hover */
+    .card::before {
+      content: '';
+      position: absolute; inset: 0;
+      border-radius: inherit;
+      opacity: 0;
+      transition: opacity .25s;
+    }
+    .card:hover::before { opacity: 1; }
+
+    /* per-card accent colors */
+    .c-violet  { --c: #7c3aed; --clit: #a78bfa; }
+    .c-cyan    { --c: #0891b2; --clit: #22d3ee; }
+    .c-blue    { --c: #1d4ed8; --clit: #60a5fa; }
+    .c-indigo  { --c: #4338ca; --clit: #818cf8; }
+    .c-emerald { --c: #059669; --clit: #34d399; }
+    .c-amber   { --c: #b45309; --clit: #fbbf24; }
+    .c-gray    { --c: #374151; --clit: #6b7280; }
+
+    .card { border-top: 2px solid var(--c, var(--bd)); }
+    .card:hover { border-color: var(--clit, #818cf8); box-shadow: 0 16px 40px rgba(0,0,0,.35), 0 0 0 1px var(--clit, #818cf8)20; }
+    .card::before { background: radial-gradient(ellipse 200% 120% at 50% 0%, color-mix(in srgb, var(--clit,#818cf8) 8%, transparent) 0%, transparent 70%); }
+
+    /* icon circle */
+    .card-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: color-mix(in srgb, var(--c) 18%, transparent);
+      border: 1px solid color-mix(in srgb, var(--clit) 30%, transparent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      margin-bottom: 16px;
+      flex-shrink: 0;
+    }
+
+    .card-top {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .card-badge {
+      font-size: 10px; font-weight: 700; letter-spacing: .06em;
+      padding: 3px 9px; border-radius: 999px;
+      background: color-mix(in srgb, var(--clit) 12%, transparent);
+      color: var(--clit);
+      border: 1px solid color-mix(in srgb, var(--clit) 28%, transparent);
+    }
+    .badge-lock {
+      background: rgba(100,116,139,.1); color: var(--muted);
+      border: 1px solid rgba(100,116,139,.2);
+    }
+
+    .card h2 {
+      font-size: 18px; font-weight: 700;
+      margin-bottom: 6px; line-height: 1.3;
+    }
+    .card p {
+      font-size: 13px; color: var(--muted); line-height: 1.65;
+      margin-bottom: 18px; flex: 1;
+    }
+
+    .card-tags {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      margin-bottom: 18px;
+    }
+    .tag {
+      font-size: 11px; color: var(--muted);
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--bd);
+      border-radius: 6px; padding: 2px 8px;
+    }
+
+    .card-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 600;
+      color: var(--clit);
+      background: color-mix(in srgb, var(--c) 15%, transparent);
+      border: 1px solid color-mix(in srgb, var(--clit) 30%, transparent);
+      border-radius: 9px;
+      padding: 9px 18px;
+      text-decoration: none;
+      transition: background .15s;
+      align-self: flex-start;
+    }
+    .card-btn:hover { background: color-mix(in srgb, var(--c) 28%, transparent); }
+    .card-btn.disabled {
+      color: var(--muted); background: rgba(255,255,255,.03);
+      border-color: var(--bd); cursor: not-allowed; pointer-events: none;
+    }
+    .card-btn svg { flex-shrink: 0; }
+
+    .card.locked { opacity: .55; }
+
+    /* ────── FOOTER ────── */
+    footer {
+      border-top: 1px solid var(--bd);
+      text-align: center; padding: 28px;
+      color: var(--muted); font-size: 12px;
+      display: flex; align-items: center; justify-content: center; gap: 16px;
+    }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>有道编程游戏 - 目录</h1>
-            <div class="subtitle">选择一个级别进入对应的游戏集合</div>
-        </header>
 
-        <main class="grid">
-            <div class="card" style="border-color:#a78bfa55;background:linear-gradient(135deg,#ffffff,#f5f3ff)">
-                <span class="badge" style="background:linear-gradient(90deg,#a78bfa,#818cf8);color:#fff">图灵班</span>
-                <h3>图灵班 · 1 期课程</h3>
-                <p>系统化 C++ 课程入口，含互动课件、配套小游戏与阶段测验，共 20 讲。</p>
-                <div class="actions">
-                    <a class="btn btn-primary" style="background:linear-gradient(180deg,#a78bfa,#7c3aed);border-color:#6d28d9" href="turing1.html">进入课程</a>
-                </div>
-            </div>
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-eyebrow">
+    <span class="pulse"></span>
+    Youdao Games · 有道编程
+  </div>
+  <h1>互动编程游戏平台</h1>
+  <p>从基础 C++ 到算法进阶，通过游戏化互动深化每一个知识点。</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="num">20+</div><div class="lbl">课程讲次</div></div>
+    <div class="hero-stat"><div class="num">15+</div><div class="lbl">互动小游戏</div></div>
+    <div class="hero-stat"><div class="num">4</div><div class="lbl">难度级别</div></div>
+  </div>
+</section>
 
-            <div class="card">
-                <span class="badge">新</span>
-                <h3>精选小游戏</h3>
-                <p>包含 C++ 打字游戏、大战僵尸等精选练习小游戏的入口。</p>
-                <div class="actions">
-                    <a class="btn btn-primary" href="miniGames/index.html">开始游戏</a>
-                </div>
-            </div>
+<!-- CONTENT -->
+<div class="wrap">
 
-            <div class="card">
-                <span class="badge">可用</span>
-                <h3>L1 游戏集合</h3>
-                <p>数组、栈、二维数组等入门游戏与练习。</p>
-                <div class="actions">
-                    <a class="btn btn-primary" href="L1Games/index.html">进入 L1</a>
-                </div>
-            </div>
+  <div class="section-label">精选入口</div>
+  <div class="grid">
 
-            <div class="card">
-                <span class="badge">新</span>
-                <h3>L1 2.0 游戏集合</h3>
-                <p>L1 全新升级版本，内容与玩法持续更新中。</p>
-                <div class="actions">
-                    <a class="btn btn-primary" href="L1Games2.0/index.html">进入 L1 2.0</a>
-                </div>
-            </div>
+    <!-- 图灵班 -->
+    <a class="card c-violet" href="turing1.html">
+      <div class="card-top">
+        <div class="card-icon">🎓</div>
+        <span class="card-badge">图灵班</span>
+      </div>
+      <h2>图灵班 · 1 期课程</h2>
+      <p>系统化 C++ 编程课程，4 个阶段 20 讲，每讲配套互动课件、小游戏与阶段测验。</p>
+      <div class="card-tags">
+        <span class="tag">C++ 基础</span>
+        <span class="tag">循环与数组</span>
+        <span class="tag">函数</span>
+        <span class="tag">20 讲</span>
+      </div>
+      <span class="card-btn">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        进入课程
+      </span>
+    </a>
 
-            <div class="card">
-                <span class="badge">可用</span>
-                <h3>L2 游戏集合</h3>
-                <p>进阶算法与数据结构讲义与练习，在线阅读与跳转。
-                </p>
-                <div class="actions">
-                    <a class="btn btn-primary" href="L2Games/index.html">进入 L2</a>
-                </div>
-            </div>
+    <!-- 精选小游戏 -->
+    <a class="card c-cyan" href="miniGames/index.html">
+      <div class="card-top">
+        <div class="card-icon">🎮</div>
+        <span class="card-badge">新</span>
+      </div>
+      <h2>精选小游戏合集</h2>
+      <p>冒泡排序、机器人工厂、最大值擂台、打字练习等精选互动游戏，随时进入练习。</p>
+      <div class="card-tags">
+        <span class="tag">气泡排序</span>
+        <span class="tag">进制转换</span>
+        <span class="tag">for 循环</span>
+        <span class="tag">挑战模式</span>
+      </div>
+      <span class="card-btn">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        开始游戏
+      </span>
+    </a>
 
-            <div class="card disabled" title="即将上线">
-                <h3>L3 游戏集合</h3>
-                <p>综合项目挑战与算法竞赛模式。敬请期待。</p>
-                <div class="actions">
-                    <button class="btn btn-disabled" disabled>即将上线</button>
-                </div>
-            </div>
+  </div>
 
-            <div class="card">
-                <span class="badge">新</span>
-                <h3>L4 游戏集合</h3>
-                <p>高阶专题与实战项目集合，目前包含棋盘覆盖分治算法演示。</p>
-                <div class="actions">
-                    <a class="btn btn-primary" href="L4Games/index.html">进入 L4</a>
-                </div>
-            </div>
-        </main>
+  <div class="section-label">分级游戏集合</div>
+  <div class="grid">
 
-        <footer>
-            © <span id="y"></span> Youdao Games
-        </footer>
+    <!-- L1 -->
+    <a class="card c-blue" href="L1Games/index.html">
+      <div class="card-top">
+        <div class="card-icon">🔵</div>
+        <span class="card-badge">可用</span>
+      </div>
+      <h2>L1 游戏集合</h2>
+      <p>数组下标、栈操作、二维数组等入门级游戏与互动练习。</p>
+      <div class="card-tags">
+        <span class="tag">数组</span><span class="tag">栈</span><span class="tag">二维数组</span>
+      </div>
+      <span class="card-btn">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        进入 L1
+      </span>
+    </a>
+
+    <!-- L1 2.0 -->
+    <a class="card c-indigo" href="L1Games2.0/index.html">
+      <div class="card-top">
+        <div class="card-icon">🟣</div>
+        <span class="card-badge">新</span>
+      </div>
+      <h2>L1 2.0 游戏集合</h2>
+      <p>L1 全新升级版本，课件质量与游戏玩法持续迭代，内容同步图灵班课程体系。</p>
+      <div class="card-tags">
+        <span class="tag">20 单元</span><span class="tag">持续更新</span><span class="tag">答题器</span>
+      </div>
+      <span class="card-btn">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        进入 L1 2.0
+      </span>
+    </a>
+
+    <!-- L2 -->
+    <a class="card c-emerald" href="L2Games/index.html">
+      <div class="card-top">
+        <div class="card-icon">🟢</div>
+        <span class="card-badge">可用</span>
+      </div>
+      <h2>L2 游戏集合</h2>
+      <p>进阶算法与数据结构讲义，涵盖排序、查找与复杂度分析，在线阅读并跳转练习。</p>
+      <div class="card-tags">
+        <span class="tag">排序算法</span><span class="tag">数据结构</span><span class="tag">复杂度</span>
+      </div>
+      <span class="card-btn">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        进入 L2
+      </span>
+    </a>
+
+    <!-- L3 即将上线 -->
+    <div class="card c-gray locked">
+      <div class="card-top">
+        <div class="card-icon">🔒</div>
+        <span class="card-badge badge-lock">即将上线</span>
+      </div>
+      <h2>L3 游戏集合</h2>
+      <p>综合项目挑战与算法竞赛模式，敬请期待。</p>
+      <div class="card-tags">
+        <span class="tag">竞赛算法</span><span class="tag">综合项目</span>
+      </div>
+      <span class="card-btn disabled">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-2V7a5 5 0 0 0-5-5zm0 2a3 3 0 0 1 3 3v3H9V7a3 3 0 0 1 3-3z"/></svg>
+        开发中
+      </span>
     </div>
 
-    <script>
-        document.getElementById('y').textContent = new Date().getFullYear();
-    </script>
+    <!-- L4 -->
+    <a class="card c-amber" href="L4Games/index.html">
+      <div class="card-top">
+        <div class="card-icon">🟠</div>
+        <span class="card-badge">新</span>
+      </div>
+      <h2>L4 游戏集合</h2>
+      <p>高阶专题与实战项目，目前包含棋盘覆盖分治算法可视化演示。</p>
+      <div class="card-tags">
+        <span class="tag">分治算法</span><span class="tag">棋盘覆盖</span><span class="tag">可视化</span>
+      </div>
+      <span class="card-btn">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        进入 L4
+      </span>
+    </a>
+
+  </div>
+</div>
+
+<footer>
+  <span>© <span id="yr"></span> Youdao Games</span>
+  <span>·</span>
+  <a href="miniGames/index.html">小游戏</a>
+  <span>·</span>
+  <a href="turing1.html">图灵班</a>
+</footer>
+
+<script>
+  document.getElementById('yr').textContent = new Date().getFullYear();
+</script>
 </body>
 </html>
-
-
