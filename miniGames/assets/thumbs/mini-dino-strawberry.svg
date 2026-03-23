@@ -1,0 +1,37 @@
+<svg width="128" height="96" viewBox="0 0 128 96" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9bd4ff"/>
+      <stop offset="1" stop-color="#d9f0ff"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="128" height="96" fill="url(#sky)"/>
+  <rect x="0" y="70" width="128" height="26" fill="#7d5a50"/>
+
+  <!-- cartoon cloud -->
+  <g fill="#ffffff" stroke="#dfe6ff" stroke-width="1.6">
+    <rect x="10" y="12" width="28" height="10" rx="5"/>
+    <circle cx="16" cy="12" r="5"/>
+    <circle cx="28" cy="11" r="6"/>
+  </g>
+
+  <!-- strawberry -->
+  <g transform="translate(90 26)">
+    <path d="M0 10C0 4 5 0 11 0C17 0 22 4 22 10C22 18 15 26 11 28C7 26 0 18 0 10Z" fill="#ef4444" stroke="#be123c" stroke-width="1.6"/>
+    <path d="M5 2L11 -1L17 2L14 5H8Z" fill="#22c55e" stroke="#15803d" stroke-width="1.2"/>
+    <circle cx="7" cy="10" r="1" fill="#fef08a"/>
+    <circle cx="11" cy="8" r="1" fill="#fef08a"/>
+    <circle cx="14.5" cy="12" r="1" fill="#fef08a"/>
+  </g>
+
+  <!-- dino -->
+  <g transform="translate(42 34)">
+    <rect x="0" y="10" width="28" height="18" rx="3" fill="#84cc16" stroke="#3f6212" stroke-width="2"/>
+    <rect x="18" y="2" width="10" height="10" rx="2" fill="#84cc16" stroke="#3f6212" stroke-width="2"/>
+    <circle cx="25.5" cy="6.5" r="1.2" fill="#111827"/>
+    <rect x="5" y="27" width="5" height="8" rx="1.2" fill="#65a30d" stroke="#3f6212" stroke-width="1.5"/>
+    <rect x="14" y="27" width="5" height="8" rx="1.2" fill="#65a30d" stroke="#3f6212" stroke-width="1.5"/>
+    <path d="M-5 19L0 14V24Z" fill="#65a30d" stroke="#3f6212" stroke-width="1.5"/>
+  </g>
+</svg>
