@@ -264,6 +264,20 @@
     }
     .end-title.win  { color: #FFD700; text-shadow: 0 0 20px #FFD700, 0 0 50px #FF8800; }
     .end-title.lose { color: #FF5555; text-shadow: 0 0 20px #FF5555, 0 0 50px #AA0000; }
+    .end-sub {
+      font-size: 14px;
+      letter-spacing: 1px;
+      color: #88AACC;
+      margin-top: -6px;
+      text-align: center;
+    }
+
+    #endScreen.lv1 .stat-card { border-color: #36cfc955; background: #36cfc915; }
+    #endScreen.lv1 .stat-card .cv { color: #36cfc9; }
+    #endScreen.lv2 .stat-card { border-color: #4f86ff55; background: #4f86ff15; }
+    #endScreen.lv2 .stat-card .cv { color: #4f86ff; }
+    #endScreen.lv3 .stat-card { border-color: #b37dff55; background: #b37dff15; }
+    #endScreen.lv3 .stat-card .cv { color: #b37dff; }
 
     .stats-row {
       display: flex;
@@ -378,6 +392,7 @@
 <!-- End screen -->
 <div class="screen hidden" id="endScreen">
   <div class="end-title" id="endTitle">MISSION COMPLETE</div>
+  <div class="end-sub" id="endSub">继续练习，稳定提升速度和准确率</div>
   <div class="stats-row">
     <div class="stat-card"><div class="cl">TIME</div><div class="cv" id="eTime">-</div></div>
     <div class="stat-card"><div class="cl">WPM</div><div class="cv"  id="eWpm">-</div></div>
@@ -401,28 +416,39 @@
 // ============================================================
 const LEVELS = {
   1: {
-    name: '初级 · 基础关键字',
-    total: 15,
-    words: ['int','char','bool','for','while','if','else','return','break',
-            'continue','main','double','double','include','using']
+    name: '初级',
+    total: 0,
+    words: [
+      'a','b','c','d','e','f','g','h','i','j','k','l','m',
+      'n','o','p','q','r','s','t','u','v','w','x','y','z',
+      '0','1','2','3','4','5','7','8','12','13','15','42','90','105','200','500','3.14159','1005','2001','10000'
+    ]
   },
   2: {
-    name: '中级 · 容器与算法',
-    total: 15,
-    words: ['vector','string','pair','map','set','queue','stack',
-            'priority_queue','push_back','size','begin','end',
-            'sort','lower_bound','upper_bound']
+    name: '中级',
+    total: 0,
+    words: [
+      'int','char','bool','void','double','string','return','if','else','for','while','sort',
+      'using','namespace','std','cin','cout','endl','true','false','break','continue',
+      '1e10', 'ans','sum','num','cnt','tmp','flag','maxn','minn','len','size'
+    ]
   },
   3: {
-    name: '高级 · 竞赛常用',
-    total: 15,
-    words: ['long long','bits/stdc++.h','iostream','using namespace std',
-            'ios::sync_with_stdio(false)','cin.tie(nullptr)','memset',
-            'vector<int>','pair<int,int>','priority_queue<int>',
-            'sort(a,a+n)','for(int i=0;i<n;i++)','while(1)',
-            'push_back(x)','lower_bound(a,a+n,x)']
+    name: '高级',
+    total: 0,
+    words: [
+      'vector','string','pair','map','set','queue','stack',
+      'size','begin','end','sort','lower_bound','upper_bound',
+      'long long','bits','stdc++','iostream','using','namespace','std',
+      'ios','sync','with','stdio','cin','tie','memset',
+      'vector','pair','priority',
+    ]
   }
 };
+
+Object.values(LEVELS).forEach(level => {
+  level.total = level.words.length;
+});
 
 // ============================================================
 //  AUDIO  (Web Audio API)
@@ -939,13 +965,37 @@ function showEndScreen(win, reason) {
   const elapsed = (performance.now() - startMs) / 1000;
   const acc  = totalTyped > 0 ? correctTyped / totalTyped : 1;
   const wpm  = elapsed > 0 ? (correctTyped / 5 / elapsed) * 60 : 0;
+  const lvl = LEVELS[selLevel];
+  const levelCfg = {
+    1: { pass: '🌱 初级训练完成', fail: '🌱 初级训练中断', advice: '先稳住正确率，再逐步提速。' },
+    2: { pass: '⚡ 中级训练完成', fail: '⚡ 中级训练中断', advice: '尝试减少停顿，保持连续输入节奏。' },
+    3: { pass: '🚀 高级训练完成', fail: '🚀 高级训练中断', advice: '优先攻克长词和符号组合，提升上限。' }
+  }[selLevel];
+
+  let rank = '继续加油';
+  if (acc >= 0.98 && wpm >= 75) rank = '评级 S';
+  else if (acc >= 0.95 && wpm >= 55) rank = '评级 A';
+  else if (acc >= 0.90 && wpm >= 40) rank = '评级 B';
+
   document.getElementById('eTime' ).textContent = elapsed.toFixed(1) + 's';
   document.getElementById('eWpm'  ).textContent = wpm.toFixed(0);
   document.getElementById('eWords').textContent = wordIdx;
   document.getElementById('eAcc'  ).textContent = (acc * 100).toFixed(0) + '%';
   const et = document.getElementById('endTitle');
-  if (win) { et.textContent = '🏆 MISSION COMPLETE'; et.className = 'end-title win'; }
-  else      { et.textContent = '💥 ' + reason;         et.className = 'end-title lose'; }
+  const es = document.getElementById('endSub');
+  const endScreen = document.getElementById('endScreen');
+  endScreen.classList.remove('lv1', 'lv2', 'lv3');
+  endScreen.classList.add('lv' + selLevel);
+
+  if (win) {
+    et.textContent = levelCfg.pass;
+    et.className = 'end-title win';
+    es.textContent = `${lvl.name} | ${rank} | ${levelCfg.advice}`;
+  } else {
+    et.textContent = levelCfg.fail + ' · ' + reason;
+    et.className = 'end-title lose';
+    es.textContent = `${lvl.name} | ${rank} | ${levelCfg.advice}`;
+  }
   document.getElementById('endScreen').classList.remove('hidden');
   phase = 'end';
 }
