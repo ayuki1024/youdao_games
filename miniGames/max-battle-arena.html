@@ -2,1186 +2,781 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <title>擂台比大小 · 找最大值闯关</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>擂台争霸 — 找出最强王者</title>
   <style>
-    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    :root {
-      --bg: #020617;
-      --surface: #0b1120;
-      --surface2: #0f172a;
-      --border: #1e293b;
-      --accent: #22c55e;
-      --accent2: #38bdf8;
-      --danger: #f97316;
-      --text: #e5e7eb;
-      --dim: #64748b;
-      --mono: "Fira Code", "Consolas", monospace;
+    body {
+      font-family: 'Microsoft YaHei', 'PingFang SC', 'Segoe UI', sans-serif;
+      background: #07071a;
+      min-height: 100vh;
+      color: #fff;
+      overflow-x: hidden;
+      user-select: none;
+      -webkit-user-select: none;
     }
 
-    html, body {
-      width:100%;
-      height:100%;
-      background:radial-gradient(circle at 10% 0%, #1d4ed8, transparent 55%),
-                 radial-gradient(circle at 90% 0%, #a855f7, transparent 60%),
-                 radial-gradient(circle at 50% 110%, #0f172a, #020617 70%, #000 100%);
-      color:var(--text);
-      font-family:system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      overflow:hidden;
+    /* ── STARS ── */
+    #stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+    .star {
+      position: absolute; border-radius: 50%; background: #fff;
+      animation: tw var(--d) var(--dd) infinite alternate;
+    }
+    @keyframes tw { from { opacity: .1; } to { opacity: 1; } }
+
+    /* ── LAYOUT ── */
+    .wrap {
+      position: relative; z-index: 1;
+      max-width: 1100px; margin: 0 auto;
+      padding: 16px 20px;
     }
 
-    body::after {
-      content:"";
-      position:fixed; inset:0; pointer-events:none;
-      background:repeating-linear-gradient(0deg,
-        rgba(15,23,42,0.35), rgba(15,23,42,0.35) 1px,
-        transparent 1px, transparent 3px
-      );
-      mix-blend-mode:soft-light;
-      opacity:.55;
+    /* ── HEADER ── */
+    h1 {
+      text-align: center;
+      font-size: clamp(2em, 5vw, 3em);
+      font-weight: 900;
+      background: linear-gradient(90deg, #ffd700 0%, #ff6b35 50%, #ffd700 100%);
+      background-size: 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shine 3s linear infinite;
+      letter-spacing: 3px;
+      margin-bottom: 4px;
     }
+    @keyframes shine { to { background-position: 200%; } }
 
-    #app {
-      position:relative; z-index:1;
-      width:100%; height:100%;
-      display:flex; align-items:center; justify-content:center;
-      padding:12px;
-    }
-
-    .card {
-      width:min(960px, 100%);
-      height:min(640px, 100%);
-      background:linear-gradient(135deg, rgba(15,23,42,0.96), rgba(15,23,42,0.98));
-      border-radius:18px;
-      border:1px solid rgba(148,163,184,.4);
-      box-shadow:0 22px 50px rgba(15,23,42,.9);
-      padding:18px 20px;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      position:relative;
-      overflow:hidden;
-    }
-
-    .header {
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      padding-bottom:6px;
-      border-bottom:1px solid rgba(148,163,184,.35);
-    }
-    .title {
-      font-size:22px;
-      font-weight:800;
-      letter-spacing:2px;
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-    .title-pill {
-      font-size:11px;
-      padding:2px 8px;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,.6);
-      color:var(--dim);
-    }
     .subtitle {
-      font-size:12px;
-      color:var(--dim);
-      margin-top:4px;
+      text-align: center;
+      color: rgba(255,255,255,.5);
+      font-size: .9em;
+      margin-bottom: 14px;
     }
 
-    .nav-tabs {
-      display:flex;
-      gap:6px;
-      font-size:12px;
+    /* ── STATS BAR ── */
+    .stats {
+      display: flex; justify-content: center; flex-wrap: wrap; gap: 12px 22px;
+      background: rgba(255,215,0,.06);
+      border: 1px solid rgba(255,215,0,.2);
+      border-radius: 50px; padding: 8px 22px;
+      margin-bottom: 18px; font-size: .88em;
     }
-    .tab-btn {
-      padding:6px 12px;
-      border-radius:999px;
-      border:1px solid transparent;
-      background:transparent;
-      color:var(--dim);
-      cursor:pointer;
-      font-size:12px;
+    .stat { display: flex; align-items: center; gap: 6px; }
+    .stat-lbl { color: rgba(255,255,255,.5); }
+    .stat-val { color: #ffd700; font-weight: 700; font-size: 1.1em; min-width: 28px; }
+
+    /* ── GAME GRID ── */
+    .game { display: flex; gap: 18px; align-items: flex-start; }
+
+    /* ── ROSTER ── */
+    .roster { width: 310px; flex-shrink: 0; }
+    .roster-hd {
+      text-align: center; color: rgba(255,255,255,.55);
+      font-size: .84em; margin-bottom: 10px;
+      padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,.1);
     }
-    .tab-btn.active {
-      background:linear-gradient(135deg, #22c55e, #16a34a);
-      border-color:#22c55e;
-      color:#022c22;
-      font-weight:600;
-      box-shadow:0 0 12px rgba(34,197,94,.6);
+    .cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* ── WARRIOR CARD ── */
+    .wcard {
+      background: rgba(255,255,255,.07);
+      border: 2px solid var(--c);
+      border-radius: 14px; padding: 12px 8px;
+      text-align: center; cursor: grab;
+      transition: transform .2s, box-shadow .2s, opacity .3s, filter .3s;
+      position: relative; overflow: hidden;
+    }
+    .wcard:not(.gone):not(.is-champ):hover {
+      transform: translateY(-5px) scale(1.04);
+      box-shadow: 0 8px 22px var(--c);
+    }
+    .wcard.dragging { opacity: .35; cursor: grabbing; }
+    .wcard.gone {
+      opacity: .22; cursor: default;
+      filter: grayscale(.85) brightness(.6);
+    }
+    .wcard.gone::after {
+      content: '💀';
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2em; background: rgba(0,0,0,.4);
+      border-radius: 12px; z-index: 1;
+    }
+    .wcard.is-champ {
+      border-color: #ffd700;
+      box-shadow: 0 0 18px rgba(255,215,0,.4);
+      opacity: .5; cursor: default;
+    }
+    .wcard.is-champ::after {
+      content: '👑';
+      position: absolute; top: 4px; right: 6px;
+      font-size: 1em; z-index: 1;
+    }
+    .wcard .em { font-size: 2.2em; display: block; margin-bottom: 3px; }
+    .wcard .nm { font-size: .76em; color: rgba(255,255,255,.88); margin-bottom: 6px; font-weight: 600; }
+    .badge {
+      display: inline-block; padding: 2px 10px;
+      border-radius: 20px; font-size: .82em; font-weight: 700;
+      background: rgba(255,255,255,.08); color: rgba(255,255,255,.3);
+      transition: all .5s;
+    }
+    .badge.show {
+      background: rgba(255,215,0,.18); color: #ffd700;
+      border: 1px solid rgba(255,215,0,.4);
+    }
+    .tip {
+      margin-top: 10px; font-size: .8em; color: rgba(255,255,255,.38);
+      text-align: center; padding: 8px 10px;
+      background: rgba(255,255,255,.03); border-radius: 10px;
+      line-height: 1.5;
     }
 
-    .main {
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-      padding-top:4px;
-    }
+    /* ── ARENA SECTION ── */
+    .arena-sec { flex: 1; min-width: 0; }
 
-    .screen {
-      flex:1;
-      display:none;
-      grid-template-columns:minmax(0,1.5fr) minmax(0,1.2fr);
-      grid-template-rows:auto 1fr;
-      gap:12px;
-    }
-    .screen.active { display:grid; }
-
-    /* ---------------- 第一关：擂台 ---------------- */
-    .hint-box {
-      grid-column:1 / -1;
-      font-size:13px;
-      padding:10px 12px;
-      border-radius:10px;
-      background:rgba(15,23,42,.8);
-      border:1px solid rgba(148,163,184,.5);
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:8px;
-    }
-    .hint-main {
-      display:flex;
-      flex-direction:column;
-      gap:3px;
-    }
-    .hint-title { font-size:13px; font-weight:600; color:#facc15; }
-    .hint-text { font-size:12px; color:var(--dim); }
-
-    .arena-wrap {
-      background:radial-gradient(circle at 50% 0%, rgba(56,189,248,.35), transparent 60%),
-                 linear-gradient(to top, #020617 0%, #020617 55%, #020617 55%, transparent 100%);
-      border-radius:14px;
-      border:1px solid rgba(30,64,175,.6);
-      position:relative;
-      overflow:hidden;
-      padding:10px 12px 0;
-      display:flex;
-      flex-direction:column;
-    }
-
-    .arena-title-row {
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      font-size:11px;
-      color:var(--dim);
-      margin-bottom:4px;
-    }
-
-    .arena {
-      flex:1;
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-end;
-      padding:6px 10px 10px;
-      gap:10px;
-      position:relative;
-    }
-
-    .platform {
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:4px;
-    }
-    .platform-label {
-      font-size:11px;
-      letter-spacing:2px;
-      color:var(--dim);
-    }
-
+    /* ── STAGE ── */
     .stage {
-      width:100%;
-      max-width:260px;
-      height:200px;
-      position:relative;
-      display:flex;
-      align-items:flex-end;
-      justify-content:center;
+      position: relative; overflow: hidden;
+      background: radial-gradient(ellipse at 50% 55%, rgba(255,215,0,.1) 0%, transparent 68%);
+      border: 2px solid rgba(255,215,0,.25);
+      border-radius: 22px; padding: 28px 20px;
+      min-height: 360px;
+      display: flex; align-items: center; justify-content: center;
+      transition: box-shadow .3s, border-color .3s;
+    }
+    .stage.drop-active {
+      box-shadow: 0 0 50px rgba(255,215,0,.35);
+      border-color: rgba(255,215,0,.75);
+    }
+    /* decorative ring */
+    .stage::before {
+      content: '';
+      position: absolute; width: 290px; height: 290px;
+      border-radius: 50%; border: 2px dashed rgba(255,215,0,.1);
+      top: 50%; left: 50%; transform: translate(-50%,-50%);
+      pointer-events: none;
+    }
+    .stage::after {
+      content: '';
+      position: absolute; width: 220px; height: 220px;
+      border-radius: 50%; border: 1px dashed rgba(255,215,0,.06);
+      top: 50%; left: 50%; transform: translate(-50%,-50%);
+      pointer-events: none;
     }
 
-    .stage-floor {
-      position:absolute;
-      bottom:0;
-      width:82%;
-      height:20px;
-      border-radius:999px;
-      background:radial-gradient(circle at 50% 10%, rgba(248,250,252,.18), transparent 65%),
-                 radial-gradient(circle at 0 50%, rgba(56,189,248,.3), transparent 60%),
-                 radial-gradient(circle at 100% 50%, rgba(34,197,94,.3), transparent 60%),
-                 linear-gradient(to right,#020617,#020617);
-      box-shadow:0 0 20px rgba(15,23,42,.8);
+    /* ── THRONE ── */
+    .throne {
+      position: relative; z-index: 2;
+      width: 180px; min-height: 200px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
     }
+    .throne-empty { color: rgba(255,215,0,.35); font-size: .85em; line-height: 1.65; }
+    .throne-empty-icon { font-size: 2.5em; margin-bottom: 8px; }
 
-    .fighter {
-      position:absolute;
-      bottom:14px;
-      width:140px;
-      height:160px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:flex-end;
-      transform-origin:50% 100%;
-      opacity:0;
-      pointer-events:none;
+    .champ-card {
+      display: flex; flex-direction: column; align-items: center;
+      animation: popIn .45s cubic-bezier(.34,1.56,.64,1);
     }
+    @keyframes popIn { from { transform: scale(.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-    .fighter-body {
-      width:110px;
-      height:96px;
-      border-radius:26px 26px 18px 18px;
-      background:linear-gradient(135deg,#38bdf8,#0ea5e9);
-      box-shadow:0 0 18px rgba(56,189,248,.8);
-      border:2px solid rgba(15,23,42,.9);
-      position:relative;
-      overflow:hidden;
+    .champ-crown { font-size: 1.9em; animation: bob 1.8s ease-in-out infinite; }
+    @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+    .champ-em { font-size: 4em; margin: 4px 0; }
+    .champ-nm { font-size: .9em; font-weight: 700; color: rgba(255,255,255,.9); margin-bottom: 5px; }
+    .champ-pw {
+      font-size: 2.2em; font-weight: 900; color: #ffd700;
+      text-shadow: 0 0 16px rgba(255,215,0,.65);
     }
-    .fighter-body.alt {
-      background:linear-gradient(135deg,#f97316,#facc15);
-      box-shadow:0 0 18px rgba(248,171,30,.9);
-    }
-    .fighter-face {
-      position:absolute;
-      inset:10px 12px 30px 12px;
-      border-radius:20px;
-      background:linear-gradient(to bottom,#fef9c3,#fed7aa);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding:0 10px;
-    }
-    .eye {
-      width:14px; height:14px;
-      border-radius:999px;
-      background:#022c22;
-    }
-    .eye::after {
-      content:""; display:block;
-      width:5px; height:5px;
-      border-radius:999px;
-      background:white;
-      margin:1px;
-    }
-    .mouth {
-      position:absolute;
-      left:50%;
-      bottom:6px;
-      width:24px;
-      height:10px;
-      border-radius:0 0 999px 999px;
-      border-bottom:2px solid #7c2d12;
-      transform:translateX(-50%);
-    }
-    .face-happy .mouth {
-      border-radius:0 0 999px 999px;
-    }
-    .face-sad .mouth {
-      border-radius:999px 999px 0 0;
-      bottom:6px;
-      border-bottom:none;
-      border-top:2px solid #7c2d12;
-    }
-    .fighter-belt {
-      position:absolute;
-      bottom:10px;
-      left:0; right:0;
-      height:18px;
-      background:linear-gradient(to right,#0f172a,#0f172a);
-    }
+    .champ-lbl { font-size: .72em; color: rgba(255,215,0,.55); letter-spacing: 2px; margin-top: 3px; }
 
-    .fighter-num {
-      margin-top:2px;
-      padding:3px 10px;
-      font-size:13px;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,.6);
-      background:rgba(15,23,42,.8);
+    /* ── FX LAYER ── */
+    .fx-layer {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none; z-index: 5;
     }
+    .fx-ring {
+      position: absolute; border-radius: 50%;
+      animation: ring .75s ease-out forwards;
+    }
+    @keyframes ring { from { width: 0; height: 0; opacity: 1; } to { width: 260px; height: 260px; opacity: 0; } }
 
-    .fighter-name {
-      font-size:12px;
-      margin-top:3px;
+    /* ── BATTLE POPUP ── */
+    .battle-popup {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 8; pointer-events: none;
     }
+    .popup-inner {
+      background: rgba(4,4,20,.94);
+      border-radius: 20px; padding: 20px 28px;
+      text-align: center; min-width: 270px;
+      transform: scale(0); opacity: 0;
+      transition: transform .32s cubic-bezier(.34,1.56,.64,1), opacity .32s;
+    }
+    .popup-inner.show { transform: scale(1); opacity: 1; }
+    .popup-inner.pw { border: 2px solid rgba(255,215,0,.75); box-shadow: 0 0 36px rgba(255,215,0,.3); }
+    .popup-inner.pl { border: 2px solid rgba(100,140,255,.65); box-shadow: 0 0 36px rgba(100,140,255,.2); }
 
-    /* lineup row */
-    .lineup {
-      display:flex;
-      align-items:center;
-      gap:6px;
-      margin:4px 4px 6px;
-      font-size:11px;
-      color:var(--dim);
+    /* ── DROP HINT ── */
+    .drop-hint {
+      text-align: center; margin-top: 11px;
+      color: rgba(255,215,0,.5); font-size: .83em;
     }
-    .lineup-label {
-      padding:2px 6px;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,.4);
-    }
-    .lineup-list {
-      display:flex;
-      gap:6px;
-      flex-wrap:wrap;
-    }
-    .lineup-item {
-      width:36px;
-      height:36px;
-      border-radius:999px;
-      background:rgba(15,23,42,.9);
-      border:1px solid rgba(148,163,184,.5);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:var(--dim);
-      position:relative;
-      overflow:hidden;
-    }
-    .lineup-avatar {
-      position:absolute;
-      inset:4px;
-      border-radius:999px;
-      background:linear-gradient(to bottom,#fef9c3,#fed7aa);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      box-shadow:0 0 6px rgba(248,250,252,.5);
-    }
-    .lineup-avatar::before,
-    .lineup-avatar::after {
-      content:"";
-      width:6px; height:6px;
-      border-radius:999px;
-      background:#022c22;
-      margin:0 2px;
-    }
-    .lineup-item span {
-      font-size:10px;
-      font-weight:600;
-      position:relative;
-      z-index:2;
-    }
-    .lineup-item.active {
-      border-color:#22c55e;
-      box-shadow:0 0 10px rgba(34,197,94,.7);
-      color:#bbf7d0;
-    }
-    .lineup-item.done {
-      opacity:.4;
-    }
+    .bounce { display: inline-block; animation: bn 1s ease infinite; }
+    @keyframes bn { 0%,100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
 
-    .fighter.enter {
-      animation:enter-step .4s ease-out forwards;
-    }
-    .fighter.win {
-      animation:win-bounce .8s ease-out forwards;
-    }
-    .fighter.lose {
-      animation:lose-walk .5s ease-in forwards;
-    }
-
-    @keyframes enter-step {
-      0% { transform:translateX(-40px) translateY(10px) scale(.9); opacity:0; }
-      60% { transform:translateX(6px) translateY(0) scale(1.02); opacity:1;}
-      100% { transform:translateX(0) translateY(0) scale(1); opacity:1;}
-    }
-    @keyframes win-bounce {
-      0% { transform:translateY(0) scale(1); }
-      30% { transform:translateY(-12px) scale(1.05); }
-      60% { transform:translateY(0) scale(1); }
-      100% { transform:translateY(-4px) scale(1.02); }
-    }
-    @keyframes lose-walk {
-      0% { transform:translateX(0) translateY(0); opacity:1; }
-      100% { transform:translateX(40px) translateY(10px); opacity:0; }
-    }
-
-    .arena-side-info {
-      font-size:12px;
-      color:var(--dim);
-    }
-
-    .pill {
-      display:inline-flex;
-      align-items:center;
-      padding:2px 7px;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,.5);
-      font-size:11px;
-      gap:4px;
-    }
-
+    /* ── ACTIONS ── */
+    .actions { display: flex; justify-content: center; gap: 12px; margin-top: 14px; }
     .btn {
-      border:none;
-      border-radius:999px;
-      padding:8px 18px;
-      font-size:13px;
-      font-weight:600;
-      cursor:pointer;
-      font-family:inherit;
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      transition:transform .08s, box-shadow .08s, opacity .08s;
+      padding: 11px 26px; border-radius: 50px; border: none;
+      cursor: pointer; font-size: .95em; font-weight: 700;
+      font-family: inherit; transition: all .2s;
     }
-    .btn-main {
-      background:linear-gradient(135deg,#22c55e,#16a34a);
-      color:#022c22;
-      box-shadow:0 0 14px rgba(34,197,94,.7);
+    .btn-gold {
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      color: #1a1000; box-shadow: 0 4px 16px rgba(255,215,0,.35);
     }
-    .btn-main:disabled {
-      opacity:.4;
-      box-shadow:none;
-      cursor:not-allowed;
-    }
-    .btn-main:not(:disabled):hover { transform:translateY(-1px); }
-    .btn-main:not(:disabled):active { transform:translateY(1px); box-shadow:none; }
-
+    .btn-gold:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 7px 24px rgba(255,215,0,.55); }
+    .btn-gold:disabled { opacity: .32; cursor: not-allowed; transform: none; }
     .btn-ghost {
-      background:rgba(15,23,42,1);
-      border:1px solid rgba(148,163,184,.4);
-      color:var(--dim);
+      background: rgba(255,255,255,.08); color: rgba(255,255,255,.7);
+      border: 1px solid rgba(255,255,255,.15);
     }
+    .btn-ghost:hover { background: rgba(255,255,255,.15); }
 
-    .footer-msg {
-      font-size:12px;
-      color:var(--dim);
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:8px;
+    /* ── LOG ── */
+    .log {
+      margin-top: 14px;
+      background: rgba(0,0,0,.3); border-radius: 12px;
+      padding: 10px 14px; max-height: 118px; overflow-y: auto;
     }
+    .log::-webkit-scrollbar { width: 4px; }
+    .log::-webkit-scrollbar-thumb { background: rgba(255,215,0,.25); border-radius: 2px; }
+    .log-hd { font-size: .75em; color: rgba(255,255,255,.38); margin-bottom: 6px; }
+    .log-row {
+      font-size: .8em; color: rgba(255,255,255,.65);
+      padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,.05);
+      line-height: 1.5;
+    }
+    .log-row:last-child { border: none; }
+    .hi { color: #ffd700; } .lo { color: #88aaff; }
 
-    /* ---------------- 第二关：代码 ---------------- */
+    /* ── RESULT OVERLAY ── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.88);
+      backdrop-filter: blur(7px);
+      -webkit-backdrop-filter: blur(7px);
+      display: none; align-items: center; justify-content: center;
+      z-index: 100;
+    }
+    .overlay.on { display: flex; }
+    .res-card {
+      background: linear-gradient(145deg, #131325, #1a1a3a);
+      border-radius: 24px; padding: 38px 46px;
+      text-align: center; max-width: 450px; width: 92%;
+      animation: card-pop .5s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes card-pop { from { transform: scale(.2) rotate(-8deg); opacity: 0; } to { transform: none; opacity: 1; } }
+    .res-card.win-card { border: 2px solid rgba(255,215,0,.75); box-shadow: 0 0 70px rgba(255,215,0,.35); }
+    .res-card.lose-card { border: 2px solid rgba(120,120,255,.5); box-shadow: 0 0 50px rgba(120,120,255,.25); }
+    .res-big { font-size: 4em; animation: fl 1.2s ease-in-out infinite alternate; }
+    @keyframes fl { from { transform: translateY(-4px); } to { transform: translateY(5px); } }
+    .res-title { font-size: 2em; font-weight: 900; margin: 10px 0 8px; }
+    .win-card .res-title {
+      background: linear-gradient(90deg, #ffd700, #ff6b35);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .lose-card .res-title { color: #aaaaff; }
+    .res-msg { color: rgba(255,255,255,.72); font-size: .92em; line-height: 1.65; margin-bottom: 16px; }
+    .top3-box {
+      background: rgba(255,255,255,.04); border-radius: 14px;
+      padding: 12px; margin-bottom: 20px;
+    }
+    .top3-lbl { font-size: .75em; color: rgba(255,255,255,.4); margin-bottom: 8px; }
+    .top3 { display: flex; justify-content: center; gap: 10px; }
+    .t3item { text-align: center; padding: 8px 12px; border-radius: 10px; }
+    .t3item.gold { background: rgba(255,215,0,.14); border: 1px solid rgba(255,215,0,.3); }
+    .t3em { font-size: 1.5em; }
+    .t3nm { font-size: .7em; color: rgba(255,255,255,.6); }
+    .t3pw { font-size: .9em; font-weight: 700; color: #ffd700; }
 
-    .code-layout {
-      grid-column:1 / -1;
-      display:grid;
-      grid-template-columns:minmax(0,0.9fr) minmax(0,1.4fr);
-      gap:12px;
-      height:100%;
+    /* ── CONFETTI ── */
+    #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 200; }
+    .cf {
+      position: absolute; top: -14px;
+      animation: cf-fall var(--d) linear var(--dd) forwards;
+      opacity: 1;
     }
+    @keyframes cf-fall { to { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
 
-    .panel {
-      background:var(--surface2);
-      border-radius:12px;
-      border:1px solid var(--border);
-      padding:10px 12px;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-
-    .panel-title {
-      font-size:12px;
-      font-weight:600;
-      letter-spacing:2px;
-      color:var(--dim);
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-    }
-
-    .input-row {
-      display:flex;
-      align-items:center;
-      gap:8px;
-      font-size:13px;
-      color:var(--text);
-    }
-    .input-row input {
-      width:68px;
-      padding:4px 8px;
-      border-radius:6px;
-      border:1px solid var(--border);
-      background:#020617;
-      color:var(--text);
-      font-family:var(--mono);
-      font-size:13px;
-    }
-
-    .hint-small {
-      font-size:11px;
-      color:var(--dim);
-      margin-top:4px;
-      line-height:1.5;
-    }
-
-    .code-editor {
-      flex:1;
-      background:#020617;
-      border-radius:10px;
-      border:1px solid #1e293b;
-      font-family:var(--mono);
-      font-size:13px;
-      color:var(--text);
-      padding:8px 10px;
-      overflow:auto;
-      position:relative;
-    }
-
-    .code-line {
-      display:flex;
-      gap:6px;
-    }
-    .code-lno {
-      width:24px;
-      color:#4b5563;
-      text-align:right;
-      user-select:none;
-    }
-    .code-text {
-      white-space:pre;
-      flex:1;
-    }
-    .code-input {
-      border:none;
-      outline:none;
-      background:transparent;
-      color:#facc15;
-      font-family:inherit;
-      font-size:inherit;
-      min-width:30px;
-    }
-    .code-input::placeholder {
-      color:#4b5563;
-    }
-
-    .kw       { color:#38bdf8; }
-    .fn       { color:#22c55e; }
-    .str      { color:#f97316; }
-    .comment  { color:#6b7280; }
-
-    .run-bar {
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:8px;
-      margin-top:6px;
-    }
-
-    .log-panel {
-      flex:1;
-      background:#020617;
-      border-radius:8px;
-      border:1px solid #1e293b;
-      padding:8px;
-      font-family:var(--mono);
-      font-size:12px;
-      color:var(--dim);
-      overflow:auto;
-      max-height:180px;
-    }
-    .log-line {
-      margin-bottom:2px;
-    }
-    .log-line.good { color:#22c55e; }
-    .log-line.bad  { color:#fb7185; }
-
-    .badge-small {
-      font-size:10px;
-      padding:2px 8px;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,.5);
-      color:var(--dim);
-    }
-
-    @media (max-width:840px) {
-      .screen { grid-template-columns:1fr; grid-template-rows:auto auto 1fr; }
-      .arena-wrap { order:2; }
-      .panel { order:3; }
-      .code-layout { grid-template-columns:1fr; }
+    /* ── RESPONSIVE ── */
+    @media (max-width: 680px) {
+      .game { flex-direction: column; }
+      .roster { width: 100%; }
     }
   </style>
 </head>
 <body>
-<div id="app">
-  <div class="card">
-    <div class="header">
-      <div>
-        <div class="title">
-          擂台比大小 · 找最大值
-          <span class="title-pill">从点击到代码 · 循环找最大</span>
-        </div>
-        <div class="subtitle" id="globalTip">
-          第 1 关：看 Q 萌勇士上台打擂，谁的数字最大谁留在台上。
-        </div>
-      </div>
-      <div class="nav-tabs">
-        <button class="tab-btn active" data-tab="stage1">第一关：手动擂台</button>
-        <button class="tab-btn" data-tab="stage2">第二关：循环代码</button>
-      </div>
+
+<div id="stars"></div>
+
+<div class="wrap">
+  <!-- Header -->
+  <h1>⚔️ 擂台争霸 ⚔️</h1>
+  <p class="subtitle">10 位神秘勇士，谁才是真正的最强王者？拖动勇士上擂台，战斗后才能揭晓实力！</p>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-lbl">⚔️ 挑战次数</span>
+      <span class="stat-val" id="sBattle">0</span>
+    </div>
+    <div class="stat">
+      <span class="stat-lbl">🏆 当前擂主</span>
+      <span class="stat-val" id="sChamp" style="min-width:60px">虚位以待</span>
+    </div>
+    <div class="stat">
+      <span class="stat-lbl">👁️ 已探明</span>
+      <span class="stat-val"><span id="sRevealed">0</span>/10</span>
+    </div>
+    <div class="stat">
+      <span class="stat-lbl">📈 已知最高战力</span>
+      <span class="stat-val" id="sMax">—</span>
+    </div>
+  </div>
+
+  <!-- Game -->
+  <div class="game">
+
+    <!-- Roster -->
+    <div class="roster">
+      <div class="roster-hd">⚡ 待战勇士（拖动或点击挑战擂主）</div>
+      <div class="cards-grid" id="cardsGrid"></div>
+      <div class="tip">💡 勇士战力隐藏中……上擂台打一场才能揭晓！<br>找到最强王者后点击宣告胜利！</div>
     </div>
 
-    <div class="main">
-      <!-- 关卡 1：擂台 -->
-      <div id="screen1" class="screen active">
-        <div class="hint-box">
-          <div class="hint-main">
-            <div class="hint-title">第一关：擂台争霸！谁的数字更大？</div>
-            <div class="hint-text">
-              擂主站左边，点击「下一个挑战者」，看两边角色头上的数字谁更大。
+    <!-- Arena -->
+    <div class="arena-sec">
+      <div class="stage" id="stage">
+        <!-- throne -->
+        <div class="throne" id="throne">
+          <div id="throneInner">
+            <div class="throne-empty">
+              <div class="throne-empty-icon">🪑</div>
+              <div>将勇士拖到这里<br>或直接点击勇士<br>开始挑战！</div>
             </div>
-          </div>
-          <button id="btnRestart1" class="btn btn-ghost" type="button">重新生成一组数</button>
-        </div>
-
-        <div class="arena-wrap">
-          <div class="arena-title-row">
-            <span class="pill">当前擂主</span>
-            <span class="arena-side-info" id="roundInfo">已比较：0 / 0</span>
-          </div>
-
-          <div class="lineup">
-            <span class="lineup-label">出战顺序：</span>
-            <div class="lineup-list" id="lineupList"></div>
-          </div>
-
-          <div class="arena">
-            <div class="platform">
-              <div class="platform-label">擂主 · 当前最大值</div>
-              <div class="stage">
-                <div class="stage-floor"></div>
-                <div id="champion" class="fighter">
-                  <div class="fighter-body">
-            <div class="fighter-face face-happy">
-                      <div class="eye"></div><div class="eye"></div>
-              <div class="mouth"></div>
-                    </div>
-                    <div class="fighter-belt"></div>
-                  </div>
-                  <div class="fighter-num" id="champVal">--</div>
-                  <div class="fighter-name" id="champName">（暂无）</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="platform">
-              <div class="platform-label">挑战者 · 逐个上场</div>
-              <div class="stage">
-                <div class="stage-floor"></div>
-                <div id="challenger" class="fighter">
-                  <div class="fighter-body alt">
-            <div class="fighter-face face-happy">
-                      <div class="eye"></div><div class="eye"></div>
-              <div class="mouth"></div>
-                    </div>
-                    <div class="fighter-belt"></div>
-                  </div>
-                  <div class="fighter-num" id="challVal">--</div>
-                  <div class="fighter-name" id="challName">（暂无）</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 4px 8px;">
-            <div class="arena-side-info" id="numbersInfo">本轮随机数列表：-</div>
-            <button id="btnNextChallenger" class="btn btn-main" type="button">
-              下一个挑战者 →
-            </button>
           </div>
         </div>
-
-        <div class="panel">
-          <div class="panel-title">
-            手动找最大值 · 小结
-            <span class="badge-small" id="summaryBadge1">尚未通关</span>
-          </div>
-          <div class="hint-small" id="summaryText1">
-            小贴士：先随便选一个人当擂主 → 每来一个挑战者就和擂主比数字 → 更大的就把擂主换掉。
-          </div>
+        <!-- fx layers -->
+        <div class="fx-layer" id="fxLayer"></div>
+        <div class="battle-popup" id="bPopup">
+          <div class="popup-inner" id="bPopupInner"></div>
         </div>
       </div>
 
-      <!-- 关卡 2：代码 -->
-      <div id="screen2" class="screen">
-        <div class="hint-box">
-          <div class="hint-main">
-            <div class="hint-title">第二关：写代码！让程序自动打擂</div>
-            <div class="hint-text">
-              把刚才“一个个上台比数字”的流程，改写成 for 循环 + if 判断，让电脑帮你做完。
-            </div>
-          </div>
-          <button id="btnCopySolution" class="btn btn-ghost" type="button">不会写？先看参考答案</button>
-        </div>
+      <div class="drop-hint" id="dropHint">
+        <span class="bounce">👆</span> 把左边的勇士拖到擂台上来挑战
+      </div>
 
-        <div class="code-layout">
-          <div class="panel">
-            <div class="panel-title">
-              参数设置
-              <span class="badge-small" id="paramBadge">未运行</span>
-            </div>
-            <div class="input-row">
-              <span>挑战者人数 n（3-10）：</span>
-              <input id="inputN" type="number" min="3" max="10" value="5" />
-            </div>
-            <div class="hint-small">
-              建议从 3 或 4 开始尝试，方便你看清每一次循环比较的过程。
-            </div>
-            <div style="margin-top:8px;">
-              <button id="btnRun" class="btn btn-main" type="button">▶ 运行代码</button>
-              <button id="btnHint" class="btn btn-ghost" type="button">小提示</button>
-            </div>
-            <div class="hint-small" id="codeHint">
-              先补全右侧代码里的两处空白（循环条件 + 条件判断），再点“运行代码”看动画。
-            </div>
-          </div>
+      <div class="actions">
+        <button class="btn btn-gold" id="declareBtn" disabled>
+          👑 就是他！宣告最强王者！
+        </button>
+        <button class="btn btn-ghost" id="resetBtn">🔄 重新开始</button>
+      </div>
 
-          <div class="panel">
-            <div class="panel-title">
-              代码编辑区（JavaScript）
-            </div>
-            <div class="code-editor" id="codeEditor">
-              <div class="code-line">
-                <div class="code-lno">1</div>
-                <div class="code-text">
-<span class="comment">// challengers 是长度为 n 的数组，比如 [12, 85, 39, ...]</span>
-                </div>
-              </div>
-              <div class="code-line">
-                <div class="code-lno">2</div>
-                <div class="code-text">
-<span class="kw">let</span> challengers = <span class="kw">[]</span>; <span class="comment">// 运行时会自动随机生成</span>
-                </div>
-              </div>
-              <div class="code-line">
-                <div class="code-lno">3</div>
-                <div class="code-text">
-<span class="comment">// 初始化最大值为第一个挑战者的数值</span>
-                </div>
-              </div>
-              <div class="code-line">
-                <div class="code-lno">4</div>
-                <div class="code-text">
-<span class="kw">let</span> maxNum = challengers[<span class="kw">0</span>];
-                </div>
-              </div>
-              <div class="code-line">
-                <div class="code-lno">5</div>
-                <div class="code-text">
-<span class="comment">// 循环遍历所有挑战者（请补全循环代码）</span>
-                </div>
-              </div>
-              <div class="code-line">
-                <div class="code-lno">6</div>
-                <div class="code-text">
-<span class="kw">for</span>(<span class="kw">let</span> i = <span class="kw">1</span>; i 
-<input id="inpLoopCond" class="code-input" placeholder="&lt; n 或 &lt;= n-1" />
-; i++){
-                </div>
-              </div>
-              <div class="code-line">
-                <div class="code-lno">7</div>
-                <div class="code-text">
-  <span class="comment">// 比较当前挑战者数值和最大值（请补全条件判断）</span>
-                </div>
-              </div>
-              <div class="code-line">
-                <div class="code-lno">8</div>
-                <div class="code-text">
-  <span class="kw">if</span>(
-<input id="inpIfCond" class="code-input" placeholder="challengers[i] &gt; maxNum" />
-){
-                </div>
-              </div>
-              <div class="code-line">
-                <div class="code-lno">9</div>
-                <div class="code-text">
-    maxNum = challengers[i]; <span class="comment">// 替换为更大的数值</span>
-                </div>
-              </div>
-              <div class="code-line">
-                <div class="code-lno">10</div>
-                <div class="code-text">  }</div>
-              </div>
-              <div class="code-line">
-                <div class="code-lno">11</div>
-                <div class="code-text">}</div>
-              </div>
-              <div class="code-line">
-                <div class="code-lno">12</div>
-                <div class="code-text">
-<span class="fn">console</span>.log(<span class="str">"最大值是："</span> + maxNum);
-                </div>
-              </div>
-            </div>
-
-            <div class="run-bar">
-              <div class="hint-small">
-                运行结果与过程：
-              </div>
-            </div>
-            <div class="log-panel" id="logPanel"></div>
-          </div>
+      <div class="log">
+        <div class="log-hd">📜 战斗记录</div>
+        <div id="logBody">
+          <div class="log-row" style="color:rgba(255,255,255,.22);font-style:italic">尚无记录……</div>
         </div>
       </div>
-    </div>
-
-    <div class="footer-msg">
-      <span id="globalSummary1">
-        核心逻辑一：先假定一个初始最大值，再让每个挑战者依次上台比较，更大的就替换成新的擂主。
-      </span>
-      <span id="globalSummary2" style="display:none;">
-        核心逻辑二：用 for 循环遍历所有元素 + if 条件判断替换最大值，就能让程序自动完成“擂台比大小”。
-      </span>
     </div>
   </div>
 </div>
 
+<!-- Result overlay -->
+<div class="overlay" id="overlay">
+  <div class="res-card" id="resCard">
+    <div class="res-big" id="resEmoji">🏆</div>
+    <div class="res-title" id="resTitle"></div>
+    <div class="res-msg" id="resMsg"></div>
+    <div class="top3-box">
+      <div class="top3-lbl">🏅 真实实力榜（前三名）</div>
+      <div class="top3" id="resTop3"></div>
+    </div>
+    <button class="btn btn-gold" onclick="resetGame()">🔄 再来一局</button>
+  </div>
+</div>
+
+<div id="confetti"></div>
+
 <script>
-'use strict';
+/* ======== WARRIOR DEFINITIONS ======== */
+const DEFS = [
+  { name:'烈火战神', emoji:'🔥', color:'rgba(255,100,60,.5)' },
+  { name:'冰霜女王', emoji:'❄️', color:'rgba(80,180,255,.5)' },
+  { name:'雷霆天将', emoji:'⚡', color:'rgba(255,230,30,.5)' },
+  { name:'暗影刺客', emoji:'🌑', color:'rgba(180,80,255,.5)' },
+  { name:'圣光骑士', emoji:'✨', color:'rgba(255,255,200,.4)' },
+  { name:'毒蛇弓手', emoji:'🐍', color:'rgba(60,220,110,.5)' },
+  { name:'钢铁巨人', emoji:'🤖', color:'rgba(160,160,160,.5)' },
+  { name:'狂暴战士', emoji:'⚔️', color:'rgba(255,140,60,.5)' },
+  { name:'风暴法师', emoji:'🌪️', color:'rgba(60,220,220,.5)' },
+  { name:'龙裔勇者', emoji:'🐲', color:'rgba(255,180,40,.5)' },
+];
 
-/* ========== 简单音效（可选） ========== */
-let audioCtx = null;
-function getAC() {
-  if (!audioCtx) {
-    const C = window.AudioContext || window.webkitAudioContext;
-    if (C) audioCtx = new C();
+const CRIES    = ['一鸣惊人！','势不可挡！','天下无敌！','王者之力！','气吞山河！','神挡杀神！','所向无敌！','战无不胜！'];
+const TAUNTS   = ['还不够看！','以为够格？','差得远呢！','下一位！'];
+
+/* ======== STATE ======== */
+let warriors, champion, battleCount, busy, dragId, dragOver;
+
+/* ======== INIT ======== */
+function initStars() {
+  const c = document.getElementById('stars');
+  for (let i = 0; i < 90; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const sz = (Math.random() * 2.2 + .4).toFixed(1);
+    s.style.cssText =
+      `width:${sz}px;height:${sz}px;` +
+      `top:${(Math.random()*100).toFixed(1)}%;` +
+      `left:${(Math.random()*100).toFixed(1)}%;` +
+      `--d:${(Math.random()*3+1.5).toFixed(1)}s;` +
+      `--dd:${(Math.random()*2).toFixed(1)}s`;
+    c.appendChild(s);
   }
-  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-  return audioCtx;
 }
-function tone(freq, dur, type = 'sine', vol = 0.12, delay = 0) {
-  const ctx = getAC(); if (!ctx) return;
-  const o = ctx.createOscillator();
-  const g = ctx.createGain();
-  const t = ctx.currentTime + delay + 0.01;
-  o.type = type;
-  o.frequency.value = freq;
-  g.gain.setValueAtTime(0.001, t);
-  g.gain.exponentialRampToValueAtTime(vol, t + 0.02);
-  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-  o.connect(g); g.connect(ctx.destination);
-  o.start(t); o.stop(t + dur + 0.05);
+
+function genUniquePowers() {
+  const set = new Set();
+  while (set.size < 10) set.add(Math.floor(Math.random() * 99) + 1);
+  return [...set];
 }
-function sfxStep() { tone(440, 0.08, 'square', 0.08); }
-function sfxCompare() { tone(760, 0.06, 'sine', 0.12); }
-function sfxLose() { tone(220, 0.12, 'sawtooth', 0.1); }
-function sfxWin() { [523,659,784].forEach((f,i)=>tone(f,0.18,'triangle',0.14, i*0.05));}
 
-/* ========== Tab 切换 ========== */
-const tabBtns = document.querySelectorAll('.tab-btn');
-const screen1 = document.getElementById('screen1');
-const screen2 = document.getElementById('screen2');
-const globalTip = document.getElementById('globalTip');
-const globalSummary1 = document.getElementById('globalSummary1');
-const globalSummary2 = document.getElementById('globalSummary2');
+function initGame() {
+  const powers = genUniquePowers();
+  warriors = DEFS.map((d, i) => ({
+    ...d, id: i, power: powers[i],
+    revealed: false, inArena: false, isChamp: false
+  }));
+  champion  = null;
+  battleCount = 0;
+  busy      = false;
+  dragId    = null;
+  dragOver  = 0;
 
-tabBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    tabBtns.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    const tab = btn.getAttribute('data-tab');
-    if (tab === 'stage1') {
-      screen1.classList.add('active');
-      screen2.classList.remove('active');
-      globalTip.textContent = '第 1 关：先用手动擂台对决，感受 “逐个比较、保留最大值” 的过程。';
-      globalSummary1.style.display = '';
-      globalSummary2.style.display = 'none';
-    } else {
-      screen2.classList.add('active');
-      screen1.classList.remove('active');
-      globalTip.textContent = '第 2 关：用 for 循环 + if 条件判断，让程序自动完成“擂台比大小”。';
-      globalSummary1.style.display = 'none';
-      globalSummary2.style.display = '';
+  renderRoster();
+  renderThrone();
+  updateStats();
+  clearLog();
+  document.getElementById('declareBtn').disabled = true;
+  document.getElementById('dropHint').style.display = 'block';
+  document.getElementById('stage').classList.remove('drop-active');
+  document.getElementById('bPopupInner').className = 'popup-inner';
+  document.getElementById('fxLayer').innerHTML = '';
+}
+
+/* ======== RENDER ======== */
+function renderRoster() {
+  const grid = document.getElementById('cardsGrid');
+  grid.innerHTML = '';
+  warriors.forEach(w => {
+    const div = document.createElement('div');
+    const stateClass = w.isChamp ? 'is-champ' : w.inArena ? 'gone' : '';
+    div.className = `wcard ${stateClass}`;
+    div.id = `w${w.id}`;
+    div.style.setProperty('--c', w.color);
+
+    if (!w.inArena && !w.isChamp) {
+      div.draggable = true;
+      div.addEventListener('dragstart', e => {
+        if (busy) { e.preventDefault(); return; }
+        dragId = w.id;
+        div.classList.add('dragging');
+      });
+      div.addEventListener('dragend', () => {
+        div.classList.remove('dragging');
+        dragId = null;
+      });
+      div.addEventListener('click', () => {
+        if (!busy) triggerChallenge(w.id);
+      });
     }
+
+    div.innerHTML =
+      `<span class="em">${w.emoji}</span>` +
+      `<div class="nm">${w.name}</div>` +
+      `<div class="badge${w.revealed ? ' show' : ''}">` +
+        (w.revealed ? `战力&nbsp;<b>${w.power}</b>` : '??? 神秘战力') +
+      `</div>`;
+
+    grid.appendChild(div);
   });
-});
-
-/* ========== 第一关：擂台逻辑 ========== */
-// 角色数据结构：{ name: '勇士 A', value: 85 }
-let stage1Data = {
-  list: [],
-  index: 1,
-  champIndex: 0
-};
-
-const champEl = document.getElementById('champion');
-const champValEl = document.getElementById('champVal');
-const champNameEl = document.getElementById('champName');
-
-const challEl = document.getElementById('challenger');
-const challValEl = document.getElementById('challVal');
-const challNameEl = document.getElementById('challName');
-
-const numbersInfoEl = document.getElementById('numbersInfo');
-const roundInfoEl = document.getElementById('roundInfo');
-const lineupListEl = document.getElementById('lineupList');
-const btnNextChallenger = document.getElementById('btnNextChallenger');
-const btnRestart1 = document.getElementById('btnRestart1');
-const summaryBadge1 = document.getElementById('summaryBadge1');
-const summaryText1 = document.getElementById('summaryText1');
-
-function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
-
-// 初始化第一关随机数
-function initStage1() {
-  const used = new Set();
-  const arr = [];
-  while (arr.length < 5) {
-    const v = randInt(1,100);
-    if (!used.has(v)) {
-      used.add(v);
-      const name = '勇士 ' + String.fromCharCode(65 + arr.length);
-      arr.push({ name, value: v });
-    }
-  }
-  stage1Data.list = arr;
-  stage1Data.index = 1;
-  stage1Data.champIndex = 0;
-  updateArenaDisplay(true);
-  summaryBadge1.textContent = '尚未通关';
-  summaryBadge1.style.color = '';
-  summaryText1.textContent =
-    '操作提示：点击「下一个挑战者」，观察谁留下来。你可以多玩几轮，感受 “先给一个初始最大值，再逐个比较、更大就替换” 的过程。';
 }
 
-function updateArenaDisplay(firstInit = false) {
-  const arr = stage1Data.list;
-  const n = arr.length;
-  const champ = arr[stage1Data.champIndex];
-
-  numbersInfoEl.textContent = '本轮随机数列表：[' + arr.map(x=>x.value).join(', ') + ']';
-  roundInfoEl.textContent = '已比较：' + Math.min(stage1Data.index, n-1) + ' / ' + (n-1);
-
-  // 更新擂主
-  champValEl.textContent = champ.value;
-  champNameEl.textContent = champ.name + '（当前擂主）';
-  champEl.style.opacity = '1';
-  champEl.classList.remove('win','lose');
-  const champFace = champEl.querySelector('.fighter-face');
-  champFace.classList.remove('face-sad');
-  champFace.classList.add('face-happy');
-  if (firstInit) {
-    champEl.classList.add('enter');
-    setTimeout(()=>champEl.classList.remove('enter'), 450);
-  }
-
-  // 更新按钮状态
-  if (stage1Data.index >= n) {
-    btnNextChallenger.disabled = true;
+function renderThrone() {
+  const inner = document.getElementById('throneInner');
+  if (!champion) {
+    inner.innerHTML =
+      `<div class="throne-empty">` +
+        `<div class="throne-empty-icon">🪑</div>` +
+        `<div>将勇士拖到这里<br>或直接点击勇士<br>开始挑战！</div>` +
+      `</div>`;
   } else {
-    btnNextChallenger.disabled = false;
-  }
-
-  // 更新出战顺序条
-  if (lineupListEl) {
-    lineupListEl.innerHTML = '';
-    for (let i = 0; i < n; i++) {
-      const item = document.createElement('div');
-      item.className = 'lineup-item';
-      if (i === stage1Data.champIndex) item.classList.add('active');
-      if (i < stage1Data.index) item.classList.add('done');
-      const avatar = document.createElement('div');
-      avatar.className = 'lineup-avatar';
-      item.appendChild(avatar);
-      const s = document.createElement('span');
-      s.textContent = String.fromCharCode(65 + i);
-      item.appendChild(s);
-      lineupListEl.appendChild(item);
-    }
+    inner.innerHTML =
+      `<div class="champ-card">` +
+        `<div class="champ-crown">👑</div>` +
+        `<div class="champ-em">${champion.emoji}</div>` +
+        `<div class="champ-nm">${champion.name}</div>` +
+        `<div class="champ-pw">${champion.power}</div>` +
+        `<div class="champ-lbl">当前擂主</div>` +
+      `</div>`;
   }
 }
 
-btnNextChallenger.addEventListener('click', () => {
-  const arr = stage1Data.list;
-  const n = arr.length;
-  if (stage1Data.index >= n) return;
-
-  const challenger = arr[stage1Data.index];
-  const champ = arr[stage1Data.champIndex];
-
-  // 展示挑战者
-  challValEl.textContent = challenger.value;
-  challNameEl.textContent = challenger.name;
-  challEl.style.opacity = '1';
-  challEl.classList.remove('win','lose');
-  challEl.classList.add('enter');
-  const challFace = challEl.querySelector('.fighter-face');
-  challFace.classList.remove('face-sad');
-  challFace.classList.add('face-happy');
-  sfxStep();
-  setTimeout(()=>challEl.classList.remove('enter'), 420);
-
-  // 一点延时，再开始比大小动画
-  setTimeout(() => {
-    sfxCompare();
-    if (challenger.value > champ.value) {
-      // 挑战者胜出
-      challEl.classList.add('win');
-      champEl.classList.add('lose');
-      const champFace2 = champEl.querySelector('.fighter-face');
-      champFace2.classList.remove('face-happy');
-      champFace2.classList.add('face-sad');
-      sfxWin();
-      setTimeout(() => {
-        // 替换擂主
-        stage1Data.champIndex = stage1Data.index;
-        champEl.classList.remove('lose');
-        challEl.style.opacity = '0';
-        updateArenaDisplay();
-      }, 520);
-    } else {
-      // 挑战者失败
-      challEl.classList.add('lose');
-      sfxLose();
-      setTimeout(() => {
-        challEl.style.opacity = '0';
-        challEl.classList.remove('lose');
-      }, 520);
-    }
-
-    stage1Data.index++;
-
-    if (stage1Data.index >= n) {
-      // 所有人比较完成，给出总结
-      setTimeout(() => {
-        const finalChamp = stage1Data.list[stage1Data.champIndex];
-        summaryBadge1.textContent = '通关完成';
-        summaryBadge1.style.color = '#22c55e';
-        summaryText1.textContent =
-          '恭喜！你手动找到了最大值：' + finalChamp.value +
-          '（' + finalChamp.name + '）。这就是“逐个比较找最大值”的逻辑：先定一个初始最大值，再让每个挑战者依次比较，更大就替换。';
-      }, 650);
-    } else {
-      updateArenaDisplay();
-    }
-  }, 420);
-});
-
-btnRestart1.addEventListener('click', () => {
-  initStage1();
-});
-
-/* ========== 第二关：代码逻辑 ========== */
-const inputN = document.getElementById('inputN');
-const btnRun = document.getElementById('btnRun');
-const btnHint = document.getElementById('btnHint');
-const btnCopySolution = document.getElementById('btnCopySolution');
-const paramBadge = document.getElementById('paramBadge');
-const codeHint = document.getElementById('codeHint');
-const logPanel = document.getElementById('logPanel');
-
-const inpLoopCond = document.getElementById('inpLoopCond');
-const inpIfCond = document.getElementById('inpIfCond');
-
-function logLine(text, type) {
-  const div = document.createElement('div');
-  div.className = 'log-line' + (type ? ' ' + type : '');
-  div.textContent = text;
-  logPanel.appendChild(div);
-  logPanel.scrollTop = logPanel.scrollHeight;
+function updateStats() {
+  document.getElementById('sBattle').textContent = battleCount;
+  document.getElementById('sChamp').textContent  = champion ? champion.name : '虚位以待';
+  const rev = warriors.filter(w => w.revealed);
+  document.getElementById('sRevealed').textContent = rev.length;
+  const mx = rev.length ? Math.max(...rev.map(w => w.power)) : null;
+  document.getElementById('sMax').textContent = mx !== null ? mx : '—';
 }
 
-// 检查代码填写是否完整
-function isCodeFilled() {
-  return inpLoopCond.value.trim() !== '' && inpIfCond.value.trim() !== '';
+/* ======== DRAG & DROP ======== */
+const stage = document.getElementById('stage');
+
+stage.addEventListener('dragenter', e => {
+  e.preventDefault();
+  dragOver++;
+  stage.classList.add('drop-active');
+});
+stage.addEventListener('dragleave', () => {
+  if (--dragOver <= 0) {
+    dragOver = 0;
+    stage.classList.remove('drop-active');
+  }
+});
+stage.addEventListener('dragover', e => e.preventDefault());
+stage.addEventListener('drop', e => {
+  e.preventDefault();
+  dragOver = 0;
+  stage.classList.remove('drop-active');
+  if (dragId !== null && !busy) {
+    const id = dragId;
+    dragId = null;
+    triggerChallenge(id);
+  }
+});
+
+/* ======== BATTLE LOGIC ======== */
+async function triggerChallenge(id) {
+  if (busy) return;
+  const w = warriors[id];
+  if (w.inArena || w.isChamp) return;
+
+  busy = true;
+  w.revealed = true;
+  w.inArena  = true;
+  battleCount++;
+  document.getElementById('dropHint').style.display = 'none';
+
+  if (!champion) {
+    /* first warrior: becomes champion instantly */
+    w.isChamp = true;
+    champion  = w;
+    renderThrone();
+    renderRoster();
+    updateStats();
+    document.getElementById('declareBtn').disabled = false;
+    addLog(
+      `🎉 ${w.emoji} <b>${w.name}</b> 登上擂台，` +
+      `战力 <span class="hi">${w.power}</span>，首位擂主诞生！`
+    );
+    busy = false;
+  } else {
+    const prev = champion;
+    renderRoster();
+    updateStats();
+    await doBattle(prev, w);
+    renderRoster();
+    renderThrone();
+    updateStats();
+    busy = false;
+  }
 }
 
-btnHint.addEventListener('click', () => {
-  codeHint.textContent =
-    '提示：循环条件可以写成 i < n（或 i <= n-1），因为第 0 个元素已经用来初始化 maxNum；' +
-    '条件判断可以写成 challengers[i] > maxNum。';
+async function doBattle(prev, challenger) {
+  showFX();
+  await sleep(380);
+
+  const prevWins = prev.power > challenger.power;
+  const winner   = prevWins ? prev : challenger;
+  const loser    = prevWins ? challenger : prev;
+
+  const inner = document.getElementById('bPopupInner');
+  const cry   = rnd(prevWins ? CRIES : TAUNTS);
+  inner.className = `popup-inner show ${prevWins ? 'pw' : 'pl'}`;
+  inner.innerHTML =
+    `<div style="font-size:1.8em;margin-bottom:7px">${winner.emoji}</div>` +
+    `<div style="font-weight:700;font-size:1.08em;color:${prevWins ? '#ffd700' : '#aaaaff'};margin-bottom:6px">` +
+      (prevWins ? '✅ 擂主守擂！' : '🔄 新王降临！') +
+    `</div>` +
+    `<div style="font-size:.9em;color:rgba(255,255,255,.8);margin-bottom:7px">` +
+      `<span style="color:#ffd700">${prev.name} <b>${prev.power}</b></span>` +
+      `<span style="color:rgba(255,255,255,.35)"> vs </span>` +
+      `<span style="color:#aaaaff">${challenger.name} <b>${challenger.power}</b></span>` +
+    `</div>` +
+    `<div style="font-size:.83em;color:#ffd700">${cry}</div>`;
+
+  await sleep(1850);
+  inner.className = 'popup-inner';
+
+  if (!prevWins) {
+    prev.isChamp      = false;
+    challenger.isChamp = true;
+    champion           = challenger;
+  } else {
+    challenger.isChamp = false;
+  }
+
+  addLog(
+    `⚔️ ${prev.emoji}${prev.name}(${prev.power}) ` +
+    `<span style="color:rgba(255,255,255,.28)">VS</span> ` +
+    `${challenger.emoji}${challenger.name}(${challenger.power}) → ` +
+    (prevWins
+      ? `<span class="hi">擂主守擂 💪</span>`
+      : `<span class="lo">新擂主诞生 👑</span>`)
+  );
+}
+
+function showFX() {
+  const layer  = document.getElementById('fxLayer');
+  layer.innerHTML = '';
+  const colors = [
+    'rgba(255,120,20,.85)',
+    'rgba(255,215,0,.65)',
+    'rgba(255,60,60,.45)',
+  ];
+  colors.forEach((c, i) => {
+    const r = document.createElement('div');
+    r.className  = 'fx-ring';
+    r.style.cssText = `border:3px solid ${c};animation-delay:${(i * .18).toFixed(2)}s`;
+    layer.appendChild(r);
+  });
+  setTimeout(() => { layer.innerHTML = ''; }, 950);
+}
+
+/* ======== LOG ======== */
+function addLog(html) {
+  const body = document.getElementById('logBody');
+  const placeholder = body.querySelector('[style*="italic"]');
+  if (placeholder) placeholder.remove();
+  const row = document.createElement('div');
+  row.className = 'log-row';
+  row.innerHTML  = html;
+  body.insertBefore(row, body.firstChild);
+}
+
+function clearLog() {
+  document.getElementById('logBody').innerHTML =
+    '<div class="log-row" style="color:rgba(255,255,255,.22);font-style:italic">尚无记录……</div>';
+}
+
+/* ======== DECLARE WINNER ======== */
+document.getElementById('declareBtn').addEventListener('click', () => {
+  if (!champion || busy) return;
+  const trueMax = warriors.reduce((m, w) => w.power > m.power ? w : m);
+  showResult(champion.id === trueMax.id, trueMax);
 });
 
-btnCopySolution.addEventListener('click', () => {
-  inpLoopCond.value = '< n';
-  inpIfCond.value = 'challengers[i] > maxNum';
-  codeHint.textContent = '已填入参考答案：循环条件 i < n，判断条件 challengers[i] > maxNum。你也可以尝试别的等价写法。';
-});
+function showResult(win, trueMax) {
+  warriors.forEach(w => (w.revealed = true));
+  renderRoster();
 
-// 运行代码按钮
-btnRun.addEventListener('click', () => {
-  logPanel.innerHTML = '';
-  const nRaw = inputN.value.trim();
-  const n = Number(nRaw);
-  if (!Number.isInteger(n) || n < 3 || n > 10) {
-    paramBadge.textContent = '参数错误';
-    paramBadge.style.color = '#fb7185';
-    logLine('请输入 3-10 之间的整数作为挑战者人数哦～', 'bad');
-    return;
+  const card = document.getElementById('resCard');
+  card.className = `res-card ${win ? 'win-card' : 'lose-card'}`;
+
+  document.getElementById('resEmoji').textContent = win ? '🏆' : '😔';
+  document.getElementById('resTitle').textContent = win ? '王者降临！' : '差一点点……';
+
+  const eff = win ? getEff(battleCount) : '';
+  document.getElementById('resMsg').innerHTML = win
+    ? `你只用了 <b style="color:#ffd700">${battleCount}</b> 次挑战，` +
+      `成功找出了最强王者 ${champion.emoji}<b>${champion.name}</b>（战力 ${champion.power}）！<br>` +
+      `<span style="color:#ffd700;font-size:.95em">${eff}</span>`
+    : `你选择的 ${champion.emoji}<b>${champion.name}</b>（战力 ${champion.power}）并非最强，<br>` +
+      `真正的王者是 ${trueMax.emoji}<b style="color:#ffd700">${trueMax.name}</b>（战力 <b style="color:#ffd700">${trueMax.power}</b>）。<br>` +
+      `<small style="color:rgba(255,255,255,.42)">要找到最大值，需要让所有候选者都与当前最大值比较哦！</small>`;
+
+  const sorted = [...warriors].sort((a, b) => b.power - a.power).slice(0, 3);
+  document.getElementById('resTop3').innerHTML = sorted.map((w, i) =>
+    `<div class="t3item ${i === 0 ? 'gold' : ''}">` +
+      `<div>${['🥇','🥈','🥉'][i]}</div>` +
+      `<div class="t3em">${w.emoji}</div>` +
+      `<div class="t3nm">${w.name}</div>` +
+      `<div class="t3pw">${w.power}</div>` +
+    `</div>`
+  ).join('');
+
+  document.getElementById('overlay').classList.add('on');
+  if (win) launchConfetti();
+}
+
+function getEff(n) {
+  if (n <= 3) return '🌟🌟🌟 超神级效率！算法大师！';
+  if (n <= 5) return '🌟🌟 非常聪明，策略精准！';
+  if (n <= 7) return '🌟 稳扎稳打，不错！';
+  return '你把所有勇士都试过一遍了，稳！';
+}
+
+/* ======== CONFETTI ======== */
+function launchConfetti() {
+  const c = document.getElementById('confetti');
+  c.innerHTML = '';
+  const colors = ['#ffd700','#ff4444','#4488ff','#44ff88','#ff88ff','#ff8844','#44ffdd'];
+  for (let i = 0; i < 100; i++) {
+    const el    = document.createElement('div');
+    const color = colors[i % colors.length];
+    const sz    = (Math.random() * 9 + 5).toFixed(0);
+    const isCircle = Math.random() > .5;
+    el.className = 'cf';
+    el.style.cssText =
+      `left:${(Math.random()*100).toFixed(1)}%;` +
+      `width:${sz}px;height:${sz}px;` +
+      `background:${color};` +
+      `border-radius:${isCircle ? '50%' : '2px'};` +
+      `--d:${(Math.random()*2+2).toFixed(1)}s;` +
+      `--dd:${(Math.random()*1.5).toFixed(1)}s`;
+    c.appendChild(el);
   }
-  if (!isCodeFilled()) {
-    paramBadge.textContent = '代码未填完整';
-    paramBadge.style.color = '#fb7185';
-    logLine('请先补全循环条件和 if 判断条件，再运行代码。', 'bad');
-    return;
-  }
+  setTimeout(() => { c.innerHTML = ''; }, 5000);
+}
 
-  const loopCond = inpLoopCond.value.trim();
-  const ifCond = inpIfCond.value.trim();
+/* ======== RESET ======== */
+function resetGame() {
+  document.getElementById('overlay').classList.remove('on');
+  document.getElementById('confetti').innerHTML = '';
+  initGame();
+}
+document.getElementById('resetBtn').addEventListener('click', resetGame);
 
-  // 简单检查循环条件
-  const validLoop = (loopCond === '< n' || loopCond === '<n' || loopCond === '<  n'
-    || loopCond === '<= n-1' || loopCond === '<= n - 1' || loopCond === '<= n -1' || loopCond === '<=n-1');
-  if (!validLoop) {
-    paramBadge.textContent = '循环条件可能有问题';
-    paramBadge.style.color = '#fb923c';
-    logLine('循环条件看起来不太对，建议用 i < n 或 i <= n-1，因为第 0 个已经用来初始化 maxNum。', 'bad');
-  }
+/* ======== UTILS ======== */
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const rnd   = arr => arr[Math.floor(Math.random() * arr.length)];
 
-  // 检查 if 条件
-  const normalizedIf = ifCond.replace(/\s+/g,'');
-  if (normalizedIf !== 'challengers[i]>maxNum') {
-    paramBadge.textContent = '条件判断可能有问题';
-    paramBadge.style.color = '#fb923c';
-    logLine('条件判断建议写成 challengers[i] > maxNum，这样当当前值更大时才会替换最大值。', 'bad');
-  }
-
-  // 随机生成 challengers 数组
-  const challengers = [];
-  for (let i=0;i<n;i++) {
-    challengers.push(randInt(1,100));
-  }
-
-  logLine('生成 ' + n + ' 位挑战者：[' + challengers.join(', ') + ']', 'good');
-  logLine('开始执行你的 for 循环代码...', '');
-
-  // 模拟执行 for 循环，并可视化每次比较
-  let maxNum = challengers[0];
-  let i = 1;
-
-  function step() {
-    if (i >= n) {
-      logLine('循环结束，最终最大值为：' + maxNum, 'good');
-      paramBadge.textContent = '执行成功';
-      paramBadge.style.color = '#22c55e';
-      sfxWin();
-      logLine('你用 for 循环 + if 条件判断，成功自动找出了最大值！', 'good');
-      return;
-    }
-
-    const cur = challengers[i];
-    const cond = cur > maxNum;
-    sfxCompare();
-    logLine('第 ' + i + ' 次循环：i = ' + i +
-      '，当前数值 challengers[' + i + '] = ' + cur +
-      '，当前最大值 maxNum = ' + maxNum + '。', '');
-
-    if (cond) {
-      logLine('→ ' + cur + ' > ' + maxNum + '，满足条件，更新 maxNum = ' + cur, 'good');
-      maxNum = cur;
-    } else {
-      logLine('→ ' + cur + ' ≤ ' + maxNum + '，条件不成立，maxNum 保持不变。', '');
-    }
-
-    i++;
-    setTimeout(step, 550);
-  }
-
-  // 开始执行
-  setTimeout(step, 500);
-});
-
-initStage1();
+/* ======== START ======== */
+initStars();
+initGame();
 </script>
 </body>
 </html>
-

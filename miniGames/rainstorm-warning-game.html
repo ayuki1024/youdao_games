@@ -60,7 +60,7 @@ canvas#rain{position:fixed;inset:0;z-index:0}
 .ck{color:#a78bfa}.cv{color:var(--gold)}.cn{color:#60a5fa}.cc{color:#34d399;font-weight:800}
 
 /* Stage */
-.stage{flex:1;border-radius:16px;background:linear-gradient(180deg,#1a1340 0%,#1e1b4b 40%,#312e81 70%,#1e1b4b 100%);position:relative;overflow:hidden;min-height:200px;border:2px solid rgba(139,92,246,.15);box-shadow:inset 0 0 60px rgba(99,102,241,.08)}
+.stage{flex:1;order:5;border-radius:16px;background:linear-gradient(180deg,#1a1340 0%,#1e1b4b 40%,#312e81 70%,#1e1b4b 100%);position:relative;overflow:hidden;min-height:200px;border:2px solid rgba(139,92,246,.15);box-shadow:inset 0 0 60px rgba(99,102,241,.08)}
 
 /* Stars / rain overlay on stage */
 .stage-rain{position:absolute;inset:0;pointer-events:none;z-index:1}
@@ -85,9 +85,26 @@ canvas#rain{position:fixed;inset:0;z-index:0}
 .wx-lv.wl-yellow{background:rgba(250,204,21,.15);color:#facc15}
 .wx-lv.wl-orange{background:rgba(251,146,60,.15);color:#fb923c}
 .wx-lv.wl-red{background:rgba(248,113,113,.15);color:#f87171}
+.wx-hint{
+  position:absolute;
+  top:8px;
+  left:8px;
+  width:220px;
+  z-index:8;
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid rgba(251,191,36,.45);
+  background:linear-gradient(180deg,rgba(30,27,75,.92),rgba(15,14,30,.92));
+  box-shadow:0 0 16px rgba(251,191,36,.2), inset 0 0 18px rgba(251,191,36,.08);
+  color:#e2e8f0;
+  font-size:12px;
+  line-height:1.5;
+  display:none;
+}
+.wx-hint .hx{display:block;color:#fbbf24;font-weight:900;letter-spacing:.5px;margin-bottom:4px}
 
 /* Characters */
-.char{position:absolute;bottom:8%;text-align:center;z-index:4;transition:all .6s cubic-bezier(.22,.61,.36,1)}
+.char{position:absolute;bottom:22%;text-align:center;z-index:4;transition:all .6s cubic-bezier(.22,.61,.36,1)}
 .char svg{display:block;margin:0 auto;filter:drop-shadow(0 4px 16px rgba(0,0,0,.35))}
 .char-badge{display:inline-block;padding:2px 10px;border-radius:6px;font-size:9px;font-weight:800;margin-top:3px;letter-spacing:.5px}
 
@@ -109,7 +126,7 @@ canvas#rain{position:fixed;inset:0;z-index:0}
 .bub-val{font-size:32px;font-weight:900;background:linear-gradient(135deg,var(--indigo),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;display:block;margin:2px 0;line-height:1.2}
 
 /* Queue */
-.queue{position:absolute;right:4px;bottom:8%;display:flex;align-items:flex-end;gap:1px;z-index:3}
+.queue{position:absolute;right:4px;bottom:30%;display:flex;align-items:flex-end;gap:1px;z-index:3}
 .qp{text-align:center;flex-shrink:0;position:relative;transition:all .4s}
 .qp-nm{font-size:7px;color:rgba(255,255,255,.4);font-weight:700;margin-top:1px;white-space:nowrap}
 .qp-i{font-family:monospace;font-size:6px;color:rgba(255,255,255,.25)}
@@ -117,11 +134,23 @@ canvas#rain{position:fixed;inset:0;z-index:0}
 .qb::after{content:'';position:absolute;bottom:-3px;left:50%;transform:translateX(-50%);border:3px solid transparent;border-top-color:rgba(255,255,255,.85)}
 @keyframes qbf{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-4px)}}
 
-/* ── Bottom panel ── */
-.panel{padding:8px;flex-shrink:0}
-.answers{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
-@media(max-width:560px){.answers{grid-template-columns:repeat(3,1fr)}.answers .ab:last-child{grid-column:span 3}}
-.ab{padding:10px 4px;border-radius:11px;border:2px solid transparent;font-weight:800;font-size:12px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;letter-spacing:.3px}
+/* ── In-stage answer panel ── */
+.panel{
+  position:absolute;
+  top:8px;
+  left:50px;
+  z-index:9;
+  width:210px;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid rgba(99,102,241,.25);
+  background:rgba(15,14,30,.78);
+}
+.answers{display:grid;grid-template-columns:1fr;gap:6px}
+@media(max-width:760px){
+  .panel{top:170px;left:8px;width:240px}
+}
+.ab{padding:10px 8px;border-radius:11px;border:2px solid transparent;font-weight:800;font-size:12px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;letter-spacing:.3px;text-align:left}
 .ab::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.12),transparent);border-radius:9px;pointer-events:none}
 .ab:hover:not(:disabled){transform:translateY(-3px);filter:brightness(1.15)}
 .ab:active:not(:disabled){transform:translateY(0)}
@@ -204,7 +233,7 @@ canvas#rain{position:fixed;inset:0;z-index:0}
       <div class="t-row"><span class="t-label">难度</span><div class="t-diff" id="diffBtns"><button data-d="easy">简单</button><button data-d="normal" class="on">普通</button><button data-d="hard">困难</button></div></div>
       <button class="t-start" id="startBtn">开 始 任 务</button>
     </div>
-    <div class="t-tip">💡 &lt;50mm 无预警 · 50-99 蓝色 · 100-149 黄色 · 150-199 橙色 · ≥200 红色</div>
+    <div class="t-tip">💡 预警规则：&lt;50mm 无预警；50-99 蓝色；100-149 黄色；150-199 橙色；≥200 红色。<br>输出要求：无预警输出 no warning；蓝色预警输出 blue warning；黄色预警输出 yellow warning；橙色预警输出 orange warning；红色预警输出 red warning。</div>
   </div>
 </div>
 
@@ -216,7 +245,6 @@ canvas#rain{position:fixed;inset:0;z-index:0}
       <div class="hud-g"><div class="hp hp-prog"><span class="ico">📋</span><span id="hProg">0/0</span></div><div class="hp hp-time"><span class="ico">⏱</span><span id="hTime">--</span></div></div>
     </div>
     <div class="timer-track"><div class="timer-bar" id="tBar"></div></div>
-    <div class="code-line" id="codeLine"><span class="ck">for</span> (<span class="ck">let</span> <span class="cv">i</span>=<span class="cn">0</span>; <span class="cv">i</span>&lt;<span class="cn" id="cN">n</span>; <span class="cv">i</span>++) → <span class="cv">i</span>=<span class="cc" id="cI">0</span></div>
 
     <div class="stage" id="stage">
       <div class="stage-rain"><canvas id="stageRain"></canvas></div>
@@ -226,24 +254,25 @@ canvas#rain{position:fixed;inset:0;z-index:0}
         <div class="wx-cv"><canvas id="wxCv"></canvas></div>
         <div class="wx-foot"><span class="wx-mm"><b id="wxMm">--</b> mm</span><span class="wx-lv wl-none" id="wxLv">--</span></div>
       </div>
+      <div class="wx-hint"><span class="hx">提示牌</span>无预警：降水量 &lt; 50<br>蓝 色 ：50 ≤ 降水量 &lt; 100<br>黄 色 ：100mm ≤ 降水量 &lt; 150<br>橙 色 ：150 ≤ 降水量 &lt; 200<br>红 色 ：降水量 ≥ 200</div>
+      <div class="panel" id="panel">
+        <div class="answers">
+          <button class="ab ab-n" data-a="none">🟢 无预警 <= 50</button>
+          <button class="ab ab-b" data-a="blue">🔵 蓝色 50<=水量<100)</button>
+          <button class="ab ab-y" data-a="yellow">🟡 黄色 100<=水量<150)</button>
+          <button class="ab ab-o" data-a="orange">🟠 橙色 150<=水量<200)</button>
+          <button class="ab ab-r" data-a="red">🔴 红色 >= 200</button>
+        </div>
+        <div class="fb" id="fb"></div>
+        <button class="nxt" id="nxtBtn">下一位 →</button>
+      </div>
       <div class="char reporter" id="rep"></div>
       <div class="char citizen" id="ctz">
         <div class="bub" id="bub"><div class="bub-txt">今日降雨量</div><span class="bub-val" id="bVal">--</span><div class="bub-txt">mm · 请发布预警！</div></div>
       </div>
       <div class="queue" id="queue"></div>
       <div class="round-intro" id="roundIntro"><div class="ri-num" id="riNum"></div><div class="ri-sub" id="riSub"></div></div>
-    </div>
-
-    <div class="panel" id="panel">
-      <div class="answers">
-        <button class="ab ab-n" data-a="none">🟢 无预警</button>
-        <button class="ab ab-b" data-a="blue">🔵 蓝色</button>
-        <button class="ab ab-y" data-a="yellow">🟡 黄色</button>
-        <button class="ab ab-o" data-a="orange">🟠 橙色</button>
-        <button class="ab ab-r" data-a="red">🔴 红色</button>
-      </div>
-      <div class="fb" id="fb"></div>
-      <button class="nxt" id="nxtBtn">下一位 →</button>
+      <div class="code-line" id="codeLine"><span class="ck">for</span> (<span class="ck">int</span> <span class="cv">i</span>=<span class="cn">1</span>; <span class="cv">i</span>&lt;=<span class="cn" id="cN">n</span>; <span class="cv">i</span>++) → <span class="cv">i</span>=<span class="cc" id="cI">1</span></div>
     </div>
   </div>
 </div>
@@ -396,7 +425,7 @@ function classify(n){return n<50?'none':n<100?'blue':n<150?'yellow':n<200?'orang
 function label(l){return{none:'无预警',blue:'蓝色预警',yellow:'黄色预警',orange:'橙色预警',red:'红色预警'}[l];}
 function genRain(){if(diff==='easy'){const b=[25,75,125,175,250];return b[~~(Math.random()*5)]+~~(Math.random()*10-5);}if(diff==='hard'){const e=[0,48,52,98,102,148,152,198,202,300,450];return e[~~(Math.random()*11)]+~~(Math.random()*4-2);}return~~(Math.random()*501);}
 function timerDur(){return{easy:15,normal:10,hard:6}[diff]||10;}
-function hud(){$('hScore').textContent=score;$('hCombo').textContent=combo>1?`x${combo}`:'x1';$('hProg').textContent=`${idx}/${N}`;$('cN').textContent=N;$('cI').textContent=Math.max(0,idx-1);}
+function hud(){$('hScore').textContent=score;$('hCombo').textContent=combo>1?`x${combo}`:'x1';$('hProg').textContent=`${idx}/${N}`;$('cN').textContent=N;$('cI').textContent=Math.max(1,idx);}
 function setAns(v){abs.forEach(b=>b.disabled=!v);}
 
 /* confetti */
@@ -458,7 +487,7 @@ async function finish(){
   await wipe('任务完成！','统计结果中...');
   $('rIco').textContent=st>=3?'🏆':st>=2?'🎖️':st>=1?'👍':'💪';
   $('rTitle').textContent=st>=3?'完美预报！':st>=2?'表现不错！':st>=1?'继续加油！':'还需练习';
-  $('rSub').textContent=`for (i=0; i<${N}; i++) ✓`;
+  $('rSub').textContent=`for (int i=1; i<=${N}; i++) ✓`;
   $('rStars').textContent='⭐'.repeat(st)+'☆'.repeat(3-st);
   $('rScore').textContent=score;$('rMax').textContent=`/ ${mx}`;
   $('rsOk').textContent=ok;$('rsNo').textContent=N-ok;$('rsCb').textContent=maxC;$('rsAc').textContent=~~(pct*100)+'%';
