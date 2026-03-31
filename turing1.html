@@ -113,6 +113,12 @@
       display: flex; flex-wrap: wrap; gap: 7px;
       justify-content: flex-end; flex-shrink: 0;
     }
+    .unit-games-two-rows {
+      display: grid;
+      grid-template-columns: repeat(3, max-content);
+      gap: 7px;
+      justify-content: end;
+    }
     .game-btn {
       display: inline-flex; align-items: center; gap: 5px;
       font-size: 12.5px; font-weight: 600;
@@ -327,9 +333,10 @@
           <span class="unit-tag">计数 / 求和 / 最值</span>
         </div>
       </div>
-      <div class="unit-games">
+      <div class="unit-games unit-games-two-rows">
         <a class="game-btn" href="https://c.youdao.com/xue/tianshu/tianshu_dae25da2-0bd2-4077-9756-648314c3dc8e.html" target="_blank" rel="noopener noreferrer">🍽️ 模拟餐厅</a>
         <a class="game-btn" href="https://c.youdao.com/xue/tianshu/tianshu_66aace48-0aff-4357-9095-f6ee8260d06a.html" target="_blank" rel="noopener noreferrer">⚔️ 打擂台</a>
+        <a class="game-btn" href="miniGames/max-battle-arena.html">🧑‍🤝‍🧑 葫芦娃打擂台</a>
         <a class="game-btn" href="https://c.youdao.com/xue/tianshu/tianshu_e2517f52-2f2f-45c5-a130-94f3527ed854.html" target="_blank" rel="noopener noreferrer">🔀 break 与 continue</a>
         <a class="game-btn" href="https://c.youdao.com/xue/tianshu/tianshu_fe662a98-8fc5-4ff4-838c-e0444f9c5c8b.html" target="_blank" rel="noopener noreferrer">⛏️ 黄金矿工 flag</a>
         <a class="game-btn" href="miniGames/rainstorm-warning-game.html">⛈️ 暴雨预警行动</a>

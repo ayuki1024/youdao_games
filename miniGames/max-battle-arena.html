@@ -3,324 +3,577 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>擂台争霸 — 找出最强王者</title>
+  <title>葫芦娃擂台争霸</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'Microsoft YaHei', 'PingFang SC', 'Segoe UI', sans-serif;
-      background: #07071a;
-      min-height: 100vh;
-      color: #fff;
+      background: #0a1205;
+      background-image:
+        radial-gradient(ellipse at 15% 0%,  rgba(160,20,20,.45) 0%, transparent 48%),
+        radial-gradient(ellipse at 85% 0%,  rgba(20,80,10,.5)  0%, transparent 48%),
+        radial-gradient(ellipse at 50% 100%, rgba(80,40,0,.5)   0%, transparent 55%);
+      min-height: 100vh; color: #fff;
       overflow-x: hidden;
-      user-select: none;
-      -webkit-user-select: none;
+      -webkit-user-select: none; user-select: none;
     }
 
-    /* ── STARS ── */
+    /* ── FIREFLIES ── */
     #stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
     .star {
-      position: absolute; border-radius: 50%; background: #fff;
+      position: absolute; border-radius: 50%; background: #aaff88;
+      box-shadow: 0 0 5px 2px rgba(150,255,80,.5);
       animation: tw var(--d) var(--dd) infinite alternate;
     }
-    @keyframes tw { from { opacity: .1; } to { opacity: 1; } }
+    @keyframes tw { from { opacity: .05; } to { opacity: .9; } }
 
-    /* ── LAYOUT ── */
     .wrap {
       position: relative; z-index: 1;
-      max-width: 1100px; margin: 0 auto;
-      padding: 16px 20px;
+      max-width: 880px; margin: 0 auto;
+      padding: 14px 16px 20px;
     }
 
-    /* ── HEADER ── */
+    /* ── TITLE ── */
     h1 {
       text-align: center;
-      font-size: clamp(2em, 5vw, 3em);
-      font-weight: 900;
-      background: linear-gradient(90deg, #ffd700 0%, #ff6b35 50%, #ffd700 100%);
-      background-size: 200%;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      font-size: clamp(1.8em, 5vw, 2.8em); font-weight: 900;
+      background: linear-gradient(90deg, #e03030 0%, #ffcc00 40%, #e03030 80%, #ffcc00 100%);
+      background-size: 300%;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
       animation: shine 3s linear infinite;
-      letter-spacing: 3px;
-      margin-bottom: 4px;
+      letter-spacing: 3px; margin-bottom: 3px;
     }
-    @keyframes shine { to { background-position: 200%; } }
+    @keyframes shine { to { background-position: 300%; } }
+    .subtitle { text-align: center; color: rgba(255,255,255,.5); font-size: .85em; margin-bottom: 12px; }
 
-    .subtitle {
-      text-align: center;
-      color: rgba(255,255,255,.5);
-      font-size: .9em;
-      margin-bottom: 14px;
-    }
-
-    /* ── STATS BAR ── */
+    /* ── STATS ── */
     .stats {
-      display: flex; justify-content: center; flex-wrap: wrap; gap: 12px 22px;
-      background: rgba(255,215,0,.06);
-      border: 1px solid rgba(255,215,0,.2);
-      border-radius: 50px; padding: 8px 22px;
-      margin-bottom: 18px; font-size: .88em;
+      display: flex; justify-content: center; flex-wrap: wrap; gap: 8px 20px;
+      background: rgba(200,30,30,.07); border: 1px solid rgba(220,50,50,.28);
+      border-radius: 50px; padding: 7px 20px;
+      margin-bottom: 14px; font-size: .84em;
     }
-    .stat { display: flex; align-items: center; gap: 6px; }
+    .stat { display: flex; align-items: center; gap: 5px; }
     .stat-lbl { color: rgba(255,255,255,.5); }
-    .stat-val { color: #ffd700; font-weight: 700; font-size: 1.1em; min-width: 28px; }
-
-    /* ── GAME GRID ── */
-    .game { display: flex; gap: 18px; align-items: flex-start; }
+    .stat-val { color: #ffcc00; font-weight: 700; }
 
     /* ── ROSTER ── */
-    .roster { width: 310px; flex-shrink: 0; }
-    .roster-hd {
-      text-align: center; color: rgba(255,255,255,.55);
-      font-size: .84em; margin-bottom: 10px;
-      padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,.1);
+    .roster {
+      display: flex; justify-content: center; gap: 8px;
+      padding: 12px 8px 8px;
+      background: rgba(0,0,0,.25);
+      border-radius: 16px; border: 1px solid rgba(255,255,255,.06);
+      margin-bottom: 10px;
     }
-    .cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-    /* ── WARRIOR CARD ── */
-    .wcard {
-      background: rgba(255,255,255,.07);
-      border: 2px solid var(--c);
-      border-radius: 14px; padding: 12px 8px;
-      text-align: center; cursor: grab;
-      transition: transform .2s, box-shadow .2s, opacity .3s, filter .3s;
-      position: relative; overflow: hidden;
-    }
-    .wcard:not(.gone):not(.is-champ):hover {
-      transform: translateY(-5px) scale(1.04);
-      box-shadow: 0 8px 22px var(--c);
-    }
-    .wcard.dragging { opacity: .35; cursor: grabbing; }
-    .wcard.gone {
-      opacity: .22; cursor: default;
-      filter: grayscale(.85) brightness(.6);
-    }
-    .wcard.gone::after {
-      content: '💀';
-      position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 2em; background: rgba(0,0,0,.4);
-      border-radius: 12px; z-index: 1;
-    }
-    .wcard.is-champ {
-      border-color: #ffd700;
-      box-shadow: 0 0 18px rgba(255,215,0,.4);
-      opacity: .5; cursor: default;
-    }
-    .wcard.is-champ::after {
-      content: '👑';
-      position: absolute; top: 4px; right: 6px;
-      font-size: 1em; z-index: 1;
-    }
-    .wcard .em { font-size: 2.2em; display: block; margin-bottom: 3px; }
-    .wcard .nm { font-size: .76em; color: rgba(255,255,255,.88); margin-bottom: 6px; font-weight: 600; }
-    .badge {
-      display: inline-block; padding: 2px 10px;
-      border-radius: 20px; font-size: .82em; font-weight: 700;
-      background: rgba(255,255,255,.08); color: rgba(255,255,255,.3);
-      transition: all .5s;
-    }
-    .badge.show {
-      background: rgba(255,215,0,.18); color: #ffd700;
-      border: 1px solid rgba(255,215,0,.4);
-    }
-    .tip {
-      margin-top: 10px; font-size: .8em; color: rgba(255,255,255,.38);
-      text-align: center; padding: 8px 10px;
-      background: rgba(255,255,255,.03); border-radius: 10px;
-      line-height: 1.5;
-    }
-
-    /* ── ARENA SECTION ── */
-    .arena-sec { flex: 1; min-width: 0; }
-
-    /* ── STAGE ── */
-    .stage {
-      position: relative; overflow: hidden;
-      background: radial-gradient(ellipse at 50% 55%, rgba(255,215,0,.1) 0%, transparent 68%);
-      border: 2px solid rgba(255,215,0,.25);
-      border-radius: 22px; padding: 28px 20px;
-      min-height: 360px;
-      display: flex; align-items: center; justify-content: center;
-      transition: box-shadow .3s, border-color .3s;
-    }
-    .stage.drop-active {
-      box-shadow: 0 0 50px rgba(255,215,0,.35);
-      border-color: rgba(255,215,0,.75);
-    }
-    /* decorative ring */
-    .stage::before {
-      content: '';
-      position: absolute; width: 290px; height: 290px;
-      border-radius: 50%; border: 2px dashed rgba(255,215,0,.1);
-      top: 50%; left: 50%; transform: translate(-50%,-50%);
-      pointer-events: none;
-    }
-    .stage::after {
-      content: '';
-      position: absolute; width: 220px; height: 220px;
-      border-radius: 50%; border: 1px dashed rgba(255,215,0,.06);
-      top: 50%; left: 50%; transform: translate(-50%,-50%);
-      pointer-events: none;
-    }
-
-    /* ── THRONE ── */
-    .throne {
-      position: relative; z-index: 2;
-      width: 180px; min-height: 200px;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      text-align: center;
-    }
-    .throne-empty { color: rgba(255,215,0,.35); font-size: .85em; line-height: 1.65; }
-    .throne-empty-icon { font-size: 2.5em; margin-bottom: 8px; }
-
-    .champ-card {
+    .rcard {
       display: flex; flex-direction: column; align-items: center;
-      animation: popIn .45s cubic-bezier(.34,1.56,.64,1);
+      cursor: grab; width: 92px;
+      padding: 8px 4px 6px; border-radius: 12px;
+      border: 2px solid transparent;
+      transition: transform .22s, opacity .3s, border-color .2s, background .2s;
     }
-    @keyframes popIn { from { transform: scale(.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-    .champ-crown { font-size: 1.9em; animation: bob 1.8s ease-in-out infinite; }
-    @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
-    .champ-em { font-size: 4em; margin: 4px 0; }
-    .champ-nm { font-size: .9em; font-weight: 700; color: rgba(255,255,255,.9); margin-bottom: 5px; }
-    .champ-pw {
-      font-size: 2.2em; font-weight: 900; color: #ffd700;
-      text-shadow: 0 0 16px rgba(255,215,0,.65);
+    .rcard:not(.gone):not(.is-champ):hover {
+      transform: translateY(-12px) scale(1.06);
+      border-color: rgba(255,200,0,.45);
+      background: rgba(255,255,255,.07);
     }
-    .champ-lbl { font-size: .72em; color: rgba(255,215,0,.55); letter-spacing: 2px; margin-top: 3px; }
+    .rcard.dragging { opacity: .25; cursor: grabbing; }
+    .rcard.gone { opacity: .16; cursor: default; filter: grayscale(.9) brightness(.55); }
+    .rcard.is-champ { opacity: .45; cursor: default; border-color: rgba(255,200,0,.45); background: rgba(255,200,0,.06); }
+    .rcard-figure { width: 60px; height: 88px; }
+    .rcard-figure svg { width: 100%; height: 100%; display: block; }
+    .rcard-name { font-size: .78em; font-weight: 700; color: rgba(255,255,255,.88); margin-top: 4px; }
+    .rcard-badge { font-size: .68em; color: rgba(255,255,255,.3); margin-top: 2px; }
+    .rcard.gone .rcard-badge, .rcard.is-champ .rcard-badge { color: rgba(255,200,0,.65); }
 
-    /* ── FX LAYER ── */
-    .fx-layer {
-      position: absolute; inset: 0;
+    /* ── INITIAL POWER BAR ── */
+    .init-bar {
       display: flex; align-items: center; justify-content: center;
-      pointer-events: none; z-index: 5;
+      gap: 10px; margin-bottom: 10px; flex-wrap: wrap;
+      font-size: .85em; color: rgba(255,255,255,.55);
     }
-    .fx-ring {
-      position: absolute; border-radius: 50%;
-      animation: ring .75s ease-out forwards;
+    .init-bar label { display: flex; align-items: center; gap: 6px; }
+    .init-bar input[type=number] {
+      width: 72px; padding: 5px 8px;
+      border-radius: 8px; border: 1px solid rgba(255,200,0,.4);
+      background: rgba(255,200,0,.09); color: #ffcc00;
+      font-size: 1em; font-weight: 700; text-align: center;
+      font-family: inherit; outline: none; cursor: text;
+      -webkit-user-select: text; user-select: text; pointer-events: all;
     }
-    @keyframes ring { from { width: 0; height: 0; opacity: 1; } to { width: 260px; height: 260px; opacity: 0; } }
-
-    /* ── BATTLE POPUP ── */
-    .battle-popup {
-      position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
-      z-index: 8; pointer-events: none;
-    }
-    .popup-inner {
-      background: rgba(4,4,20,.94);
-      border-radius: 20px; padding: 20px 28px;
-      text-align: center; min-width: 270px;
-      transform: scale(0); opacity: 0;
-      transition: transform .32s cubic-bezier(.34,1.56,.64,1), opacity .32s;
-    }
-    .popup-inner.show { transform: scale(1); opacity: 1; }
-    .popup-inner.pw { border: 2px solid rgba(255,215,0,.75); box-shadow: 0 0 36px rgba(255,215,0,.3); }
-    .popup-inner.pl { border: 2px solid rgba(100,140,255,.65); box-shadow: 0 0 36px rgba(100,140,255,.2); }
+    .init-bar input[type=number]:focus { border-color: rgba(255,200,0,.8); box-shadow: 0 0 8px rgba(255,200,0,.25); }
+    .init-bar input[type=number]::-webkit-inner-spin-button,
+    .init-bar input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .init-bar input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+    .init-hint { font-size: .76em; color: rgba(255,255,255,.3); }
 
     /* ── DROP HINT ── */
     .drop-hint {
-      text-align: center; margin-top: 11px;
-      color: rgba(255,215,0,.5); font-size: .83em;
+      text-align: center; font-size: .82em;
+      color: rgba(255,200,0,.45); margin-bottom: 8px;
     }
     .bounce { display: inline-block; animation: bn 1s ease infinite; }
     @keyframes bn { 0%,100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
 
-    /* ── ACTIONS ── */
-    .actions { display: flex; justify-content: center; gap: 12px; margin-top: 14px; }
+    /* ── ARENA WRAP ── */
+    .arena-wrap {
+      background: rgba(0,0,0,.2); border-radius: 20px;
+      border: 1px solid rgba(255,200,0,.14);
+      margin-bottom: 14px;
+    }
+    .arena-wrap.screen-shake { animation: arenaShake .42s ease-in-out; }
+    @keyframes arenaShake {
+      0%,100% { transform: translate(0,0) rotate(0deg); }
+      15% { transform: translate(-5px, 3px) rotate(-.4deg); }
+      30% { transform: translate( 5px,-3px) rotate( .4deg); }
+      50% { transform: translate(-4px, 2px) rotate(-.3deg); }
+      70% { transform: translate( 3px,-2px) rotate( .2deg); }
+      90% { transform: translate(-2px, 1px) rotate(-.1deg); }
+    }
+
+    /* ── STAGE ── */
+    .stage {
+      position: relative; overflow: hidden;
+      background:
+        radial-gradient(ellipse at 50% 60%, rgba(200,40,20,.1) 0%, transparent 65%),
+        repeating-linear-gradient(90deg, transparent, transparent 36px, rgba(40,80,20,.05) 36px, rgba(40,80,20,.05) 38px);
+      border-bottom: 4px solid rgba(200,160,50,.42);
+      min-height: 290px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-end;
+      padding: 10px 10px 0;
+      transition: box-shadow .3s, border-color .3s;
+    }
+    .stage.drop-active {
+      box-shadow: inset 0 0 70px rgba(220,50,30,.28);
+      border-color: rgba(220,100,30,.75);
+    }
+    .stage-label {
+      position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+      font-size: .75em; color: rgba(255,200,0,.35);
+      letter-spacing: 7px; font-weight: 700; pointer-events: none;
+      z-index: 1;
+    }
+
+    /* ── ARENA 3-ZONE LAYOUT ── */
+    .arena-layout {
+      display: flex; align-items: flex-end;
+      justify-content: space-between;
+      width: 100%; padding: 0 8px;
+      position: relative;
+    }
+
+    /* ── LEFT: CHAMPION ZONE + 台子 ── */
+    .champ-zone {
+      display: flex; flex-direction: column; align-items: center;
+      flex-shrink: 0; width: 170px;
+    }
+
+    .podium-base {
+      width: 148px; min-height: 175px;
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(255,220,80,.12) 0%, transparent 60%),
+        linear-gradient(180deg, rgba(200,160,50,.22) 0%, rgba(160,100,20,.06) 100%);
+      border: 1px solid rgba(200,160,50,.5);
+      border-bottom: none;
+      border-radius: 14px 14px 0 0;
+      padding: 10px 8px 6px;
+      position: relative;
+      box-shadow:
+        0 0 35px rgba(200,160,50,.18),
+        inset 0 1px 0 rgba(255,255,255,.14),
+        inset 0 0 30px rgba(200,140,0,.05);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-end;
+      z-index: 2;
+    }
+    /* gold vertical stripes inside podium */
+    .podium-base::before {
+      content: '';
+      position: absolute; inset: 0; border-radius: 14px 14px 0 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0, transparent 18px,
+        rgba(200,160,50,.04) 18px, rgba(200,160,50,.04) 20px
+      );
+      pointer-events: none;
+    }
+
+    .podium-step {
+      background: linear-gradient(180deg, rgba(190,145,40,.25) 0%, rgba(180,130,30,.08) 100%);
+      border: 1px solid rgba(190,145,40,.35); border-top: none;
+    }
+    .podium-step-1 { width: 160px; height: 10px; border-radius: 0; }
+    .podium-step-2 { width: 174px; height: 9px; border-radius: 0 0 4px 4px; }
+    .podium-step-3 { width: 188px; height: 8px; border-radius: 0 0 6px 6px; opacity: .7; }
+
+    .podium-lbl {
+      font-size: .65em; color: rgba(255,200,0,.45);
+      letter-spacing: 6px; font-weight: 700;
+      margin-top: 4px; text-align: center;
+    }
+
+    /* ── CENTER: VS ZONE ── */
+    .vs-zone {
+      flex: 1; display: flex;
+      align-items: center; justify-content: center;
+      min-height: 180px; padding-bottom: 24px;
+    }
+
+    /* ── RIGHT: CHALLENGER ZONE ── */
+    .chal-zone {
+      width: 150px; flex-shrink: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-end;
+      min-height: 210px;
+    }
+
+    .chal-hint {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 6px; color: rgba(255,200,0,.28);
+      font-size: .82em; text-align: center;
+      padding-bottom: 24px;
+      animation: hintPulse 2.5s ease-in-out infinite;
+    }
+    @keyframes hintPulse {
+      0%,100% { opacity: .6; transform: translateY(0); }
+      50%      { opacity: 1;  transform: translateY(-6px); }
+    }
+    .chal-hint .hint-icon { font-size: 2.4em; }
+
+    /* ── ARENA CHARACTER ── */
+    .arena-char {
+      display: flex; flex-direction: column; align-items: center;
+      position: relative;
+    }
+
+    /* dramatic entry from right */
+    .arena-char.entering-chal {
+      animation: enterChal .5s cubic-bezier(.2,.8,.3,1.05) forwards;
+    }
+    @keyframes enterChal {
+      0%   { transform: translateX(260px) scale(.5) rotate(6deg); opacity: 0; filter: blur(5px); }
+      65%  { transform: translateX(-12px) scale(1.04) rotate(-1deg); opacity: 1; filter: blur(0); }
+      100% { transform: translateX(0) scale(1) rotate(0); opacity: 1; filter: blur(0); }
+    }
+
+    /* speed-lines on entry */
+    .speed-lines {
+      position: absolute; right: 0; top: 0;
+      width: 55%; height: 100%;
+      pointer-events: none; z-index: 4;
+      background: repeating-linear-gradient(
+        to left,
+        transparent 0, transparent 11px,
+        rgba(255,220,100,.07) 11px, rgba(255,220,100,.07) 13px
+      );
+      animation: speedFade .38s ease-out forwards;
+    }
+    @keyframes speedFade { from { opacity: 1; } to { opacity: 0; } }
+
+    .arena-figure { width: 100px; height: 145px; }
+    .arena-figure svg { width: 100%; height: 100%; display: block; }
+
+    .arena-name {
+      font-size: .82em; font-weight: 700;
+      color: rgba(255,255,255,.88); margin-top: 5px; margin-bottom: 6px;
+    }
+
+    /* ── POWER ABOVE HEAD ── */
+    .power-above {
+      position: absolute; top: -52px;
+      font-size: 2em; font-weight: 900; color: #ffcc00;
+      text-shadow: 0 0 18px rgba(255,200,0,.85), 0 0 6px rgba(255,200,0,.5);
+      white-space: nowrap; display: none;
+    }
+    .power-above.visible {
+      display: block; animation: floatBadge 2s ease-in-out infinite;
+    }
+    @keyframes floatBadge { 0%,100% { transform: translateY(-3px); } 50% { transform: translateY(4px); } }
+    .power-above.popping {
+      display: block; animation: powerPop .42s cubic-bezier(.34,1.56,.64,1) forwards;
+    }
+    @keyframes powerPop {
+      from { transform: scale(0) translateY(20px); opacity: 0; }
+      to   { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    /* ── CHAMPION CROWN ── */
+    .champ-crown {
+      position: absolute; top: -80px; font-size: 1.6em;
+      animation: crownBob 1.6s ease-in-out infinite;
+    }
+    @keyframes crownBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+
+    /* ── WEAPON BADGE ── */
+    .weapon-badge {
+      position: absolute; top: 12px; right: -26px;
+      font-size: 1.7em;
+      filter: drop-shadow(0 0 8px rgba(255,200,50,.7));
+      pointer-events: none; z-index: 5;
+      display: none;
+    }
+    .weapon-badge.show {
+      display: block; animation: weaponFloat 1.4s ease-in-out infinite alternate;
+    }
+    .weapon-badge.appearing {
+      display: block; animation: weaponAppear .45s cubic-bezier(.34,1.56,.64,1) forwards;
+    }
+    @keyframes weaponFloat {
+      from { transform: rotate(-10deg) translateY(0); }
+      to   { transform: rotate(10deg) translateY(-8px); }
+    }
+    @keyframes weaponAppear {
+      from { transform: scale(0) rotate(-40deg); opacity: 0; }
+      to   { transform: scale(1) rotate(-10deg); opacity: 1; }
+    }
+
+    /* ── VS LABEL ── */
+    .vs-label {
+      font-size: 2.6em; font-weight: 900; color: #ff4444;
+      text-shadow: 0 0 22px rgba(255,50,50,.75), 0 0 6px rgba(255,50,50,.5);
+      animation: vsPulse .35s ease-in-out infinite alternate;
+    }
+    @keyframes vsPulse { from { transform: scale(1); } to { transform: scale(1.25); } }
+
+    /* ── INIT CHAMPION ON PODIUM ── */
+    .init-champ .arena-figure svg { filter: grayscale(.4) opacity(.7) brightness(.88); }
+    .init-champ .arena-name { color: rgba(200,200,200,.6); font-style: italic; }
+
+    /* ── BATTLE ANIMATIONS ── */
+    .arena-char.shaking   { animation: shakeR .5s ease; }
+    @keyframes shakeR {
+      0%,100% { transform: translateX(0); }
+      15% { transform: translateX(-14px); } 35% { transform: translateX(14px); }
+      55% { transform: translateX(-10px); } 75% { transform: translateX(10px); }
+    }
+    .arena-char.shaking-l { animation: shakeL .5s ease; }
+    @keyframes shakeL {
+      0%,100% { transform: translateX(0); }
+      15% { transform: translateX(14px); } 35% { transform: translateX(-14px); }
+      55% { transform: translateX(10px); } 75% { transform: translateX(-10px); }
+    }
+
+    /* clash effects */
+    .clash-flash {
+      position: absolute; inset: 0;
+      background: rgba(255,230,80,.78);
+      animation: flashOut .16s ease-out forwards;
+      pointer-events: none; z-index: 12; border-radius: 20px 20px 0 0;
+    }
+    @keyframes flashOut { from { opacity: 1; } to { opacity: 0; } }
+
+    .clash-burst {
+      position: absolute;
+      transform: translate(-50%,-50%);
+      pointer-events: none; z-index: 13;
+      animation: burstOut .55s ease-out forwards;
+    }
+    @keyframes burstOut {
+      from { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+      to   { transform: translate(-50%,-50%) scale(2.6); opacity: 0; }
+    }
+
+    /* loser falls from podium (sideways toward camera) */
+    .arena-char.falling {
+      animation: fallDown .65s ease-in forwards;
+      pointer-events: none;
+    }
+    @keyframes fallDown {
+      0%   { transform: translateX(0)  translateY(0)   rotate(0deg)  scale(1);   opacity: 1; }
+      100% { transform: translateX(-60px) translateY(100px) rotate(-40deg) scale(.55); opacity: 0; }
+    }
+
+    /* winner glow */
+    .arena-char.winner-glow { animation: winGlow .85s ease-in-out; }
+    @keyframes winGlow {
+      0%   { filter: brightness(1); }
+      40%  { filter: brightness(2.5) drop-shadow(0 0 24px gold); }
+      100% { filter: brightness(1); }
+    }
+
+    /* new champion takes the podium */
+    .arena-char.take-podium { animation: takePodium 1s cubic-bezier(.34,1.56,.64,1) forwards; }
+    @keyframes takePodium {
+      0%   { transform: scale(.1) translateY(60px); opacity: 0; filter: brightness(8) saturate(3); }
+      35%  { transform: scale(1.3) translateY(-22px); opacity: 1; filter: brightness(3) drop-shadow(0 0 32px #ffd700); }
+      58%  { transform: scale(.88) translateY(8px);  filter: brightness(1.8) drop-shadow(0 0 18px #ffd700); }
+      78%  { transform: scale(1.1) translateY(-7px); filter: brightness(1.4) drop-shadow(0 0 14px #ffd700); }
+      100% { transform: scale(1)   translateY(0);    opacity: 1; filter: brightness(1); }
+    }
+
+    /* 换擂主全屏公告 */
+    .new-champ-announce {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 300; pointer-events: none;
+      background: radial-gradient(ellipse at center, rgba(255,180,0,.15) 0%, rgba(0,0,20,.72) 100%);
+      animation: ncaFade 2s ease forwards;
+    }
+    @keyframes ncaFade {
+      0%   { opacity: 0; }
+      12%  { opacity: 1; }
+      68%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    .nca-title {
+      font-size: 3em; font-weight: 900; letter-spacing: .05em;
+      background: linear-gradient(135deg, #ffe566, #ff9900 45%, #ffe566);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 24px rgba(255,200,0,.85));
+      animation: ncaPop .55s cubic-bezier(.34,1.56,.64,1) .08s both;
+    }
+    .nca-name {
+      font-size: 2.2em; color: #fff; font-weight: 800;
+      margin-top: 10px;
+      filter: drop-shadow(0 0 12px gold);
+      animation: ncaPop .5s cubic-bezier(.34,1.56,.64,1) .28s both;
+    }
+    .nca-power {
+      font-size: 1.25em; color: rgba(255,220,110,.9);
+      margin-top: 8px;
+      animation: ncaPop .45s cubic-bezier(.34,1.56,.64,1) .44s both;
+    }
+    @keyframes ncaPop {
+      0%   { transform: scale(0) translateY(28px); opacity: 0; }
+      60%  { transform: scale(1.18) translateY(-4px); opacity: 1; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    /* 台子星星爆炸 */
+    .pod-spark {
+      position: absolute; z-index: 22; pointer-events: none;
+      font-size: 1.5em;
+      animation: podSparkFly .9s ease-out forwards;
+    }
+    @keyframes podSparkFly {
+      0%   { transform: translate(0,0) scale(0); opacity: 1; }
+      100% { transform: translate(var(--dx),var(--dy)) scale(1.2); opacity: 0; }
+    }
+
+    /* ── BATTLE POPUP ── */
+    .battle-popup {
+      position: absolute; inset: 0;
+      display: none;
+      align-items: flex-start; justify-content: center;
+      padding-top: 16px;
+      z-index: 15; pointer-events: none;
+    }
+    .popup-inner {
+      background: rgba(4,4,18,.94);
+      border-radius: 18px; padding: 16px 24px;
+      text-align: center; min-width: 250px;
+      transform: scale(0); opacity: 0;
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+    }
+    .popup-inner.show { transform: scale(1); opacity: 1; }
+    .popup-inner.pw { border: 2px solid rgba(220,180,0,.75); box-shadow: 0 0 30px rgba(200,90,0,.3); }
+    .popup-inner.pl { border: 2px solid rgba(100,140,255,.65); box-shadow: 0 0 30px rgba(90,110,220,.2); }
+
+    /* ── DEFEATED PIT ── */
+    .defeated-pit {
+      background: rgba(0,0,0,.38);
+      border-top: 3px dashed rgba(255,80,80,.18);
+      padding: 10px 18px;
+      display: flex; align-items: center; gap: 14px;
+      min-height: 75px; flex-wrap: wrap; border-radius: 0 0 20px 20px;
+    }
+    .pit-label { font-size: .73em; color: rgba(255,100,100,.48); flex-shrink: 0; }
+    .defeated-chars { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; }
+    .def-char { display: flex; flex-direction: column; align-items: center; }
+    .def-char.entering-pit { animation: enterPit .55s cubic-bezier(.22,1,.36,1) forwards; }
+    @keyframes enterPit {
+      from { transform: scale(0) rotate(-35deg); opacity: 0; }
+      to   { transform: scale(1) rotate(-4deg);  opacity: 1; }
+    }
+    .def-char.settled { animation: cryBob 1.9s ease-in-out infinite; }
+    @keyframes cryBob {
+      0%,100% { transform: rotate(-5deg) translateY(0); }
+      50%      { transform: rotate(5deg)  translateY(3px); }
+    }
+    .def-figure { width: 50px; height: 72px; }
+    .def-figure svg { width: 100%; height: 100%; display: block; }
+    .def-name { font-size: .63em; color: rgba(255,255,255,.42); margin-top: 3px; }
+
+    /* ── CONTROLS ── */
+    .controls { display: flex; justify-content: center; gap: 12px; margin-bottom: 12px; }
     .btn {
-      padding: 11px 26px; border-radius: 50px; border: none;
-      cursor: pointer; font-size: .95em; font-weight: 700;
+      padding: 10px 24px; border-radius: 50px; border: none;
+      cursor: pointer; font-size: .92em; font-weight: 700;
       font-family: inherit; transition: all .2s;
     }
     .btn-gold {
-      background: linear-gradient(135deg, #ffd700, #ff8c00);
-      color: #1a1000; box-shadow: 0 4px 16px rgba(255,215,0,.35);
+      background: linear-gradient(135deg, #cc2200, #ff5500);
+      color: #fff8e0; box-shadow: 0 4px 14px rgba(200,50,0,.45);
     }
-    .btn-gold:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 7px 24px rgba(255,215,0,.55); }
-    .btn-gold:disabled { opacity: .32; cursor: not-allowed; transform: none; }
+    .btn-gold:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 7px 22px rgba(220,60,0,.6); }
+    .btn-gold:disabled { opacity: .3; cursor: not-allowed; transform: none; }
     .btn-ghost {
       background: rgba(255,255,255,.08); color: rgba(255,255,255,.7);
-      border: 1px solid rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.13);
     }
     .btn-ghost:hover { background: rgba(255,255,255,.15); }
 
     /* ── LOG ── */
     .log {
-      margin-top: 14px;
       background: rgba(0,0,0,.3); border-radius: 12px;
-      padding: 10px 14px; max-height: 118px; overflow-y: auto;
+      padding: 10px 14px; max-height: 105px; overflow-y: auto;
     }
     .log::-webkit-scrollbar { width: 4px; }
-    .log::-webkit-scrollbar-thumb { background: rgba(255,215,0,.25); border-radius: 2px; }
-    .log-hd { font-size: .75em; color: rgba(255,255,255,.38); margin-bottom: 6px; }
+    .log::-webkit-scrollbar-thumb { background: rgba(255,200,0,.2); border-radius: 2px; }
+    .log-hd { font-size: .73em; color: rgba(255,255,255,.35); margin-bottom: 5px; }
     .log-row {
-      font-size: .8em; color: rgba(255,255,255,.65);
-      padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,.05);
-      line-height: 1.5;
+      font-size: .79em; color: rgba(255,255,255,.62);
+      padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,.05); line-height: 1.45;
     }
     .log-row:last-child { border: none; }
-    .hi { color: #ffd700; } .lo { color: #88aaff; }
+    .hi { color: #ffcc00; } .lo { color: #88aaff; }
 
     /* ── RESULT OVERLAY ── */
     .overlay {
       position: fixed; inset: 0;
       background: rgba(0,0,0,.88);
-      backdrop-filter: blur(7px);
-      -webkit-backdrop-filter: blur(7px);
-      display: none; align-items: center; justify-content: center;
-      z-index: 100;
+      -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
+      display: none; align-items: center; justify-content: center; z-index: 100;
     }
     .overlay.on { display: flex; }
     .res-card {
-      background: linear-gradient(145deg, #131325, #1a1a3a);
-      border-radius: 24px; padding: 38px 46px;
-      text-align: center; max-width: 450px; width: 92%;
-      animation: card-pop .5s cubic-bezier(.34,1.56,.64,1);
+      background: linear-gradient(145deg, #131325, #1a1a38);
+      border-radius: 24px; padding: 34px 42px;
+      text-align: center; max-width: 420px; width: 92%;
+      animation: cardPop .5s cubic-bezier(.34,1.56,.64,1);
     }
-    @keyframes card-pop { from { transform: scale(.2) rotate(-8deg); opacity: 0; } to { transform: none; opacity: 1; } }
-    .res-card.win-card { border: 2px solid rgba(255,215,0,.75); box-shadow: 0 0 70px rgba(255,215,0,.35); }
+    @keyframes cardPop { from { transform: scale(.2) rotate(-8deg); opacity: 0; } to { transform: none; opacity: 1; } }
+    .res-card.win-card  { border: 2px solid rgba(220,60,0,.8);  box-shadow: 0 0 70px rgba(200,50,0,.4); }
     .res-card.lose-card { border: 2px solid rgba(120,120,255,.5); box-shadow: 0 0 50px rgba(120,120,255,.25); }
     .res-big { font-size: 4em; animation: fl 1.2s ease-in-out infinite alternate; }
     @keyframes fl { from { transform: translateY(-4px); } to { transform: translateY(5px); } }
     .res-title { font-size: 2em; font-weight: 900; margin: 10px 0 8px; }
     .win-card .res-title {
-      background: linear-gradient(90deg, #ffd700, #ff6b35);
+      background: linear-gradient(90deg, #ffcc00, #ff4400, #ffcc00);
+      background-size: 200%;
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
+      background-clip: text; animation: shine 2s linear infinite;
     }
     .lose-card .res-title { color: #aaaaff; }
-    .res-msg { color: rgba(255,255,255,.72); font-size: .92em; line-height: 1.65; margin-bottom: 16px; }
-    .top3-box {
-      background: rgba(255,255,255,.04); border-radius: 14px;
-      padding: 12px; margin-bottom: 20px;
-    }
-    .top3-lbl { font-size: .75em; color: rgba(255,255,255,.4); margin-bottom: 8px; }
+    .res-msg { color: rgba(255,255,255,.72); font-size: .9em; line-height: 1.65; margin-bottom: 16px; }
+    .top3-box { background: rgba(255,255,255,.04); border-radius: 14px; padding: 12px; margin-bottom: 18px; }
+    .top3-lbl { font-size: .73em; color: rgba(255,255,255,.4); margin-bottom: 8px; }
     .top3 { display: flex; justify-content: center; gap: 10px; }
     .t3item { text-align: center; padding: 8px 12px; border-radius: 10px; }
-    .t3item.gold { background: rgba(255,215,0,.14); border: 1px solid rgba(255,215,0,.3); }
-    .t3em { font-size: 1.5em; }
-    .t3nm { font-size: .7em; color: rgba(255,255,255,.6); }
-    .t3pw { font-size: .9em; font-weight: 700; color: #ffd700; }
+    .t3item.gold { background: rgba(220,60,0,.18); border: 1px solid rgba(220,100,0,.35); }
+    .t3fig { width: 36px; height: 52px; margin: 0 auto; }
+    .t3fig svg { width: 100%; height: 100%; display: block; }
+    .t3nm { font-size: .72em; color: rgba(255,255,255,.65); margin-top: 3px; }
+    .t3sub { font-size: .62em; color: rgba(255,255,255,.35); }
+    .t3pw { font-size: .95em; font-weight: 700; color: #ffcc00; }
 
     /* ── CONFETTI ── */
     #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 200; }
-    .cf {
-      position: absolute; top: -14px;
-      animation: cf-fall var(--d) linear var(--dd) forwards;
-      opacity: 1;
-    }
+    .cf { position: absolute; top: -14px; animation: cf-fall var(--d) linear var(--dd) forwards; opacity: 1; }
     @keyframes cf-fall { to { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
-
-    /* ── RESPONSIVE ── */
-    @media (max-width: 680px) {
-      .game { flex-direction: column; }
-      .roster { width: 100%; }
-    }
   </style>
 </head>
 <body>
@@ -328,373 +581,715 @@
 <div id="stars"></div>
 
 <div class="wrap">
-  <!-- Header -->
-  <h1>⚔️ 擂台争霸 ⚔️</h1>
-  <p class="subtitle">10 位神秘勇士，谁才是真正的最强王者？拖动勇士上擂台，战斗后才能揭晓实力！</p>
+  <h1>🪔 葫芦娃擂台争霸 🪔</h1>
+  <p class="subtitle">七兄弟各有绝技，谁的法力最强？拖上擂台，揭晓隐藏实力！</p>
 
-  <!-- Stats -->
   <div class="stats">
-    <div class="stat">
-      <span class="stat-lbl">⚔️ 挑战次数</span>
-      <span class="stat-val" id="sBattle">0</span>
+    <div class="stat"><span class="stat-lbl">⚔️ 对战次数</span><span class="stat-val" id="sBattle">0</span></div>
+    <div class="stat"><span class="stat-lbl">🏆 当前擂主</span><span class="stat-val" id="sChamp">虚位以待</span></div>
+    <div class="stat"><span class="stat-lbl">👁️ 已现形</span><span class="stat-val"><span id="sRevealed">0</span>/7</span></div>
+    <div class="stat"><span class="stat-lbl">📈 已知最强</span><span class="stat-val" id="sMax">—</span></div>
+  </div>
+
+  <!-- 顶部角色排 -->
+  <div class="roster" id="roster"></div>
+
+  <!-- 初始战力 -->
+  <div class="init-bar">
+    <label for="initPowerInput">🏛️ 初始擂主战力：
+      <input type="number" id="initPowerInput" value="0" min="0" max="99">
+    </label>
+    <span class="init-hint">（默认 0，重新开始后生效）</span>
+  </div>
+
+  <div class="drop-hint" id="dropHint">
+    <span class="bounce">👇</span> 拖动或点击葫芦娃，送入擂台挑战
+  </div>
+
+  <!-- 擂台 -->
+  <div class="arena-wrap" id="arenaWrap">
+    <div class="stage" id="stage">
+      <div class="stage-label">擂　台</div>
+
+      <div class="arena-layout">
+        <!-- 左：固定擂主台 -->
+        <div class="champ-zone" id="champZone">
+          <div class="podium-base" id="podiumBase">
+            <!-- 擂主角色在此 -->
+          </div>
+          <div class="podium-step podium-step-1"></div>
+          <div class="podium-step podium-step-2"></div>
+          <div class="podium-step podium-step-3"></div>
+          <div class="podium-lbl">擂　主</div>
+        </div>
+
+        <!-- 中：VS区 -->
+        <div class="vs-zone" id="vsZone"></div>
+
+        <!-- 右：挑战者入场区 -->
+        <div class="chal-zone" id="chalZone">
+          <div class="chal-hint" id="chalHint">
+            <div class="hint-icon">🥊</div>
+            <div>挑战者<br>入场区</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="battle-popup" id="bPopup">
+        <div class="popup-inner" id="bPopupInner"></div>
+      </div>
     </div>
-    <div class="stat">
-      <span class="stat-lbl">🏆 当前擂主</span>
-      <span class="stat-val" id="sChamp" style="min-width:60px">虚位以待</span>
-    </div>
-    <div class="stat">
-      <span class="stat-lbl">👁️ 已探明</span>
-      <span class="stat-val"><span id="sRevealed">0</span>/10</span>
-    </div>
-    <div class="stat">
-      <span class="stat-lbl">📈 已知最高战力</span>
-      <span class="stat-val" id="sMax">—</span>
+
+    <div class="defeated-pit">
+      <span class="pit-label">💔 落败区</span>
+      <div class="defeated-chars" id="defeatedChars">
+        <span style="font-size:.7em;color:rgba(255,255,255,.2);font-style:italic">尚无人败下阵来…</span>
+      </div>
     </div>
   </div>
 
-  <!-- Game -->
-  <div class="game">
+  <div class="controls">
+    <button class="btn btn-gold" id="declareBtn" disabled>🪔 宣告最强葫芦娃！</button>
+    <button class="btn btn-ghost" id="resetBtn">🔄 重新开始</button>
+  </div>
 
-    <!-- Roster -->
-    <div class="roster">
-      <div class="roster-hd">⚡ 待战勇士（拖动或点击挑战擂主）</div>
-      <div class="cards-grid" id="cardsGrid"></div>
-      <div class="tip">💡 勇士战力隐藏中……上擂台打一场才能揭晓！<br>找到最强王者后点击宣告胜利！</div>
-    </div>
-
-    <!-- Arena -->
-    <div class="arena-sec">
-      <div class="stage" id="stage">
-        <!-- throne -->
-        <div class="throne" id="throne">
-          <div id="throneInner">
-            <div class="throne-empty">
-              <div class="throne-empty-icon">🪑</div>
-              <div>将勇士拖到这里<br>或直接点击勇士<br>开始挑战！</div>
-            </div>
-          </div>
-        </div>
-        <!-- fx layers -->
-        <div class="fx-layer" id="fxLayer"></div>
-        <div class="battle-popup" id="bPopup">
-          <div class="popup-inner" id="bPopupInner"></div>
-        </div>
-      </div>
-
-      <div class="drop-hint" id="dropHint">
-        <span class="bounce">👆</span> 把左边的勇士拖到擂台上来挑战
-      </div>
-
-      <div class="actions">
-        <button class="btn btn-gold" id="declareBtn" disabled>
-          👑 就是他！宣告最强王者！
-        </button>
-        <button class="btn btn-ghost" id="resetBtn">🔄 重新开始</button>
-      </div>
-
-      <div class="log">
-        <div class="log-hd">📜 战斗记录</div>
-        <div id="logBody">
-          <div class="log-row" style="color:rgba(255,255,255,.22);font-style:italic">尚无记录……</div>
-        </div>
-      </div>
+  <div class="log">
+    <div class="log-hd">📜 战斗记录</div>
+    <div id="logBody">
+      <div class="log-row" style="color:rgba(255,255,255,.2);font-style:italic">尚无记录…</div>
     </div>
   </div>
 </div>
 
-<!-- Result overlay -->
+<!-- 结果弹窗 -->
 <div class="overlay" id="overlay">
   <div class="res-card" id="resCard">
     <div class="res-big" id="resEmoji">🏆</div>
     <div class="res-title" id="resTitle"></div>
-    <div class="res-msg" id="resMsg"></div>
+    <div class="res-msg"  id="resMsg"></div>
     <div class="top3-box">
-      <div class="top3-lbl">🏅 真实实力榜（前三名）</div>
+      <div class="top3-lbl">🏅 真实法力榜（前三名）</div>
       <div class="top3" id="resTop3"></div>
     </div>
-    <button class="btn btn-gold" onclick="resetGame()">🔄 再来一局</button>
+    <button class="btn btn-gold" onclick="resetGame()">🔄 再战一局</button>
   </div>
 </div>
 
 <div id="confetti"></div>
 
 <script>
-/* ======== WARRIOR DEFINITIONS ======== */
-const DEFS = [
-  { name:'烈火战神', emoji:'🔥', color:'rgba(255,100,60,.5)' },
-  { name:'冰霜女王', emoji:'❄️', color:'rgba(80,180,255,.5)' },
-  { name:'雷霆天将', emoji:'⚡', color:'rgba(255,230,30,.5)' },
-  { name:'暗影刺客', emoji:'🌑', color:'rgba(180,80,255,.5)' },
-  { name:'圣光骑士', emoji:'✨', color:'rgba(255,255,200,.4)' },
-  { name:'毒蛇弓手', emoji:'🐍', color:'rgba(60,220,110,.5)' },
-  { name:'钢铁巨人', emoji:'🤖', color:'rgba(160,160,160,.5)' },
-  { name:'狂暴战士', emoji:'⚔️', color:'rgba(255,140,60,.5)' },
-  { name:'风暴法师', emoji:'🌪️', color:'rgba(60,220,220,.5)' },
-  { name:'龙裔勇者', emoji:'🐲', color:'rgba(255,180,40,.5)' },
+/* ═══════════════════════════════════════════════════
+   角色定义
+═══════════════════════════════════════════════════ */
+const CHARS = [
+  { id:0, name:'大娃', color:'#e53e3e', title:'力大无穷',  weapon:'🔨' },
+  { id:1, name:'二娃', color:'#ed8936', title:'千里眼耳',  weapon:'🔭' },
+  { id:2, name:'三娃', color:'#d4b800', title:'铜头铁臂',  weapon:'🛡️' },
+  { id:3, name:'四娃', color:'#38a169', title:'口吐烈火',  weapon:'🔥' },
+  { id:4, name:'五娃', color:'#3182ce', title:'喷水灭火',  weapon:'🌊' },
+  { id:5, name:'六娃', color:'#6b46c1', title:'隐身遁形',  weapon:'⚔️' },
+  { id:6, name:'七娃', color:'#9f7aea', title:'宝葫芦法',  weapon:'🫙' },
 ];
 
-const CRIES    = ['一鸣惊人！','势不可挡！','天下无敌！','王者之力！','气吞山河！','神挡杀神！','所向无敌！','战无不胜！'];
-const TAUNTS   = ['还不够看！','以为够格？','差得远呢！','下一位！'];
+const CRIES  = ['葫芦娃，葫芦娃！','妖怪休走！','为爷爷报仇！','降妖除魔！','宝贝回来！','兄弟齐心！','七色葫芦！'];
+const TAUNTS = ['哈哈哈哈！','小娃娃，哼！','送上门来！','再来一个！'];
 
-/* ======== STATE ======== */
+/* ═══════════════════════════════════════════════════
+   SVG 生成
+   type: 'back' | 'front' | 'cry'
+═══════════════════════════════════════════════════ */
+function makeSVG(c, type) {
+  let face = '';
+  if (type === 'front') {
+    face = `
+      <circle cx="24" cy="12" r="2.8" fill="rgba(0,0,0,.42)"/>
+      <circle cx="36" cy="12" r="2.8" fill="rgba(0,0,0,.42)"/>
+      <path d="M21,19 Q30,26 39,19" stroke="rgba(0,0,0,.36)" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+  } else if (type === 'cry') {
+    face = `
+      <circle cx="24" cy="11" r="2.8" fill="rgba(0,0,0,.45)"/>
+      <circle cx="36" cy="11" r="2.8" fill="rgba(0,0,0,.45)"/>
+      <path d="M21,19 Q30,14 39,19" stroke="rgba(0,0,0,.38)" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+      <ellipse cx="21" cy="21" rx="2.4" ry="4.2" fill="rgba(130,200,255,.88)">
+        <animate attributeName="cy" values="21;31;21" dur="1.4s" repeatCount="indefinite"/>
+        <animate attributeName="ry" values="4.2;2;4.2" dur="1.4s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values=".88;0;.88" dur="1.4s" repeatCount="indefinite"/>
+      </ellipse>
+      <ellipse cx="39" cy="21" rx="2.4" ry="4.2" fill="rgba(130,200,255,.88)">
+        <animate attributeName="cy" values="21;31;21" dur="1.4s" begin=".3s" repeatCount="indefinite"/>
+        <animate attributeName="ry" values="4.2;2;4.2" dur="1.4s" begin=".3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values=".88;0;.88" dur="1.4s" begin=".3s" repeatCount="indefinite"/>
+      </ellipse>`;
+  }
+
+  const armL = type === 'cry'
+    ? `<ellipse cx="11" cy="50" rx="4.5" ry="12" fill="${c}" transform="rotate(28 11 50)"/>`
+    : `<ellipse cx="11" cy="42" rx="4.5" ry="12" fill="${c}" transform="rotate(13 11 42)"/>`;
+  const armR = type === 'cry'
+    ? `<ellipse cx="49" cy="50" rx="4.5" ry="12" fill="${c}" transform="rotate(-28 49 50)"/>`
+    : `<ellipse cx="49" cy="42" rx="4.5" ry="12" fill="${c}" transform="rotate(-13 49 42)"/>`;
+
+  return `<svg viewBox="0 0 60 95" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="30" cy="14" r="13" fill="${c}"/>
+    ${face}
+    <rect x="25" y="25" width="10" height="6" rx="2" fill="${c}"/>
+    <ellipse cx="30" cy="44" rx="11" ry="14" fill="${c}"/>
+    <ellipse cx="30" cy="64" rx="14" ry="12" fill="${c}"/>
+    <rect x="18" y="72" width="10" height="20" rx="5" fill="${c}"/>
+    <rect x="32" y="72" width="10" height="20" rx="5" fill="${c}"/>
+    ${armL}
+    ${armR}
+  </svg>`;
+}
+
+/* ═══════════════════════════════════════════════════
+   状态
+═══════════════════════════════════════════════════ */
 let warriors, champion, battleCount, busy, dragId, dragOver;
+let champEl      = null;
+let initialPower = 0;
 
-/* ======== INIT ======== */
+/* ═══════════════════════════════════════════════════
+   初始化
+═══════════════════════════════════════════════════ */
 function initStars() {
   const c = document.getElementById('stars');
-  for (let i = 0; i < 90; i++) {
+  for (let i = 0; i < 55; i++) {
     const s = document.createElement('div');
     s.className = 'star';
-    const sz = (Math.random() * 2.2 + .4).toFixed(1);
+    const sz = (Math.random() * 2.5 + .4).toFixed(1);
     s.style.cssText =
       `width:${sz}px;height:${sz}px;` +
-      `top:${(Math.random()*100).toFixed(1)}%;` +
-      `left:${(Math.random()*100).toFixed(1)}%;` +
-      `--d:${(Math.random()*3+1.5).toFixed(1)}s;` +
-      `--dd:${(Math.random()*2).toFixed(1)}s`;
+      `top:${(Math.random()*100).toFixed(1)}%;left:${(Math.random()*100).toFixed(1)}%;` +
+      `--d:${(Math.random()*3+1.5).toFixed(1)}s;--dd:${(Math.random()*2).toFixed(1)}s`;
     c.appendChild(s);
   }
 }
 
-function genUniquePowers() {
-  const set = new Set();
-  while (set.size < 10) set.add(Math.floor(Math.random() * 99) + 1);
-  return [...set];
+function genPowers() {
+  const s = new Set();
+  while (s.size < 7) s.add(Math.floor(Math.random() * 99) + 1);
+  return [...s];
 }
 
 function initGame() {
-  const powers = genUniquePowers();
-  warriors = DEFS.map((d, i) => ({
-    ...d, id: i, power: powers[i],
+  const ip = parseInt(document.getElementById('initPowerInput').value);
+  initialPower = isNaN(ip) ? 0 : Math.max(0, Math.min(99, ip));
+
+  const powers = genPowers();
+  warriors = CHARS.map((d, i) => ({
+    ...d, power: powers[i],
     revealed: false, inArena: false, isChamp: false
   }));
-  champion  = null;
+
+  champion = {
+    id: 'init', name: '守擂人', color: '#8899aa', title: '初始擂主',
+    power: initialPower, isVirtual: true,
+    revealed: true, inArena: true, isChamp: true
+  };
+  champEl     = null;
   battleCount = 0;
-  busy      = false;
-  dragId    = null;
-  dragOver  = 0;
+  busy        = false;
+  dragId      = null;
+  dragOver    = 0;
 
   renderRoster();
-  renderThrone();
+  resetArena();
   updateStats();
   clearLog();
   document.getElementById('declareBtn').disabled = true;
   document.getElementById('dropHint').style.display = 'block';
   document.getElementById('stage').classList.remove('drop-active');
   document.getElementById('bPopupInner').className = 'popup-inner';
-  document.getElementById('fxLayer').innerHTML = '';
+  document.getElementById('defeatedChars').innerHTML =
+    '<span style="font-size:.7em;color:rgba(255,255,255,.2);font-style:italic">尚无人败下阵来…</span>';
+  addLog(`🏛️ 守擂人以战力 <span class="hi">${initialPower}</span> 镇守擂台，葫芦娃们，谁敢挑战？`);
 }
 
-/* ======== RENDER ======== */
+/* ═══════════════════════════════════════════════════
+   渲染角色排
+═══════════════════════════════════════════════════ */
 function renderRoster() {
-  const grid = document.getElementById('cardsGrid');
-  grid.innerHTML = '';
+  const roster = document.getElementById('roster');
+  roster.innerHTML = '';
   warriors.forEach(w => {
-    const div = document.createElement('div');
-    const stateClass = w.isChamp ? 'is-champ' : w.inArena ? 'gone' : '';
-    div.className = `wcard ${stateClass}`;
-    div.id = `w${w.id}`;
-    div.style.setProperty('--c', w.color);
-
+    const card = document.createElement('div');
+    const stCls = w.isChamp ? 'is-champ' : w.inArena ? 'gone' : '';
+    card.className = `rcard ${stCls}`;
+    card.id = `rc${w.id}`;
+    card.innerHTML =
+      `<div class="rcard-figure" id="rf${w.id}">${makeSVG(w.color, 'back')}</div>` +
+      `<div class="rcard-name">${w.name}</div>` +
+      `<div class="rcard-badge" id="rb${w.id}">${w.revealed ? `法力 ${w.power}` : '??? 待揭晓'}</div>`;
     if (!w.inArena && !w.isChamp) {
-      div.draggable = true;
-      div.addEventListener('dragstart', e => {
+      card.draggable = true;
+      card.addEventListener('dragstart', e => {
         if (busy) { e.preventDefault(); return; }
         dragId = w.id;
-        div.classList.add('dragging');
+        card.classList.add('dragging');
       });
-      div.addEventListener('dragend', () => {
-        div.classList.remove('dragging');
+      card.addEventListener('dragend', () => {
+        card.classList.remove('dragging');
         dragId = null;
       });
-      div.addEventListener('click', () => {
-        if (!busy) triggerChallenge(w.id);
-      });
+      card.addEventListener('click', () => { if (!busy) triggerChallenge(w.id); });
     }
-
-    div.innerHTML =
-      `<span class="em">${w.emoji}</span>` +
-      `<div class="nm">${w.name}</div>` +
-      `<div class="badge${w.revealed ? ' show' : ''}">` +
-        (w.revealed ? `战力&nbsp;<b>${w.power}</b>` : '??? 神秘战力') +
-      `</div>`;
-
-    grid.appendChild(div);
+    roster.appendChild(card);
   });
 }
 
-function renderThrone() {
-  const inner = document.getElementById('throneInner');
-  if (!champion) {
-    inner.innerHTML =
-      `<div class="throne-empty">` +
-        `<div class="throne-empty-icon">🪑</div>` +
-        `<div>将勇士拖到这里<br>或直接点击勇士<br>开始挑战！</div>` +
-      `</div>`;
+function syncRosterCard(id) {
+  const w = warriors[id];
+  const card = document.getElementById(`rc${id}`);
+  if (!card) return;
+  card.className = `rcard ${w.isChamp ? 'is-champ' : w.inArena ? 'gone' : ''}`;
+  card.draggable = false;
+  const badge = document.getElementById(`rb${id}`);
+  if (badge && w.revealed) badge.textContent = `法力 ${w.power}`;
+}
+
+/* ═══════════════════════════════════════════════════
+   擂台 DOM 工具
+═══════════════════════════════════════════════════ */
+function resetArena() {
+  const podium = document.getElementById('podiumBase');
+  podium.innerHTML = '';
+
+  /* 还原挑战者区提示 */
+  const chalZone = document.getElementById('chalZone');
+  chalZone.innerHTML =
+    `<div class="chal-hint" id="chalHint">` +
+      `<div class="hint-icon">🥊</div>` +
+      `<div>挑战者<br>入场区</div>` +
+    `</div>`;
+
+  /* 清除 VS 区 */
+  document.getElementById('vsZone').innerHTML = '';
+
+  if (champion && champion.isVirtual) {
+    const el = makeInitChampEl(champion.power);
+    podium.appendChild(el);
+    champEl = el;
   } else {
-    inner.innerHTML =
-      `<div class="champ-card">` +
-        `<div class="champ-crown">👑</div>` +
-        `<div class="champ-em">${champion.emoji}</div>` +
-        `<div class="champ-nm">${champion.name}</div>` +
-        `<div class="champ-pw">${champion.power}</div>` +
-        `<div class="champ-lbl">当前擂主</div>` +
-      `</div>`;
+    champEl = null;
   }
 }
 
-function updateStats() {
-  document.getElementById('sBattle').textContent = battleCount;
-  document.getElementById('sChamp').textContent  = champion ? champion.name : '虚位以待';
-  const rev = warriors.filter(w => w.revealed);
-  document.getElementById('sRevealed').textContent = rev.length;
-  const mx = rev.length ? Math.max(...rev.map(w => w.power)) : null;
-  document.getElementById('sMax').textContent = mx !== null ? mx : '—';
+/* 初始守擂人（台子上） */
+function makeInitChampEl(power) {
+  const div = document.createElement('div');
+  div.className = 'arena-char init-champ';
+  div.id = 'acInit';
+  div.innerHTML =
+    `<div class="champ-crown">👑</div>` +
+    `<div class="power-above visible" id="pwInit">战力&nbsp;${power}</div>` +
+    `<div class="arena-figure">${makeSVG('#8899aa', 'back')}</div>` +
+    `<div class="arena-name">守擂人</div>`;
+  return div;
 }
 
-/* ======== DRAG & DROP ======== */
+/* 普通角色擂台节点（挑战者用） */
+function makeArenaCharEl(w) {
+  const div = document.createElement('div');
+  div.className = 'arena-char';
+  div.id = `ac${w.id}`;
+  div.innerHTML =
+    `<div class="power-above" id="pw${w.id}">法力&nbsp;${w.power}</div>` +
+    `<div class="arena-figure" id="af${w.id}">${makeSVG(w.color, 'back')}</div>` +
+    `<div class="weapon-badge" id="wb${w.id}">${w.weapon || '⚔️'}</div>` +
+    `<div class="arena-name">${w.name}</div>`;
+  return div;
+}
+
+/* 擂主台上专用节点（已揭示，正面，带武器） */
+function makeChampPodiumEl(w) {
+  const div = document.createElement('div');
+  div.className = 'arena-char take-podium';
+  div.id = `ac${w.id}`;
+  div.innerHTML =
+    `<div class="champ-crown">👑</div>` +
+    `<div class="power-above visible" id="pw${w.id}">法力&nbsp;${w.power}</div>` +
+    `<div class="arena-figure" id="af${w.id}">${makeSVG(w.color, 'front')}</div>` +
+    `<div class="weapon-badge show" id="wb${w.id}">${w.weapon || '⚔️'}</div>` +
+    `<div class="arena-name">${w.name}</div>`;
+  return div;
+}
+
+/* 显示武器（带弹出动画） */
+function showWeapon(charEl, id) {
+  const wb = charEl.querySelector(`#wb${id}`);
+  if (!wb) return;
+  wb.classList.add('appearing');
+  setTimeout(() => {
+    wb.classList.remove('appearing');
+    wb.classList.add('show');
+  }, 450);
+}
+
+/* ═══════════════════════════════════════════════════
+   拖拽
+═══════════════════════════════════════════════════ */
 const stage = document.getElementById('stage');
-
-stage.addEventListener('dragenter', e => {
-  e.preventDefault();
-  dragOver++;
-  stage.classList.add('drop-active');
-});
-stage.addEventListener('dragleave', () => {
-  if (--dragOver <= 0) {
-    dragOver = 0;
-    stage.classList.remove('drop-active');
-  }
-});
-stage.addEventListener('dragover', e => e.preventDefault());
+stage.addEventListener('dragenter', e => { e.preventDefault(); dragOver++; stage.classList.add('drop-active'); });
+stage.addEventListener('dragleave', () => { if (--dragOver <= 0) { dragOver = 0; stage.classList.remove('drop-active'); } });
+stage.addEventListener('dragover',  e => e.preventDefault());
 stage.addEventListener('drop', e => {
-  e.preventDefault();
-  dragOver = 0;
+  e.preventDefault(); dragOver = 0;
   stage.classList.remove('drop-active');
-  if (dragId !== null && !busy) {
-    const id = dragId;
-    dragId = null;
-    triggerChallenge(id);
-  }
+  if (dragId !== null && !busy) { const id = dragId; dragId = null; triggerChallenge(id); }
 });
 
-/* ======== BATTLE LOGIC ======== */
+/* ═══════════════════════════════════════════════════
+   挑战入口
+═══════════════════════════════════════════════════ */
 async function triggerChallenge(id) {
   if (busy) return;
   const w = warriors[id];
   if (w.inArena || w.isChamp) return;
 
   busy = true;
-  w.revealed = true;
-  w.inArena  = true;
+  w.inArena = true;
   battleCount++;
+  syncRosterCard(id);
+  updateStats();
   document.getElementById('dropHint').style.display = 'none';
 
-  if (!champion) {
-    /* first warrior: becomes champion instantly */
-    w.isChamp = true;
-    champion  = w;
-    renderThrone();
-    renderRoster();
-    updateStats();
-    document.getElementById('declareBtn').disabled = false;
-    addLog(
-      `🎉 ${w.emoji} <b>${w.name}</b> 登上擂台，` +
-      `战力 <span class="hi">${w.power}</span>，首位擂主诞生！`
-    );
-    busy = false;
-  } else {
-    const prev = champion;
-    renderRoster();
-    updateStats();
-    await doBattle(prev, w);
-    renderRoster();
-    renderThrone();
-    updateStats();
-    busy = false;
+  await doBattle(w);
+  busy = false;
+}
+
+/* ═══════════════════════════════════════════════════
+   翻转揭示（在挑战者区内）
+═══════════════════════════════════════════════════ */
+async function flipReveal(charEl, id, color) {
+  const figEl = charEl.querySelector(`#af${id}`);
+  const pwEl  = charEl.querySelector(`#pw${id}`);
+
+  figEl.style.transition = 'transform .26s ease-in';
+  figEl.style.transform  = 'scaleX(0)';
+  await sleep(260);
+
+  figEl.innerHTML = makeSVG(color, 'front');
+  figEl.style.transition = 'none';
+  figEl.style.transform  = 'scaleX(0)';
+  figEl.offsetHeight;
+
+  figEl.style.transition = 'transform .26s ease-out';
+  figEl.style.transform  = 'scaleX(1)';
+  await sleep(260);
+
+  if (pwEl) {
+    pwEl.classList.add('popping');
+    await sleep(420);
+    pwEl.classList.remove('popping');
+    pwEl.classList.add('visible');
   }
 }
 
-async function doBattle(prev, challenger) {
-  showFX();
-  await sleep(380);
+/* ═══════════════════════════════════════════════════
+   对战流程（固定台位版）
+═══════════════════════════════════════════════════ */
+async function doBattle(challenger) {
+  const prev       = champion;
+  const prevVirtual = prev.isVirtual;
 
+  const chalZone  = document.getElementById('chalZone');
+  const vsZone    = document.getElementById('vsZone');
+  const podium    = document.getElementById('podiumBase');
+
+  /* 移除挑战者区提示 */
+  const chalHint = document.getElementById('chalHint');
+  if (chalHint) chalHint.remove();
+
+  /* 隐藏擂主皇冠 */
+  const oldCrown = champEl ? champEl.querySelector('.champ-crown') : null;
+  if (oldCrown) oldCrown.style.visibility = 'hidden';
+
+  /* 挑战者过场入场（右侧滑入） */
+  const chalEl = makeArenaCharEl(challenger);
+  chalEl.classList.add('entering-chal');
+
+  /* 速度线 */
+  const spdLines = document.createElement('div');
+  spdLines.className = 'speed-lines';
+  stage.appendChild(spdLines);
+
+  chalZone.appendChild(chalEl);
+  await sleep(560);
+  chalEl.classList.remove('entering-chal');
+  spdLines.remove();
+
+  /* 翻转揭示挑战者战力 */
+  await flipReveal(chalEl, challenger.id, challenger.color);
+  challenger.revealed = true;
+  syncRosterCard(challenger.id);
+  updateStats();
+
+  /* 武器弹出 */
+  showWeapon(chalEl, challenger.id);
+  await sleep(320);
+
+  /* VS 出现 */
+  const vsEl = document.createElement('div');
+  vsEl.className = 'vs-label';
+  vsEl.textContent = 'VS';
+  vsZone.appendChild(vsEl);
+
+  /* 战斗弹窗 */
+  showBattlePopup(prev, challenger);
+  await sleep(320);
+
+  /* 过场：双方互相冲锋 */
+  if (champEl) {
+    champEl.style.transition = 'transform .22s ease-out';
+    champEl.style.transform  = 'translateX(28px)';
+  }
+  chalEl.style.transition = 'transform .22s ease-out';
+  chalEl.style.transform  = 'translateX(-28px)';
+  await sleep(230);
+  if (champEl) {
+    champEl.style.transition = 'transform .2s ease-in-out';
+    champEl.style.transform  = 'translateX(0)';
+  }
+  chalEl.style.transition = 'transform .2s ease-in-out';
+  chalEl.style.transform  = 'translateX(0)';
+  await sleep(210);
+
+  /* 抖动 */
+  if (champEl) champEl.classList.add('shaking');
+  chalEl.classList.add('shaking-l');
+  await sleep(540);
+  if (champEl) champEl.classList.remove('shaking');
+  chalEl.classList.remove('shaking-l');
+
+  /* 碰撞：闪光 + 多重爆炸 + 屏幕震动 */
+  const flash = document.createElement('div');
+  flash.className = 'clash-flash';
+  stage.appendChild(flash);
+
+  const burstData = [
+    { e:'💥', l:'38%', t:'36%', d:'0s' },
+    { e:'✨', l:'52%', t:'28%', d:'.1s' },
+    { e:'⚡', l:'46%', t:'44%', d:'.08s' },
+    { e:'💫', l:'60%', t:'32%', d:'.15s' },
+  ];
+  burstData.forEach(b => {
+    const el = document.createElement('div');
+    el.className = 'clash-burst';
+    el.textContent = b.e;
+    el.style.cssText = `font-size:3em;left:${b.l};top:${b.t};animation-delay:${b.d}`;
+    stage.appendChild(el);
+    setTimeout(() => el.remove(), 700);
+  });
+
+  const arenaWrap = document.getElementById('arenaWrap');
+  arenaWrap.classList.add('screen-shake');
+  setTimeout(() => arenaWrap.classList.remove('screen-shake'), 450);
+
+  await sleep(560);
+  flash.remove();
+
+  /* 判定 */
   const prevWins = prev.power > challenger.power;
   const winner   = prevWins ? prev : challenger;
   const loser    = prevWins ? challenger : prev;
+  const winEl    = prevWins ? champEl : chalEl;
+  const loseEl   = prevWins ? chalEl  : champEl;
 
-  const inner = document.getElementById('bPopupInner');
-  const cry   = rnd(prevWins ? CRIES : TAUNTS);
-  inner.className = `popup-inner show ${prevWins ? 'pw' : 'pl'}`;
-  inner.innerHTML =
-    `<div style="font-size:1.8em;margin-bottom:7px">${winner.emoji}</div>` +
-    `<div style="font-weight:700;font-size:1.08em;color:${prevWins ? '#ffd700' : '#aaaaff'};margin-bottom:6px">` +
-      (prevWins ? '✅ 擂主守擂！' : '🔄 新王降临！') +
-    `</div>` +
-    `<div style="font-size:.9em;color:rgba(255,255,255,.8);margin-bottom:7px">` +
-      `<span style="color:#ffd700">${prev.name} <b>${prev.power}</b></span>` +
-      `<span style="color:rgba(255,255,255,.35)"> vs </span>` +
-      `<span style="color:#aaaaff">${challenger.name} <b>${challenger.power}</b></span>` +
-    `</div>` +
-    `<div style="font-size:.83em;color:#ffd700">${cry}</div>`;
+  hideBattlePopup();
+  vsEl.remove();
 
-  await sleep(1850);
-  inner.className = 'popup-inner';
+  /* 赢家光芒 */
+  if (winEl) winEl.classList.add('winner-glow');
+  await sleep(200);
 
+  /* 输家倒下 */
+  if (prevVirtual && loseEl === champEl) {
+    /* 守擂人淡出 */
+    loseEl.style.transition = 'opacity .42s ease, transform .42s ease';
+    loseEl.style.opacity    = '0';
+    loseEl.style.transform  = 'scale(.65)';
+  } else if (loseEl) {
+    loseEl.classList.add('falling');
+  }
+  await sleep(680);
+  if (winEl) winEl.classList.remove('winner-glow');
+
+  /* 清理 */
+  if (loseEl) loseEl.remove();
+
+  /* 更新状态 */
   if (!prevWins) {
-    prev.isChamp      = false;
-    challenger.isChamp = true;
-    champion           = challenger;
+    /* 挑战者赢 → 登上台子 */
+    prev.isChamp        = false;
+    challenger.isChamp  = true;
+    champion            = challenger;
+
+    /* chalEl 从右侧淡出 */
+    if (chalEl.parentNode) {
+      chalEl.style.transition = 'opacity .18s';
+      chalEl.style.opacity    = '0';
+      await sleep(180);
+      chalEl.remove();
+    }
+
+    /* 全屏换擂主公告 */
+    const announce = document.createElement('div');
+    announce.className = 'new-champ-announce';
+    announce.innerHTML = `
+      <div class="nca-title">👑 新擂主诞生！</div>
+      <div class="nca-name">${challenger.name}</div>
+      <div class="nca-power">法力值 ${challenger.power}</div>`;
+    document.body.appendChild(announce);
+    setTimeout(() => announce.remove(), 2100);
+
+    /* 新擂主弹入台子 */
+    const newEl = makeChampPodiumEl(challenger);
+    podium.innerHTML = '';
+    podium.appendChild(newEl);
+    champEl = newEl;
+
+    /* 台子四周星星爆炸 */
+    const sparkEmojis = ['⭐','🌟','✨','💫','🌠','⚡','🎇','🔥'];
+    for (let i = 0; i < 10; i++) {
+      const sp = document.createElement('div');
+      sp.className = 'pod-spark';
+      const angle = (i / 10) * 2 * Math.PI;
+      const dist  = 55 + Math.random() * 45;
+      sp.style.cssText = `left:50%;top:50%;--dx:${(Math.cos(angle)*dist).toFixed(1)}px;--dy:${(Math.sin(angle)*dist).toFixed(1)}px;animation-delay:${(i*0.06).toFixed(2)}s`;
+      sp.textContent = sparkEmojis[i % sparkEmojis.length];
+      podium.appendChild(sp);
+      setTimeout(() => sp.remove(), 1200 + i * 60);
+    }
+
+    /* 等 take-podium 动画完 */
+    await sleep(1000);
+
   } else {
+    /* 擂主守擂 → chalEl 已倒下，不需要额外处理 */
     challenger.isChamp = false;
+    if (chalEl.parentNode) chalEl.remove();
+
+    /* 恢复擂主皇冠 */
+    const crown = champEl ? champEl.querySelector('.champ-crown') : null;
+    if (crown) {
+      crown.style.visibility = 'visible';
+    } else if (champEl) {
+      const c2 = document.createElement('div');
+      c2.className = 'champ-crown';
+      c2.textContent = '👑';
+      champEl.insertBefore(c2, champEl.firstChild);
+    }
   }
 
-  addLog(
-    `⚔️ ${prev.emoji}${prev.name}(${prev.power}) ` +
-    `<span style="color:rgba(255,255,255,.28)">VS</span> ` +
-    `${challenger.emoji}${challenger.name}(${challenger.power}) → ` +
-    (prevWins
-      ? `<span class="hi">擂主守擂 💪</span>`
-      : `<span class="lo">新擂主诞生 👑</span>`)
-  );
+  loser.isChamp = false;
+  syncRosterCard(winner.id);
+  if (!prevVirtual) syncRosterCard(loser.id);
+  updateStats();
+
+  /* 落败区 */
+  if (!(prevVirtual && loser === prev)) {
+    addToDefeatedPit(loser);
+  }
+
+  /* 宣告按钮 */
+  if (champion && !champion.isVirtual) {
+    document.getElementById('declareBtn').disabled = false;
+  }
+
+  /* 日志 */
+  if (prevVirtual) {
+    addLog(prevWins
+      ? `🏛️ ${challenger.name}(${challenger.power}) 挑战守擂人(${prev.power}) → <span class="lo">不敌，败下阵来</span>`
+      : `🎉 ${challenger.name}(${challenger.power}) 击败守擂人(${prev.power}) → <span class="hi">成为首位真正擂主！</span>`
+    );
+  } else {
+    addLog(
+      `⚔️ ${prev.name}(${prev.power}) VS ${challenger.name}(${challenger.power}) → ` +
+      (prevWins
+        ? `<span class="hi">擂主守擂 💪</span>`
+        : `<span class="lo">新擂主诞生 👑</span>`)
+    );
+  }
+
+  /* 恢复挑战者区提示 */
+  const newHint = document.createElement('div');
+  newHint.className = 'chal-hint';
+  newHint.id        = 'chalHint';
+  newHint.innerHTML = '<div class="hint-icon">🥊</div><div>挑战者<br>入场区</div>';
+  document.getElementById('chalZone').appendChild(newHint);
 }
 
-function showFX() {
-  const layer  = document.getElementById('fxLayer');
-  layer.innerHTML = '';
-  const colors = [
-    'rgba(255,120,20,.85)',
-    'rgba(255,215,0,.65)',
-    'rgba(255,60,60,.45)',
-  ];
-  colors.forEach((c, i) => {
-    const r = document.createElement('div');
-    r.className  = 'fx-ring';
-    r.style.cssText = `border:3px solid ${c};animation-delay:${(i * .18).toFixed(2)}s`;
-    layer.appendChild(r);
-  });
-  setTimeout(() => { layer.innerHTML = ''; }, 950);
+/* ═══════════════════════════════════════════════════
+   战斗弹窗
+═══════════════════════════════════════════════════ */
+function showBattlePopup(prev, challenger) {
+  const inner = document.getElementById('bPopupInner');
+  inner.className = 'popup-inner show pw';
+  inner.innerHTML =
+    `<div style="font-size:.84em;color:rgba(255,255,255,.6);margin-bottom:4px">法力对决！</div>` +
+    `<div style="font-size:1.05em;margin-bottom:5px">` +
+      `<span style="color:#ffcc00">${prev.name} <b>${prev.power}</b></span>` +
+      `<span style="color:rgba(255,255,255,.3)"> ⚔️ </span>` +
+      `<span style="color:#88aaff">${challenger.name} <b>${challenger.power}</b></span>` +
+    `</div>` +
+    `<div style="font-size:.78em;color:#ffd700">${rnd(CRIES)}</div>`;
+}
+function hideBattlePopup() { document.getElementById('bPopupInner').className = 'popup-inner'; }
+
+/* ═══════════════════════════════════════════════════
+   落败区
+═══════════════════════════════════════════════════ */
+function addToDefeatedPit(w) {
+  const pit = document.getElementById('defeatedChars');
+  const ph  = pit.querySelector('[style*="italic"]');
+  if (ph) ph.remove();
+  const def = document.createElement('div');
+  def.className = 'def-char entering-pit';
+  def.innerHTML =
+    `<div class="def-figure">${makeSVG(w.color, 'cry')}</div>` +
+    `<div class="def-name">${w.name}</div>`;
+  pit.appendChild(def);
+  setTimeout(() => {
+    def.classList.remove('entering-pit');
+    def.classList.add('settled');
+  }, 560);
 }
 
-/* ======== LOG ======== */
+/* ═══════════════════════════════════════════════════
+   统计
+═══════════════════════════════════════════════════ */
+function updateStats() {
+  document.getElementById('sBattle').textContent = battleCount;
+  document.getElementById('sChamp').textContent  =
+    champion ? (champion.isVirtual ? `守擂人(${champion.power})` : champion.name) : '虚位以待';
+  const rev = warriors.filter(w => w.revealed);
+  document.getElementById('sRevealed').textContent = rev.length;
+  const mx = rev.length ? Math.max(...rev.map(w => w.power)) : null;
+  document.getElementById('sMax').textContent = mx !== null ? mx : '—';
+}
+
+/* ═══════════════════════════════════════════════════
+   日志
+═══════════════════════════════════════════════════ */
 function addLog(html) {
   const body = document.getElementById('logBody');
-  const placeholder = body.querySelector('[style*="italic"]');
-  if (placeholder) placeholder.remove();
+  const ph   = body.querySelector('[style*="italic"]');
+  if (ph) ph.remove();
   const row = document.createElement('div');
-  row.className = 'log-row';
-  row.innerHTML  = html;
+  row.className = 'log-row'; row.innerHTML = html;
   body.insertBefore(row, body.firstChild);
 }
-
 function clearLog() {
   document.getElementById('logBody').innerHTML =
-    '<div class="log-row" style="color:rgba(255,255,255,.22);font-style:italic">尚无记录……</div>';
+    '<div class="log-row" style="color:rgba(255,255,255,.2);font-style:italic">尚无记录…</div>';
 }
 
-/* ======== DECLARE WINNER ======== */
+/* ═══════════════════════════════════════════════════
+   宣告最强
+═══════════════════════════════════════════════════ */
 document.getElementById('declareBtn').addEventListener('click', () => {
-  if (!champion || busy) return;
+  if (!champion || champion.isVirtual || busy) return;
   const trueMax = warriors.reduce((m, w) => w.power > m.power ? w : m);
   showResult(champion.id === trueMax.id, trueMax);
 });
@@ -705,26 +1300,25 @@ function showResult(win, trueMax) {
 
   const card = document.getElementById('resCard');
   card.className = `res-card ${win ? 'win-card' : 'lose-card'}`;
-
   document.getElementById('resEmoji').textContent = win ? '🏆' : '😔';
-  document.getElementById('resTitle').textContent = win ? '王者降临！' : '差一点点……';
+  document.getElementById('resTitle').textContent = win ? '无敌葫芦娃！' : '差一点点……';
 
   const eff = win ? getEff(battleCount) : '';
   document.getElementById('resMsg').innerHTML = win
-    ? `你只用了 <b style="color:#ffd700">${battleCount}</b> 次挑战，` +
-      `成功找出了最强王者 ${champion.emoji}<b>${champion.name}</b>（战力 ${champion.power}）！<br>` +
-      `<span style="color:#ffd700;font-size:.95em">${eff}</span>`
-    : `你选择的 ${champion.emoji}<b>${champion.name}</b>（战力 ${champion.power}）并非最强，<br>` +
-      `真正的王者是 ${trueMax.emoji}<b style="color:#ffd700">${trueMax.name}</b>（战力 <b style="color:#ffd700">${trueMax.power}</b>）。<br>` +
-      `<small style="color:rgba(255,255,255,.42)">要找到最大值，需要让所有候选者都与当前最大值比较哦！</small>`;
+    ? `你只用了 <b style="color:#ffcc00">${battleCount}</b> 次对战，找出最强 ${champion.name}（法力 ${champion.power}）！<br>` +
+      `<span style="color:#ffcc00;font-size:.94em">${eff}</span>`
+    : `你选的 <b>${champion.name}</b>（法力 ${champion.power}）并非最强，<br>` +
+      `真正最强是 <b style="color:#ffcc00">${trueMax.name}</b>（法力 <b style="color:#ffcc00">${trueMax.power}</b>）。<br>` +
+      `<small style="color:rgba(255,255,255,.4)">要找最大值，须让所有候选者都与当前最强比较哦！</small>`;
 
   const sorted = [...warriors].sort((a, b) => b.power - a.power).slice(0, 3);
   document.getElementById('resTop3').innerHTML = sorted.map((w, i) =>
     `<div class="t3item ${i === 0 ? 'gold' : ''}">` +
-      `<div>${['🥇','🥈','🥉'][i]}</div>` +
-      `<div class="t3em">${w.emoji}</div>` +
-      `<div class="t3nm">${w.name}</div>` +
-      `<div class="t3pw">${w.power}</div>` +
+    `<div>${['🥇','🥈','🥉'][i]}</div>` +
+    `<div class="t3fig">${makeSVG(w.color, 'front')}</div>` +
+    `<div class="t3nm">${w.name}</div>` +
+    `<div class="t3sub">${w.title}</div>` +
+    `<div class="t3pw">${w.power} ${w.weapon}</div>` +
     `</div>`
   ).join('');
 
@@ -733,36 +1327,35 @@ function showResult(win, trueMax) {
 }
 
 function getEff(n) {
-  if (n <= 3) return '🌟🌟🌟 超神级效率！算法大师！';
-  if (n <= 5) return '🌟🌟 非常聪明，策略精准！';
-  if (n <= 7) return '🌟 稳扎稳打，不错！';
-  return '你把所有勇士都试过一遍了，稳！';
+  if (n <= 2) return '🌟🌟🌟 超神！两次就找到了！';
+  if (n <= 4) return '🌟🌟 聪明！策略精准！';
+  if (n <= 6) return '🌟 稳扎稳打，不错！';
+  return '七兄弟全上场了，彻底摸清实力！';
 }
 
-/* ======== CONFETTI ======== */
+/* ═══════════════════════════════════════════════════
+   彩纸
+═══════════════════════════════════════════════════ */
 function launchConfetti() {
   const c = document.getElementById('confetti');
   c.innerHTML = '';
-  const colors = ['#ffd700','#ff4444','#4488ff','#44ff88','#ff88ff','#ff8844','#44ffdd'];
-  for (let i = 0; i < 100; i++) {
-    const el    = document.createElement('div');
-    const color = colors[i % colors.length];
-    const sz    = (Math.random() * 9 + 5).toFixed(0);
-    const isCircle = Math.random() > .5;
+  const cols = ['#ff2200','#ffcc00','#ff6600','#44ff88','#ff88ff','#ffffff','#4af'];
+  for (let i = 0; i < 90; i++) {
+    const el = document.createElement('div');
+    const sz = (Math.random() * 8 + 5).toFixed(0);
     el.className = 'cf';
     el.style.cssText =
-      `left:${(Math.random()*100).toFixed(1)}%;` +
-      `width:${sz}px;height:${sz}px;` +
-      `background:${color};` +
-      `border-radius:${isCircle ? '50%' : '2px'};` +
-      `--d:${(Math.random()*2+2).toFixed(1)}s;` +
-      `--dd:${(Math.random()*1.5).toFixed(1)}s`;
+      `left:${(Math.random()*100).toFixed(1)}%;width:${sz}px;height:${sz}px;` +
+      `background:${cols[i % cols.length]};border-radius:${Math.random()>.5?'50%':'2px'};` +
+      `--d:${(Math.random()*2+2).toFixed(1)}s;--dd:${(Math.random()*1.5).toFixed(1)}s`;
     c.appendChild(el);
   }
   setTimeout(() => { c.innerHTML = ''; }, 5000);
 }
 
-/* ======== RESET ======== */
+/* ═══════════════════════════════════════════════════
+   重置
+═══════════════════════════════════════════════════ */
 function resetGame() {
   document.getElementById('overlay').classList.remove('on');
   document.getElementById('confetti').innerHTML = '';
@@ -770,11 +1363,9 @@ function resetGame() {
 }
 document.getElementById('resetBtn').addEventListener('click', resetGame);
 
-/* ======== UTILS ======== */
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const rnd   = arr => arr[Math.floor(Math.random() * arr.length)];
 
-/* ======== START ======== */
 initStars();
 initGame();
 </script>
